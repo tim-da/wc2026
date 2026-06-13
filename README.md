@@ -1,4 +1,4 @@
-# World Cup Market Tracker
+# wc2026
 
 Local Flask app that compares FIFA World Cup 2026 actual results against Polymarket and Kalshi prediction snapshots.
 
