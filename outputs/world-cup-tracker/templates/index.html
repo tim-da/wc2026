@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>World Cup Market Tracker</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">FIFA World Cup 2026</p>
+          <h1>Market Tracker</h1>
+        </div>
+        <div class="actions">
+          <span id="refreshStamp" class="stamp">Loading...</span>
+          <button id="refreshButton" class="iconButton" title="Refresh data" type="button">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="metrics" aria-label="Summary">
+        <article class="metric">
+          <span class="label">Polymarket Pick</span>
+          <strong id="pmLeader">--</strong>
+          <small id="pmLeaderPrice">--</small>
+        </article>
+        <article class="metric">
+          <span class="label">Kalshi Pick</span>
+          <strong id="ksLeader">--</strong>
+          <small id="ksLeaderPrice">--</small>
+        </article>
+        <article class="metric">
+          <span class="label">Completed</span>
+          <strong id="completedCount">--</strong>
+          <small id="liveCount">--</small>
+        </article>
+        <article class="metric">
+          <span class="label">Favorite Hit Rate</span>
+          <strong id="hitRate">--</strong>
+          <small>decisive matches</small>
+        </article>
+      </section>
+
+      <section class="split">
+        <article class="panel">
+          <div class="panelHead">
+            <h2>Prediction Performance</h2>
+          </div>
+          <div class="scoreGrid">
+            <div>
+              <span class="label">Polymarket</span>
+              <strong id="pmAccuracy">--</strong>
+              <small id="pmRecord">--</small>
+            </div>
+            <div>
+              <span class="label">Kalshi</span>
+              <strong id="ksAccuracy">--</strong>
+              <small id="ksRecord">--</small>
+            </div>
+          </div>
+          <div id="upsets" class="upsets"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panelHead">
+            <h2>Knockout Projection</h2>
+          </div>
+          <div class="projectionGrid">
+            <div class="projection">
+              <span>Polymarket</span>
+              <strong id="pmChampion">--</strong>
+              <small id="pmFinal">--</small>
+            </div>
+            <div class="projection">
+              <span>Kalshi</span>
+              <strong id="ksChampion">--</strong>
+              <small id="ksFinal">--</small>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panelHead controls">
+          <h2>Matches</h2>
+          <div class="segmented" role="tablist" aria-label="Match filter">
+            <button class="segment active" data-filter="all" type="button">All</button>
+            <button class="segment" data-filter="live" type="button">Live</button>
+            <button class="segment" data-filter="completed" type="button">Final</button>
+            <button class="segment" data-filter="upset" type="button">Upsets</button>
+          </div>
+        </div>
+        <div id="matchList" class="matchList"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHead controls">
+          <h2>Teams</h2>
+          <input id="teamSearch" class="search" type="search" placeholder="Search team" />
+        </div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>Group</th>
+                <th>Pts</th>
+                <th>GD</th>
+                <th>PM %</th>
+                <th>Kalshi %</th>
+                <th>Avg %</th>
+                <th>PM Rank</th>
+                <th>K Rank</th>
+              </tr>
+            </thead>
+            <tbody id="teamRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHead">
+          <h2>Consensus Odds</h2>
+        </div>
+        <div id="oddsBars" class="oddsBars"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
