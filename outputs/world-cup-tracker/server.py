@@ -15,8 +15,10 @@ from flask import Flask, jsonify, render_template
 ROOT = Path(__file__).resolve().parent
 APP = Flask(__name__, static_folder=str(ROOT / "static"), template_folder=str(ROOT / "templates"))
 BASELINE_CSV = ROOT.parent / "world_cup_2026_market_odds_polymarket_kalshi.csv"
+MATCH_BASELINE_JSON = ROOT.parent / "world_cup_2026_match_market_baseline.json"
 
 POLYMARKET_EVENT_URL = "https://gamma-api.polymarket.com/events?slug=world-cup-winner"
+POLYMARKET_EVENTS_URL = "https://gamma-api.polymarket.com/events"
 KALSHI_MARKETS_URL = "https://api.elections.kalshi.com/trade-api/v2/markets"
 ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard"
 ESPN_STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings"
@@ -52,6 +54,7 @@ ALIASES = {
     "bosnia & herzegovina": "Bosnia-Herzegovina",
     "bosnia-herzegovina": "Bosnia-Herzegovina",
     "congo dr": "Congo DR",
+    "czech republic": "Czechia",
     "dr congo": "Congo DR",
     "côte d'ivoire": "Ivory Coast",
     "cote d'ivoire": "Ivory Coast",
@@ -70,6 +73,57 @@ ALIASES = {
     "united states": "USA",
     "us": "USA",
     "usa": "USA",
+}
+
+KALSHI_CODE_TO_TEAM = {
+    "ARG": "Argentina",
+    "AUS": "Australia",
+    "AUT": "Austria",
+    "BEL": "Belgium",
+    "BIH": "Bosnia-Herzegovina",
+    "BRA": "Brazil",
+    "CAN": "Canada",
+    "CIV": "Ivory Coast",
+    "COD": "Congo DR",
+    "COL": "Colombia",
+    "CPV": "Cape Verde",
+    "CRO": "Croatia",
+    "CUW": "Curaçao",
+    "CZE": "Czechia",
+    "DZA": "Algeria",
+    "ECU": "Ecuador",
+    "EGY": "Egypt",
+    "ENG": "England",
+    "ESP": "Spain",
+    "FRA": "France",
+    "GER": "Germany",
+    "GHA": "Ghana",
+    "HTI": "Haiti",
+    "IRI": "Iran",
+    "IRQ": "Iraq",
+    "JOR": "Jordan",
+    "JPN": "Japan",
+    "KOR": "South Korea",
+    "KSA": "Saudi Arabia",
+    "MAR": "Morocco",
+    "MEX": "Mexico",
+    "NED": "Netherlands",
+    "NOR": "Norway",
+    "NZL": "New Zealand",
+    "PAN": "Panama",
+    "PAR": "Paraguay",
+    "POR": "Portugal",
+    "QAT": "Qatar",
+    "RSA": "South Africa",
+    "SCO": "Scotland",
+    "SEN": "Senegal",
+    "SUI": "Switzerland",
+    "SWE": "Sweden",
+    "TUN": "Tunisia",
+    "TUR": "Turkey",
+    "URU": "Uruguay",
+    "USA": "USA",
+    "UZB": "Uzbekistan",
 }
 
 
@@ -95,6 +149,50 @@ def as_float(value: Any) -> float | None:
 
 def pct(value: float | None) -> float | None:
     return None if value is None else round(value * 100, 3)
+
+
+def market_key(team_a: str | None, team_b: str | None) -> str | None:
+    if not team_a or not team_b:
+        return None
+    return "::".join(sorted([normalized_team(team_a), normalized_team(team_b)]))
+
+
+def parse_yes_price(market: dict[str, Any]) -> dict[str, Any]:
+    try:
+        prices = json.loads(market.get("outcomePrices") or "[]")
+    except json.JSONDecodeError:
+        prices = []
+
+    outcome_price = as_float(prices[0]) if prices else None
+    bid = as_float(market.get("bestBid"))
+    if bid is None:
+        bid = as_float(market.get("yes_bid_dollars"))
+    ask = as_float(market.get("bestAsk"))
+    if ask is None:
+        ask = as_float(market.get("yes_ask_dollars"))
+    last = as_float(market.get("lastTradePrice"))
+    if last is None:
+        last = as_float(market.get("last_price_dollars"))
+    if bid is not None and ask is not None:
+        mid = (bid + ask) / 2
+    elif outcome_price is not None:
+        mid = outcome_price
+    else:
+        mid = last
+    return {
+        "mid": mid,
+        "midPct": pct(mid),
+        "bidPct": pct(bid),
+        "askPct": pct(ask),
+        "lastPct": pct(last),
+    }
+
+
+def pick_from_outcomes(outcomes: dict[str, dict[str, Any]]) -> tuple[str | None, float | None]:
+    priced = [(outcome, data.get("mid")) for outcome, data in outcomes.items() if data.get("mid") is not None]
+    if not priced:
+        return None, None
+    return max(priced, key=lambda item: item[1])
 
 
 def fetch_json(url: str, params: dict[str, Any] | None = None) -> Any:
@@ -206,6 +304,157 @@ def load_baseline_odds() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str,
     return polymarket, kalshi, str(BASELINE_CSV)
 
 
+def fetch_polymarket_match_markets() -> dict[str, dict[str, Any]]:
+    events = fetch_json(POLYMARKET_EVENTS_URL, {"limit": 500, "series_slug": "soccer-fifwc", "closed": "false"})
+    markets: dict[str, dict[str, Any]] = {}
+
+    for event in events if isinstance(events, list) else []:
+        title = event.get("title") or ""
+        title_match = re.search(r"(.+?)\s+vs\.?\s+(.+)", title)
+        if not title_match:
+            continue
+
+        team_a = normalized_team(title_match.group(1))
+        team_b = normalized_team(title_match.group(2))
+        key = market_key(team_a, team_b)
+        if not key:
+            continue
+
+        outcomes: dict[str, dict[str, Any]] = {}
+        for market in event.get("markets", []):
+            if market.get("sportsMarketType") and market.get("sportsMarketType") != "moneyline":
+                continue
+
+            group = market.get("groupItemTitle") or ""
+            if group.casefold().startswith("draw"):
+                outcome = "Draw"
+            else:
+                outcome = normalized_team(group)
+
+            if outcome not in {team_a, team_b, "Draw"}:
+                continue
+
+            outcomes[outcome] = {
+                **parse_yes_price(market),
+                "question": market.get("question"),
+                "slug": market.get("slug"),
+            }
+
+        if outcomes:
+            pick, pick_price = pick_from_outcomes(outcomes)
+            markets[key] = {
+                "source": "polymarket",
+                "eventTitle": title,
+                "teams": [team_a, team_b],
+                "outcomes": outcomes,
+                "pick": pick,
+                "pickPct": pct(pick_price),
+            }
+
+    return markets
+
+
+def fetch_kalshi_match_markets() -> dict[str, dict[str, Any]]:
+    data = fetch_json(KALSHI_MARKETS_URL, {"limit": 1000, "series_ticker": "KXWCGAME"})
+    grouped: dict[str, dict[str, Any]] = {}
+
+    for market in data.get("markets", []):
+        title = market.get("title") or ""
+        title_match = re.search(r"(.+?)\s+vs\s+(.+?)\s+Winner\?", title)
+        if not title_match:
+            continue
+
+        team_a = normalized_team(title_match.group(1))
+        team_b = normalized_team(title_match.group(2))
+        key = market_key(team_a, team_b)
+        if not key:
+            continue
+
+        suffix = (market.get("ticker") or "").split("-")[-1]
+        outcome = "Draw" if suffix == "TIE" else normalized_team(KALSHI_CODE_TO_TEAM.get(suffix, suffix))
+        if outcome not in {team_a, team_b, "Draw"}:
+            continue
+
+        if key not in grouped:
+            grouped[key] = {
+                "source": "kalshi",
+                "eventTitle": title,
+                "eventTicker": market.get("event_ticker"),
+                "teams": [team_a, team_b],
+                "outcomes": {},
+            }
+
+        grouped[key]["outcomes"][outcome] = {
+            **parse_yes_price(market),
+            "ticker": market.get("ticker"),
+        }
+
+    for match_market in grouped.values():
+        pick, pick_price = pick_from_outcomes(match_market["outcomes"])
+        match_market["pick"] = pick
+        match_market["pickPct"] = pct(pick_price)
+
+    return grouped
+
+
+def load_match_baseline() -> dict[str, Any]:
+    if not MATCH_BASELINE_JSON.exists():
+        return {"createdAt": None, "updatedAt": None, "markets": {}}
+    try:
+        return json.loads(MATCH_BASELINE_JSON.read_text())
+    except json.JSONDecodeError:
+        return {"createdAt": None, "updatedAt": None, "markets": {}}
+
+
+def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], str | None]:
+    baseline = load_match_baseline()
+    baseline.setdefault("markets", {})
+    eligible_keys = {
+        market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+        for event in events
+        if not event.get("status", {}).get("completed") and event.get("status", {}).get("state") != "in"
+    }
+    eligible_keys.discard(None)
+
+    changed = False
+    now = datetime.now(timezone.utc).isoformat()
+    if baseline.get("createdAt") is None:
+        baseline["createdAt"] = now
+        changed = True
+
+    for key in sorted(eligible_keys):
+        match_entry = baseline["markets"].setdefault(key, {})
+        for source_name, source_markets in live_sources.items():
+            if source_name in match_entry or key not in source_markets:
+                continue
+            match_entry[source_name] = {**source_markets[key], "capturedAt": now}
+            changed = True
+
+    if changed:
+        baseline["updatedAt"] = now
+        MATCH_BASELINE_JSON.write_text(json.dumps(baseline, indent=2, sort_keys=True))
+
+    return baseline["markets"], str(MATCH_BASELINE_JSON) if MATCH_BASELINE_JSON.exists() else None
+
+
+def fetch_live_match_sources() -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+    sources: dict[str, dict[str, Any]] = {}
+    errors: dict[str, str] = {}
+    fetchers = {
+        "polymarket": fetch_polymarket_match_markets,
+        "kalshi": fetch_kalshi_match_markets,
+    }
+
+    for source_name, fetcher in fetchers.items():
+        try:
+            sources[source_name] = fetcher()
+        except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+            sources[source_name] = {}
+            errors[source_name] = str(exc)
+
+    return sources, errors
+
+
 def consensus_for(team: str, polymarket: dict[str, Any], kalshi: dict[str, Any]) -> float | None:
     values = []
     if polymarket.get(team, {}).get("mid") is not None:
@@ -217,6 +466,54 @@ def consensus_for(team: str, polymarket: dict[str, Any], kalshi: dict[str, Any])
 
 def pick_between(team_a: str, team_b: str, odds: dict[str, Any]) -> str:
     return team_a if (odds.get(team_a, {}).get("mid") or 0) >= (odds.get(team_b, {}).get("mid") or 0) else team_b
+
+
+def pick_for_event(
+    source_name: str,
+    match_key: str | None,
+    team_a: str | None,
+    team_b: str | None,
+    match_markets: dict[str, Any],
+    outright_odds: dict[str, Any],
+) -> dict[str, Any]:
+    match_market = (match_markets.get(match_key or "") or {}).get(source_name)
+    if match_market and match_market.get("pick"):
+        return {
+            "pick": match_market.get("pick"),
+            "pickPct": match_market.get("pickPct"),
+            "source": "match",
+        }
+
+    if team_a and team_b:
+        team_a_mid = outright_odds.get(team_a, {}).get("mid")
+        team_b_mid = outright_odds.get(team_b, {}).get("mid")
+        if team_a_mid is not None and team_b_mid is not None and team_a_mid == team_b_mid:
+            return {
+                "pick": "Draw",
+                "pickPct": None,
+                "source": "outright",
+            }
+
+        pick = pick_between(team_a, team_b, outright_odds)
+        return {
+            "pick": pick,
+            "pickPct": outright_odds.get(pick, {}).get("midPct"),
+            "source": "outright",
+        }
+
+    return {"pick": None, "pickPct": None, "source": "unknown"}
+
+
+def current_match_pick(source_name: str, match_key: str | None, live_match_sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    match_market = live_match_sources.get(source_name, {}).get(match_key or "")
+    if not match_market or not match_market.get("pick"):
+        return {"pick": None, "pickPct": None, "source": None}
+
+    return {
+        "pick": match_market.get("pick"),
+        "pickPct": match_market.get("pickPct"),
+        "source": "match",
+    }
 
 
 def build_projection(odds: dict[str, Any]) -> dict[str, Any]:
@@ -351,7 +648,15 @@ def fetch_standings() -> list[dict[str, Any]]:
     return groups
 
 
-def compare_events(events: list[dict[str, Any]], polymarket: dict[str, Any], kalshi: dict[str, Any]) -> dict[str, Any]:
+def compare_events(
+    events: list[dict[str, Any]],
+    polymarket: dict[str, Any],
+    kalshi: dict[str, Any],
+    match_markets: dict[str, Any] | None = None,
+    live_match_sources: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    match_markets = match_markets or {}
+    live_match_sources = live_match_sources or {}
     compared = []
     summary = {
         "completed": 0,
@@ -367,8 +672,6 @@ def compare_events(events: list[dict[str, Any]], polymarket: dict[str, Any], kal
     def result_for(actual_winner: str | None, pick: str | None) -> str:
         if actual_winner is None:
             return "pending"
-        if actual_winner == "Draw":
-            return "draw"
         if not pick:
             return "unknown"
         return "hit" if actual_winner == pick else "miss"
@@ -376,8 +679,17 @@ def compare_events(events: list[dict[str, Any]], polymarket: dict[str, Any], kal
     for event in events:
         home_team = event.get("home", {}).get("team")
         away_team = event.get("away", {}).get("team")
-        pm_pick = pick_between(home_team, away_team, polymarket) if home_team and away_team else None
-        ks_pick = pick_between(home_team, away_team, kalshi) if home_team and away_team else None
+        match_key_value = market_key(home_team, away_team)
+        pm_prediction = pick_for_event("polymarket", match_key_value, home_team, away_team, match_markets, polymarket)
+        ks_prediction = pick_for_event("kalshi", match_key_value, home_team, away_team, match_markets, kalshi)
+        if event.get("status", {}).get("completed"):
+            pm_current = {"pick": None, "pickPct": None, "source": None}
+            ks_current = {"pick": None, "pickPct": None, "source": None}
+        else:
+            pm_current = current_match_pick("polymarket", match_key_value, live_match_sources)
+            ks_current = current_match_pick("kalshi", match_key_value, live_match_sources)
+        pm_pick = pm_prediction["pick"]
+        ks_pick = ks_prediction["pick"]
         pm_result = result_for(event.get("winner"), pm_pick)
         ks_result = result_for(event.get("winner"), ks_pick)
 
@@ -385,12 +697,13 @@ def compare_events(events: list[dict[str, Any]], polymarket: dict[str, Any], kal
             summary["completed"] += 1
             if event.get("winner") == "Draw":
                 summary["draws"] += 1
-            elif event.get("winner"):
-                summary["decisive"] += 1
+            if event.get("winner"):
                 summary["polymarketHits"] += int(pm_result == "hit")
                 summary["kalshiHits"] += int(ks_result == "hit")
                 summary["polymarketMisses"] += int(pm_result == "miss")
                 summary["kalshiMisses"] += int(ks_result == "miss")
+            if event.get("winner") and event.get("winner") != "Draw":
+                summary["decisive"] += 1
         elif event.get("status", {}).get("state") == "in":
             summary["live"] += 1
 
@@ -399,9 +712,19 @@ def compare_events(events: list[dict[str, Any]], polymarket: dict[str, Any], kal
                 **event,
                 "prediction": {
                     "polymarketPick": pm_pick,
+                    "polymarketPickPct": pm_prediction["pickPct"],
+                    "polymarketSource": pm_prediction["source"],
                     "polymarketResult": pm_result,
+                    "polymarketCurrentPick": pm_current["pick"],
+                    "polymarketCurrentPickPct": pm_current["pickPct"],
+                    "polymarketCurrentSource": pm_current["source"],
                     "kalshiPick": ks_pick,
+                    "kalshiPickPct": ks_prediction["pickPct"],
+                    "kalshiSource": ks_prediction["source"],
                     "kalshiResult": ks_result,
+                    "kalshiCurrentPick": ks_current["pick"],
+                    "kalshiCurrentPickPct": ks_current["pickPct"],
+                    "kalshiCurrentSource": ks_current["source"],
                 },
             }
         )
@@ -435,14 +758,19 @@ def build_team_rows(groups: list[dict[str, Any]], polymarket: dict[str, Any], ka
 
 
 def build_snapshot() -> dict[str, Any]:
-    live_polymarket = fetch_polymarket()
-    live_kalshi = fetch_kalshi()
     baseline_polymarket, baseline_kalshi, baseline_path = load_baseline_odds()
-    polymarket = baseline_polymarket or live_polymarket
-    kalshi = baseline_kalshi or live_kalshi
+    if baseline_polymarket and baseline_kalshi:
+        polymarket = baseline_polymarket
+        kalshi = baseline_kalshi
+    else:
+        polymarket = fetch_polymarket()
+        kalshi = fetch_kalshi()
+
     scoreboard = fetch_scoreboard()
+    live_match_sources, match_market_errors = fetch_live_match_sources()
+    match_markets, match_baseline_path = merge_match_baseline(scoreboard, live_match_sources)
     standings = fetch_standings()
-    comparisons = compare_events(scoreboard, polymarket, kalshi)
+    comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets, live_match_sources)
     team_rows = build_team_rows(standings, polymarket, kalshi)
 
     pm_top = max(polymarket.values(), key=lambda item: item.get("mid") or 0)
@@ -456,8 +784,13 @@ def build_snapshot() -> dict[str, Any]:
             "espnScoreboard": ESPN_SCOREBOARD_URL,
             "espnStandings": ESPN_STANDINGS_URL,
             "predictionBaseline": baseline_path,
+            "polymarketMatchMarkets": f"{POLYMARKET_EVENTS_URL}?series_slug=soccer-fifwc",
+            "kalshiMatchMarkets": f"{KALSHI_MARKETS_URL}?series_ticker=KXWCGAME",
+            "matchMarketBaseline": match_baseline_path,
         },
         "predictionMode": "baselineCsv" if baseline_path else "liveMarkets",
+        "matchMarketErrors": match_market_errors,
+        "matchMarketsCaptured": sum(len(source) for source in live_match_sources.values()),
         "leaders": {"polymarket": pm_top, "kalshi": ks_top},
         "projections": {
             "polymarket": build_projection(polymarket),

@@ -1,0 +1,5198 @@
+{
+  "createdAt": "2026-06-13T22:24:36.577772+00:00",
+  "markets": {
+    "Algeria::Argentina": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN16ARGDZA",
+        "eventTitle": "Argentina vs Algeria Winner?",
+        "outcomes": {
+          "Algeria": {
+            "askPct": 11.0,
+            "bidPct": 10.0,
+            "lastPct": 10.0,
+            "mid": 0.10500000000000001,
+            "midPct": 10.5,
+            "ticker": "KXWCGAME-26JUN16ARGDZA-DZA"
+          },
+          "Argentina": {
+            "askPct": 71.0,
+            "bidPct": 70.0,
+            "lastPct": 71.0,
+            "mid": 0.705,
+            "midPct": 70.5,
+            "ticker": "KXWCGAME-26JUN16ARGDZA-ARG"
+          },
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN16ARGDZA-TIE"
+          }
+        },
+        "pick": "Argentina",
+        "pickPct": 70.5,
+        "source": "kalshi",
+        "teams": [
+          "Argentina",
+          "Algeria"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Argentina vs. Algeria",
+        "outcomes": {
+          "Algeria": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 10.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "question": "Will Algeria win on 2026-06-16?",
+            "slug": "fifwc-arg-alg-2026-06-16-alg"
+          },
+          "Argentina": {
+            "askPct": 71.0,
+            "bidPct": 70.0,
+            "lastPct": 71.0,
+            "mid": 0.705,
+            "midPct": 70.5,
+            "question": "Will Argentina win on 2026-06-16?",
+            "slug": "fifwc-arg-alg-2026-06-16-arg"
+          },
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Argentina vs. Algeria end in a draw?",
+            "slug": "fifwc-arg-alg-2026-06-16-draw"
+          }
+        },
+        "pick": "Argentina",
+        "pickPct": 70.5,
+        "source": "polymarket",
+        "teams": [
+          "Argentina",
+          "Algeria"
+        ]
+      }
+    },
+    "Algeria::Austria": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN27DZAAUT",
+        "eventTitle": "Algeria vs Austria Winner?",
+        "outcomes": {
+          "Algeria": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "ticker": "KXWCGAME-26JUN27DZAAUT-DZA"
+          },
+          "Austria": {
+            "askPct": 45.0,
+            "bidPct": 44.0,
+            "lastPct": 45.0,
+            "mid": 0.445,
+            "midPct": 44.5,
+            "ticker": "KXWCGAME-26JUN27DZAAUT-AUT"
+          },
+          "Draw": {
+            "askPct": 30.0,
+            "bidPct": 29.0,
+            "lastPct": 30.0,
+            "mid": 0.295,
+            "midPct": 29.5,
+            "ticker": "KXWCGAME-26JUN27DZAAUT-TIE"
+          }
+        },
+        "pick": "Austria",
+        "pickPct": 44.5,
+        "source": "kalshi",
+        "teams": [
+          "Algeria",
+          "Austria"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Algeria vs. Austria",
+        "outcomes": {
+          "Algeria": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will Algeria win on 2026-06-27?",
+            "slug": "fifwc-alg-aut-2026-06-27-alg"
+          },
+          "Austria": {
+            "askPct": 45.0,
+            "bidPct": 44.0,
+            "lastPct": 45.0,
+            "mid": 0.445,
+            "midPct": 44.5,
+            "question": "Will Austria win on 2026-06-27?",
+            "slug": "fifwc-alg-aut-2026-06-27-aut"
+          },
+          "Draw": {
+            "askPct": 31.0,
+            "bidPct": 30.0,
+            "lastPct": 32.0,
+            "mid": 0.305,
+            "midPct": 30.5,
+            "question": "Will Algeria vs. Austria end in a draw?",
+            "slug": "fifwc-alg-aut-2026-06-27-draw"
+          }
+        },
+        "pick": "Austria",
+        "pickPct": 44.5,
+        "source": "polymarket",
+        "teams": [
+          "Algeria",
+          "Austria"
+        ]
+      }
+    },
+    "Algeria::Jordan": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN22JORDZA",
+        "eventTitle": "Jordan vs Algeria Winner?",
+        "outcomes": {
+          "Algeria": {
+            "askPct": 65.0,
+            "bidPct": 64.0,
+            "lastPct": 65.0,
+            "mid": 0.645,
+            "midPct": 64.5,
+            "ticker": "KXWCGAME-26JUN22JORDZA-DZA"
+          },
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN22JORDZA-TIE"
+          },
+          "Jordan": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 13.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "ticker": "KXWCGAME-26JUN22JORDZA-JOR"
+          }
+        },
+        "pick": "Algeria",
+        "pickPct": 64.5,
+        "source": "kalshi",
+        "teams": [
+          "Jordan",
+          "Algeria"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Jordan vs. Algeria",
+        "outcomes": {
+          "Algeria": {
+            "askPct": 66.0,
+            "bidPct": 65.0,
+            "lastPct": 66.0,
+            "mid": 0.655,
+            "midPct": 65.5,
+            "question": "Will Algeria win on 2026-06-22?",
+            "slug": "fifwc-jor-alg-2026-06-22-alg"
+          },
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 20.0,
+            "lastPct": 22.0,
+            "mid": 0.21000000000000002,
+            "midPct": 21.0,
+            "question": "Will Jordan vs. Algeria end in a draw?",
+            "slug": "fifwc-jor-alg-2026-06-22-draw"
+          },
+          "Jordan": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "question": "Will Jordan win on 2026-06-22?",
+            "slug": "fifwc-jor-alg-2026-06-22-jor"
+          }
+        },
+        "pick": "Algeria",
+        "pickPct": 65.5,
+        "source": "polymarket",
+        "teams": [
+          "Jordan",
+          "Algeria"
+        ]
+      }
+    },
+    "Argentina::Austria": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN22ARGAUT",
+        "eventTitle": "Argentina vs Austria Winner?",
+        "outcomes": {
+          "Argentina": {
+            "askPct": 62.0,
+            "bidPct": 61.0,
+            "lastPct": 62.0,
+            "mid": 0.615,
+            "midPct": 61.5,
+            "ticker": "KXWCGAME-26JUN22ARGAUT-ARG"
+          },
+          "Austria": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN22ARGAUT-AUT"
+          },
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN22ARGAUT-TIE"
+          }
+        },
+        "pick": "Argentina",
+        "pickPct": 61.5,
+        "source": "kalshi",
+        "teams": [
+          "Argentina",
+          "Austria"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Argentina vs. Austria",
+        "outcomes": {
+          "Argentina": {
+            "askPct": 63.0,
+            "bidPct": 62.0,
+            "lastPct": 63.0,
+            "mid": 0.625,
+            "midPct": 62.5,
+            "question": "Will Argentina win on 2026-06-22?",
+            "slug": "fifwc-arg-aut-2026-06-22-arg"
+          },
+          "Austria": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "question": "Will Austria win on 2026-06-22?",
+            "slug": "fifwc-arg-aut-2026-06-22-aut"
+          },
+          "Draw": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 23.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "question": "Will Argentina vs. Austria end in a draw?",
+            "slug": "fifwc-arg-aut-2026-06-22-draw"
+          }
+        },
+        "pick": "Argentina",
+        "pickPct": 62.5,
+        "source": "polymarket",
+        "teams": [
+          "Argentina",
+          "Austria"
+        ]
+      }
+    },
+    "Argentina::Jordan": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN27JORARG",
+        "eventTitle": "Jordan vs Argentina Winner?",
+        "outcomes": {
+          "Argentina": {
+            "askPct": 84.0,
+            "bidPct": 83.0,
+            "lastPct": 84.0,
+            "mid": 0.835,
+            "midPct": 83.5,
+            "ticker": "KXWCGAME-26JUN27JORARG-ARG"
+          },
+          "Draw": {
+            "askPct": 11.0,
+            "bidPct": 10.0,
+            "lastPct": 10.0,
+            "mid": 0.10500000000000001,
+            "midPct": 10.5,
+            "ticker": "KXWCGAME-26JUN27JORARG-TIE"
+          },
+          "Jordan": {
+            "askPct": 9.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.08,
+            "midPct": 8.0,
+            "ticker": "KXWCGAME-26JUN27JORARG-JOR"
+          }
+        },
+        "pick": "Argentina",
+        "pickPct": 83.5,
+        "source": "kalshi",
+        "teams": [
+          "Jordan",
+          "Argentina"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Jordan vs. Argentina",
+        "outcomes": {
+          "Argentina": {
+            "askPct": 83.0,
+            "bidPct": 82.0,
+            "lastPct": 83.0,
+            "mid": 0.825,
+            "midPct": 82.5,
+            "question": "Will Argentina win on 2026-06-27?",
+            "slug": "fifwc-jor-arg-2026-06-27-arg"
+          },
+          "Draw": {
+            "askPct": 13.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.12,
+            "midPct": 12.0,
+            "question": "Will Jordan vs. Argentina end in a draw?",
+            "slug": "fifwc-jor-arg-2026-06-27-draw"
+          },
+          "Jordan": {
+            "askPct": 7.3,
+            "bidPct": 6.6,
+            "lastPct": 7.0,
+            "mid": 0.0695,
+            "midPct": 6.95,
+            "question": "Will Jordan win on 2026-06-27?",
+            "slug": "fifwc-jor-arg-2026-06-27-jor"
+          }
+        },
+        "pick": "Argentina",
+        "pickPct": 82.5,
+        "source": "polymarket",
+        "teams": [
+          "Jordan",
+          "Argentina"
+        ]
+      }
+    },
+    "Australia::Paraguay": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN25PARAUS",
+        "eventTitle": "Paraguay vs Australia Winner?",
+        "outcomes": {
+          "Australia": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "ticker": "KXWCGAME-26JUN25PARAUS-AUS"
+          },
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "ticker": "KXWCGAME-26JUN25PARAUS-TIE"
+          },
+          "Paraguay": {
+            "askPct": 46.0,
+            "bidPct": 45.0,
+            "lastPct": 46.0,
+            "mid": 0.455,
+            "midPct": 45.5,
+            "ticker": "KXWCGAME-26JUN25PARAUS-PAR"
+          }
+        },
+        "pick": "Paraguay",
+        "pickPct": 45.5,
+        "source": "kalshi",
+        "teams": [
+          "Paraguay",
+          "Australia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Paraguay vs. Australia",
+        "outcomes": {
+          "Australia": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will Australia win on 2026-06-25?",
+            "slug": "fifwc-par-aus-2026-06-25-aus"
+          },
+          "Draw": {
+            "askPct": 30.0,
+            "bidPct": 29.0,
+            "lastPct": 30.0,
+            "mid": 0.295,
+            "midPct": 29.5,
+            "question": "Will Paraguay vs. Australia end in a draw?",
+            "slug": "fifwc-par-aus-2026-06-25-draw"
+          },
+          "Paraguay": {
+            "askPct": 46.0,
+            "bidPct": 45.0,
+            "lastPct": 46.0,
+            "mid": 0.455,
+            "midPct": 45.5,
+            "question": "Will Paraguay win on 2026-06-25?",
+            "slug": "fifwc-par-aus-2026-06-25-par"
+          }
+        },
+        "pick": "Paraguay",
+        "pickPct": 45.5,
+        "source": "polymarket",
+        "teams": [
+          "Paraguay",
+          "Australia"
+        ]
+      }
+    },
+    "Australia::Turkey": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN14AUSTUR",
+        "eventTitle": "Australia vs Turkiye Winner?",
+        "outcomes": {
+          "Australia": {
+            "askPct": 19.0,
+            "bidPct": 18.0,
+            "lastPct": 19.0,
+            "mid": 0.185,
+            "midPct": 18.5,
+            "ticker": "KXWCGAME-26JUN14AUSTUR-AUS"
+          },
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "ticker": "KXWCGAME-26JUN14AUSTUR-TIE"
+          },
+          "Turkey": {
+            "askPct": 58.0,
+            "bidPct": 57.0,
+            "lastPct": 58.0,
+            "mid": 0.575,
+            "midPct": 57.5,
+            "ticker": "KXWCGAME-26JUN14AUSTUR-TUR"
+          }
+        },
+        "pick": "Turkey",
+        "pickPct": 57.5,
+        "source": "kalshi",
+        "teams": [
+          "Australia",
+          "Turkey"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Australia vs. T\u00fcrkiye",
+        "outcomes": {
+          "Australia": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "question": "Will Australia win on 2026-06-14?",
+            "slug": "fifwc-aus-tur-2026-06-14-aus"
+          },
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will Australia vs. T\u00fcrkiye end in a draw?",
+            "slug": "fifwc-aus-tur-2026-06-14-draw"
+          },
+          "Turkey": {
+            "askPct": 58.0,
+            "bidPct": 57.0,
+            "lastPct": 58.0,
+            "mid": 0.575,
+            "midPct": 57.5,
+            "question": "Will T\u00fcrkiye win on 2026-06-14?",
+            "slug": "fifwc-aus-tur-2026-06-14-tur"
+          }
+        },
+        "pick": "Turkey",
+        "pickPct": 57.5,
+        "source": "polymarket",
+        "teams": [
+          "Australia",
+          "Turkey"
+        ]
+      }
+    },
+    "Australia::USA": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN19USAAUS",
+        "eventTitle": "USA vs Australia Winner?",
+        "outcomes": {
+          "Australia": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 15.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "ticker": "KXWCGAME-26JUN19USAAUS-AUS"
+          },
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN19USAAUS-TIE"
+          },
+          "USA": {
+            "askPct": 67.0,
+            "bidPct": 66.0,
+            "lastPct": 66.0,
+            "mid": 0.665,
+            "midPct": 66.5,
+            "ticker": "KXWCGAME-26JUN19USAAUS-USA"
+          }
+        },
+        "pick": "USA",
+        "pickPct": 66.5,
+        "source": "kalshi",
+        "teams": [
+          "USA",
+          "Australia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "United States vs. Australia",
+        "outcomes": {
+          "Australia": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 16.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "question": "Will Australia win on 2026-06-19?",
+            "slug": "fifwc-usa-aus-2026-06-19-aus"
+          },
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 21.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "question": "Will United States vs. Australia end in a draw?",
+            "slug": "fifwc-usa-aus-2026-06-19-draw"
+          },
+          "USA": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 63.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "question": "Will United States win on 2026-06-19?",
+            "slug": "fifwc-usa-aus-2026-06-19-usa"
+          }
+        },
+        "pick": "USA",
+        "pickPct": 63.5,
+        "source": "polymarket",
+        "teams": [
+          "USA",
+          "Australia"
+        ]
+      }
+    },
+    "Austria::Jordan": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN17AUTJOR",
+        "eventTitle": "Austria vs Jordan Winner?",
+        "outcomes": {
+          "Austria": {
+            "askPct": 73.0,
+            "bidPct": 72.0,
+            "lastPct": 73.0,
+            "mid": 0.725,
+            "midPct": 72.5,
+            "ticker": "KXWCGAME-26JUN17AUTJOR-AUT"
+          },
+          "Draw": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "ticker": "KXWCGAME-26JUN17AUTJOR-TIE"
+          },
+          "Jordan": {
+            "askPct": 11.0,
+            "bidPct": 10.0,
+            "lastPct": 11.0,
+            "mid": 0.10500000000000001,
+            "midPct": 10.5,
+            "ticker": "KXWCGAME-26JUN17AUTJOR-JOR"
+          }
+        },
+        "pick": "Austria",
+        "pickPct": 72.5,
+        "source": "kalshi",
+        "teams": [
+          "Austria",
+          "Jordan"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Austria vs. Jordan",
+        "outcomes": {
+          "Austria": {
+            "askPct": 73.0,
+            "bidPct": 72.0,
+            "lastPct": 73.0,
+            "mid": 0.725,
+            "midPct": 72.5,
+            "question": "Will Austria win on 2026-06-17?",
+            "slug": "fifwc-aut-jor-2026-06-17-aut"
+          },
+          "Draw": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "question": "Will Austria vs. Jordan end in a draw?",
+            "slug": "fifwc-aut-jor-2026-06-17-draw"
+          },
+          "Jordan": {
+            "askPct": 11.0,
+            "bidPct": 10.0,
+            "lastPct": 11.0,
+            "mid": 0.10500000000000001,
+            "midPct": 10.5,
+            "question": "Will Jordan win on 2026-06-17?",
+            "slug": "fifwc-aut-jor-2026-06-17-jor"
+          }
+        },
+        "pick": "Austria",
+        "pickPct": 72.5,
+        "source": "polymarket",
+        "teams": [
+          "Austria",
+          "Jordan"
+        ]
+      }
+    },
+    "Belgium::Egypt": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN15BELEGY",
+        "eventTitle": "Belgium vs Egypt Winner?",
+        "outcomes": {
+          "Belgium": {
+            "askPct": 61.0,
+            "bidPct": 60.0,
+            "lastPct": 61.0,
+            "mid": 0.605,
+            "midPct": 60.5,
+            "ticker": "KXWCGAME-26JUN15BELEGY-BEL"
+          },
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN15BELEGY-TIE"
+          },
+          "Egypt": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 16.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN15BELEGY-EGY"
+          }
+        },
+        "pick": "Belgium",
+        "pickPct": 60.5,
+        "source": "kalshi",
+        "teams": [
+          "Belgium",
+          "Egypt"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Belgium vs. Egypt",
+        "outcomes": {
+          "Belgium": {
+            "askPct": 61.0,
+            "bidPct": 60.0,
+            "lastPct": 61.0,
+            "mid": 0.605,
+            "midPct": 60.5,
+            "question": "Will Belgium win on 2026-06-15?",
+            "slug": "fifwc-bel-egy-2026-06-15-bel"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "question": "Will Belgium vs. Egypt end in a draw?",
+            "slug": "fifwc-bel-egy-2026-06-15-draw"
+          },
+          "Egypt": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "question": "Will Egypt win on 2026-06-15?",
+            "slug": "fifwc-bel-egy-2026-06-15-egy"
+          }
+        },
+        "pick": "Belgium",
+        "pickPct": 60.5,
+        "source": "polymarket",
+        "teams": [
+          "Belgium",
+          "Egypt"
+        ]
+      }
+    },
+    "Belgium::Iran": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN21BELIRI",
+        "eventTitle": "Belgium vs IR Iran Winner?",
+        "outcomes": {
+          "Belgium": {
+            "askPct": 70.0,
+            "bidPct": 69.0,
+            "lastPct": 69.0,
+            "mid": 0.695,
+            "midPct": 69.5,
+            "ticker": "KXWCGAME-26JUN21BELIRI-BEL"
+          },
+          "Draw": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "ticker": "KXWCGAME-26JUN21BELIRI-TIE"
+          },
+          "Iran": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "ticker": "KXWCGAME-26JUN21BELIRI-IRI"
+          }
+        },
+        "pick": "Belgium",
+        "pickPct": 69.5,
+        "source": "kalshi",
+        "teams": [
+          "Belgium",
+          "Iran"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Belgium vs. IR Iran",
+        "outcomes": {
+          "Belgium": {
+            "askPct": 70.0,
+            "bidPct": 69.0,
+            "lastPct": 70.0,
+            "mid": 0.695,
+            "midPct": 69.5,
+            "question": "Will Belgium win on 2026-06-21?",
+            "slug": "fifwc-bel-irn-2026-06-21-bel"
+          },
+          "Draw": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "question": "Will Belgium vs. IR Iran end in a draw?",
+            "slug": "fifwc-bel-irn-2026-06-21-draw"
+          },
+          "Iran": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "question": "Will IR Iran win on 2026-06-21?",
+            "slug": "fifwc-bel-irn-2026-06-21-irn"
+          }
+        },
+        "pick": "Belgium",
+        "pickPct": 69.5,
+        "source": "polymarket",
+        "teams": [
+          "Belgium",
+          "Iran"
+        ]
+      }
+    },
+    "Belgium::New Zealand": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN26NZLBEL",
+        "eventTitle": "New Zealand vs Belgium Winner?",
+        "outcomes": {
+          "Belgium": {
+            "askPct": 77.0,
+            "bidPct": 76.0,
+            "lastPct": 77.0,
+            "mid": 0.765,
+            "midPct": 76.5,
+            "ticker": "KXWCGAME-26JUN26NZLBEL-BEL"
+          },
+          "Draw": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "ticker": "KXWCGAME-26JUN26NZLBEL-TIE"
+          },
+          "New Zealand": {
+            "askPct": 9.0,
+            "bidPct": 8.0,
+            "lastPct": 9.0,
+            "mid": 0.08499999999999999,
+            "midPct": 8.5,
+            "ticker": "KXWCGAME-26JUN26NZLBEL-NZL"
+          }
+        },
+        "pick": "Belgium",
+        "pickPct": 76.5,
+        "source": "kalshi",
+        "teams": [
+          "New Zealand",
+          "Belgium"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "New Zealand vs. Belgium",
+        "outcomes": {
+          "Belgium": {
+            "askPct": 76.0,
+            "bidPct": 75.0,
+            "lastPct": 76.0,
+            "mid": 0.755,
+            "midPct": 75.5,
+            "question": "Will Belgium win on 2026-06-26?",
+            "slug": "fifwc-nzl-bel-2026-06-26-bel"
+          },
+          "Draw": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 15.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "question": "Will New Zealand vs. Belgium end in a draw?",
+            "slug": "fifwc-nzl-bel-2026-06-26-draw"
+          },
+          "New Zealand": {
+            "askPct": 9.0,
+            "bidPct": 8.0,
+            "lastPct": 9.0,
+            "mid": 0.08499999999999999,
+            "midPct": 8.5,
+            "question": "Will New Zealand win on 2026-06-26?",
+            "slug": "fifwc-nzl-bel-2026-06-26-nzl"
+          }
+        },
+        "pick": "Belgium",
+        "pickPct": 75.5,
+        "source": "polymarket",
+        "teams": [
+          "New Zealand",
+          "Belgium"
+        ]
+      }
+    },
+    "Bosnia-Herzegovina::Qatar": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN24BIHQAT",
+        "eventTitle": "Bosnia and Herzegovina vs Qatar Winner?",
+        "outcomes": {
+          "Bosnia-Herzegovina": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 64.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "ticker": "KXWCGAME-26JUN24BIHQAT-BIH"
+          },
+          "Draw": {
+            "askPct": 23.0,
+            "bidPct": 21.0,
+            "lastPct": 23.0,
+            "mid": 0.22,
+            "midPct": 22.0,
+            "ticker": "KXWCGAME-26JUN24BIHQAT-TIE"
+          },
+          "Qatar": {
+            "askPct": 15.0,
+            "bidPct": 13.0,
+            "lastPct": 15.0,
+            "mid": 0.14,
+            "midPct": 14.0,
+            "ticker": "KXWCGAME-26JUN24BIHQAT-QAT"
+          }
+        },
+        "pick": "Bosnia-Herzegovina",
+        "pickPct": 63.5,
+        "source": "kalshi",
+        "teams": [
+          "Bosnia-Herzegovina",
+          "Qatar"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Bosnia-Herzegovina vs. Qatar",
+        "outcomes": {
+          "Bosnia-Herzegovina": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 65.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "question": "Will Bosnia and Herzegovina win on 2026-06-24?",
+            "slug": "fifwc-bih-qat-2026-06-24-bih"
+          },
+          "Draw": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 21.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "question": "Will Bosnia and Herzegovina vs. Qatar end in a draw?",
+            "slug": "fifwc-bih-qat-2026-06-24-draw"
+          },
+          "Qatar": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 15.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "question": "Will Qatar win on 2026-06-24?",
+            "slug": "fifwc-bih-qat-2026-06-24-qat"
+          }
+        },
+        "pick": "Bosnia-Herzegovina",
+        "pickPct": 63.5,
+        "source": "polymarket",
+        "teams": [
+          "Bosnia-Herzegovina",
+          "Qatar"
+        ]
+      }
+    },
+    "Bosnia-Herzegovina::Switzerland": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN18SUIBIH",
+        "eventTitle": "Switzerland vs Bosnia and Herzegovina Winner?",
+        "outcomes": {
+          "Bosnia-Herzegovina": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "ticker": "KXWCGAME-26JUN18SUIBIH-BIH"
+          },
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN18SUIBIH-TIE"
+          },
+          "Switzerland": {
+            "askPct": 63.0,
+            "bidPct": 62.0,
+            "lastPct": 62.0,
+            "mid": 0.625,
+            "midPct": 62.5,
+            "ticker": "KXWCGAME-26JUN18SUIBIH-SUI"
+          }
+        },
+        "pick": "Switzerland",
+        "pickPct": 62.5,
+        "source": "kalshi",
+        "teams": [
+          "Switzerland",
+          "Bosnia-Herzegovina"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Switzerland vs. Bosnia-Herzegovina",
+        "outcomes": {
+          "Bosnia-Herzegovina": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 15.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "question": "Will Bosnia and Herzegovina win on 2026-06-18?",
+            "slug": "fifwc-che-bih-2026-06-18-bih"
+          },
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "question": "Will Switzerland vs. Bosnia and Herzegovina end in a draw?",
+            "slug": "fifwc-che-bih-2026-06-18-draw"
+          },
+          "Switzerland": {
+            "askPct": 62.0,
+            "bidPct": 61.0,
+            "lastPct": 62.0,
+            "mid": 0.615,
+            "midPct": 61.5,
+            "question": "Will Switzerland win on 2026-06-18?",
+            "slug": "fifwc-che-bih-2026-06-18-che"
+          }
+        },
+        "pick": "Switzerland",
+        "pickPct": 61.5,
+        "source": "polymarket",
+        "teams": [
+          "Switzerland",
+          "Bosnia-Herzegovina"
+        ]
+      }
+    },
+    "Brazil::Haiti": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN19BRAHTI",
+        "eventTitle": "Brazil vs Haiti Winner?",
+        "outcomes": {
+          "Brazil": {
+            "askPct": 91.0,
+            "bidPct": 89.0,
+            "lastPct": 91.0,
+            "mid": 0.9,
+            "midPct": 90.0,
+            "ticker": "KXWCGAME-26JUN19BRAHTI-BRA"
+          },
+          "Draw": {
+            "askPct": 7.0,
+            "bidPct": 5.0,
+            "lastPct": 6.0,
+            "mid": 0.060000000000000005,
+            "midPct": 6.0,
+            "ticker": "KXWCGAME-26JUN19BRAHTI-TIE"
+          },
+          "Haiti": {
+            "askPct": 5.0,
+            "bidPct": 3.0,
+            "lastPct": 5.0,
+            "mid": 0.04,
+            "midPct": 4.0,
+            "ticker": "KXWCGAME-26JUN19BRAHTI-HTI"
+          }
+        },
+        "pick": "Brazil",
+        "pickPct": 90.0,
+        "source": "kalshi",
+        "teams": [
+          "Brazil",
+          "Haiti"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Brazil vs. Haiti",
+        "outcomes": {
+          "Brazil": {
+            "askPct": 92.0,
+            "bidPct": 91.0,
+            "lastPct": 92.0,
+            "mid": 0.915,
+            "midPct": 91.5,
+            "question": "Will Brazil win on 2026-06-19?",
+            "slug": "fifwc-bra-hai-2026-06-19-bra"
+          },
+          "Draw": {
+            "askPct": 5.7,
+            "bidPct": 5.2,
+            "lastPct": 5.6,
+            "mid": 0.0545,
+            "midPct": 5.45,
+            "question": "Will Brazil vs. Haiti end in a draw?",
+            "slug": "fifwc-bra-hai-2026-06-19-draw"
+          },
+          "Haiti": {
+            "askPct": 3.2,
+            "bidPct": 3.1,
+            "lastPct": 3.2,
+            "mid": 0.0315,
+            "midPct": 3.15,
+            "question": "Will Haiti win on 2026-06-19?",
+            "slug": "fifwc-bra-hai-2026-06-19-hai"
+          }
+        },
+        "pick": "Brazil",
+        "pickPct": 91.5,
+        "source": "polymarket",
+        "teams": [
+          "Brazil",
+          "Haiti"
+        ]
+      }
+    },
+    "Brazil::Scotland": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN24SCOBRA",
+        "eventTitle": "Scotland vs Brazil Winner?",
+        "outcomes": {
+          "Brazil": {
+            "askPct": 70.0,
+            "bidPct": 69.0,
+            "lastPct": 69.0,
+            "mid": 0.695,
+            "midPct": 69.5,
+            "ticker": "KXWCGAME-26JUN24SCOBRA-BRA"
+          },
+          "Draw": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 19.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "ticker": "KXWCGAME-26JUN24SCOBRA-TIE"
+          },
+          "Scotland": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "ticker": "KXWCGAME-26JUN24SCOBRA-SCO"
+          }
+        },
+        "pick": "Brazil",
+        "pickPct": 69.5,
+        "source": "kalshi",
+        "teams": [
+          "Scotland",
+          "Brazil"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Scotland vs. Brazil",
+        "outcomes": {
+          "Brazil": {
+            "askPct": 70.0,
+            "bidPct": 69.0,
+            "lastPct": 70.0,
+            "mid": 0.695,
+            "midPct": 69.5,
+            "question": "Will Brazil win on 2026-06-24?",
+            "slug": "fifwc-sco-bra-2026-06-24-bra"
+          },
+          "Draw": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "question": "Will Scotland vs. Brazil end in a draw?",
+            "slug": "fifwc-sco-bra-2026-06-24-draw"
+          },
+          "Scotland": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 15.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "question": "Will Scotland win on 2026-06-24?",
+            "slug": "fifwc-sco-bra-2026-06-24-sco"
+          }
+        },
+        "pick": "Brazil",
+        "pickPct": 69.5,
+        "source": "polymarket",
+        "teams": [
+          "Scotland",
+          "Brazil"
+        ]
+      }
+    },
+    "Canada::Qatar": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN18CANQAT",
+        "eventTitle": "Canada vs Qatar Winner?",
+        "outcomes": {
+          "Canada": {
+            "askPct": 77.0,
+            "bidPct": 76.0,
+            "lastPct": 77.0,
+            "mid": 0.765,
+            "midPct": 76.5,
+            "ticker": "KXWCGAME-26JUN18CANQAT-CAN"
+          },
+          "Draw": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN18CANQAT-TIE"
+          },
+          "Qatar": {
+            "askPct": 9.0,
+            "bidPct": 8.0,
+            "lastPct": 8.0,
+            "mid": 0.08499999999999999,
+            "midPct": 8.5,
+            "ticker": "KXWCGAME-26JUN18CANQAT-QAT"
+          }
+        },
+        "pick": "Canada",
+        "pickPct": 76.5,
+        "source": "kalshi",
+        "teams": [
+          "Canada",
+          "Qatar"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Canada vs. Qatar",
+        "outcomes": {
+          "Canada": {
+            "askPct": 77.0,
+            "bidPct": 76.0,
+            "lastPct": 76.0,
+            "mid": 0.765,
+            "midPct": 76.5,
+            "question": "Will Canada win on 2026-06-18?",
+            "slug": "fifwc-can-qat-2026-06-18-can"
+          },
+          "Draw": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "question": "Will Canada vs. Qatar end in a draw?",
+            "slug": "fifwc-can-qat-2026-06-18-draw"
+          },
+          "Qatar": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "question": "Will Qatar win on 2026-06-18?",
+            "slug": "fifwc-can-qat-2026-06-18-qat"
+          }
+        },
+        "pick": "Canada",
+        "pickPct": 76.5,
+        "source": "polymarket",
+        "teams": [
+          "Canada",
+          "Qatar"
+        ]
+      }
+    },
+    "Canada::Switzerland": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN24SUICAN",
+        "eventTitle": "Switzerland vs Canada Winner?",
+        "outcomes": {
+          "Canada": {
+            "askPct": 28.0,
+            "bidPct": 26.0,
+            "lastPct": 28.0,
+            "mid": 0.27,
+            "midPct": 27.0,
+            "ticker": "KXWCGAME-26JUN24SUICAN-CAN"
+          },
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN24SUICAN-TIE"
+          },
+          "Switzerland": {
+            "askPct": 45.0,
+            "bidPct": 44.0,
+            "lastPct": 44.0,
+            "mid": 0.445,
+            "midPct": 44.5,
+            "ticker": "KXWCGAME-26JUN24SUICAN-SUI"
+          }
+        },
+        "pick": "Switzerland",
+        "pickPct": 44.5,
+        "source": "kalshi",
+        "teams": [
+          "Switzerland",
+          "Canada"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Switzerland vs. Canada",
+        "outcomes": {
+          "Canada": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will Canada win on 2026-06-24?",
+            "slug": "fifwc-che-can-2026-06-24-can"
+          },
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will Switzerland vs. Canada end in a draw?",
+            "slug": "fifwc-che-can-2026-06-24-draw"
+          },
+          "Switzerland": {
+            "askPct": 45.0,
+            "bidPct": 44.0,
+            "lastPct": 45.0,
+            "mid": 0.445,
+            "midPct": 44.5,
+            "question": "Will Switzerland win on 2026-06-24?",
+            "slug": "fifwc-che-can-2026-06-24-che"
+          }
+        },
+        "pick": "Switzerland",
+        "pickPct": 44.5,
+        "source": "polymarket",
+        "teams": [
+          "Switzerland",
+          "Canada"
+        ]
+      }
+    },
+    "Cape Verde::Saudi Arabia": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN26CPVKSA",
+        "eventTitle": "Cape Verde vs Saudi Arabia Winner?",
+        "outcomes": {
+          "Cape Verde": {
+            "askPct": 38.0,
+            "bidPct": 37.0,
+            "lastPct": 38.0,
+            "mid": 0.375,
+            "midPct": 37.5,
+            "ticker": "KXWCGAME-26JUN26CPVKSA-CPV"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "ticker": "KXWCGAME-26JUN26CPVKSA-TIE"
+          },
+          "Saudi Arabia": {
+            "askPct": 37.0,
+            "bidPct": 36.0,
+            "lastPct": 37.0,
+            "mid": 0.365,
+            "midPct": 36.5,
+            "ticker": "KXWCGAME-26JUN26CPVKSA-KSA"
+          }
+        },
+        "pick": "Cape Verde",
+        "pickPct": 37.5,
+        "source": "kalshi",
+        "teams": [
+          "Cape Verde",
+          "Saudi Arabia"
+        ]
+      }
+    },
+    "Cape Verde::Spain": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN15ESPCPV",
+        "eventTitle": "Spain vs Cape Verde Winner?",
+        "outcomes": {
+          "Cape Verde": {
+            "askPct": 4.0,
+            "bidPct": 3.0,
+            "lastPct": 4.0,
+            "mid": 0.035,
+            "midPct": 3.5,
+            "ticker": "KXWCGAME-26JUN15ESPCPV-CPV"
+          },
+          "Draw": {
+            "askPct": 7.0,
+            "bidPct": 6.0,
+            "lastPct": 7.0,
+            "mid": 0.065,
+            "midPct": 6.5,
+            "ticker": "KXWCGAME-26JUN15ESPCPV-TIE"
+          },
+          "Spain": {
+            "askPct": 91.0,
+            "bidPct": 90.0,
+            "lastPct": 91.0,
+            "mid": 0.905,
+            "midPct": 90.5,
+            "ticker": "KXWCGAME-26JUN15ESPCPV-ESP"
+          }
+        },
+        "pick": "Spain",
+        "pickPct": 90.5,
+        "source": "kalshi",
+        "teams": [
+          "Spain",
+          "Cape Verde"
+        ]
+      }
+    },
+    "Cape Verde::Uruguay": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN21URUCPV",
+        "eventTitle": "Uruguay vs Cape Verde Winner?",
+        "outcomes": {
+          "Cape Verde": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "ticker": "KXWCGAME-26JUN21URUCPV-CPV"
+          },
+          "Draw": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 19.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "ticker": "KXWCGAME-26JUN21URUCPV-TIE"
+          },
+          "Uruguay": {
+            "askPct": 69.0,
+            "bidPct": 68.0,
+            "lastPct": 69.0,
+            "mid": 0.685,
+            "midPct": 68.5,
+            "ticker": "KXWCGAME-26JUN21URUCPV-URU"
+          }
+        },
+        "pick": "Uruguay",
+        "pickPct": 68.5,
+        "source": "kalshi",
+        "teams": [
+          "Uruguay",
+          "Cape Verde"
+        ]
+      }
+    },
+    "Colombia::Congo DR": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN23COLCOD",
+        "eventTitle": "Colombia vs Congo DR Winner?",
+        "outcomes": {
+          "Colombia": {
+            "askPct": 68.0,
+            "bidPct": 67.0,
+            "lastPct": 68.0,
+            "mid": 0.675,
+            "midPct": 67.5,
+            "ticker": "KXWCGAME-26JUN23COLCOD-COL"
+          },
+          "Congo DR": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "ticker": "KXWCGAME-26JUN23COLCOD-COD"
+          },
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN23COLCOD-TIE"
+          }
+        },
+        "pick": "Colombia",
+        "pickPct": 67.5,
+        "source": "kalshi",
+        "teams": [
+          "Colombia",
+          "Congo DR"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Colombia vs. DR Congo",
+        "outcomes": {
+          "Colombia": {
+            "askPct": 67.0,
+            "bidPct": 66.0,
+            "lastPct": 67.0,
+            "mid": 0.665,
+            "midPct": 66.5,
+            "question": "Will Colombia win on 2026-06-23?",
+            "slug": "fifwc-col-cdr-2026-06-23-col"
+          },
+          "Congo DR": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "question": "Will DR Congo win on 2026-06-23?",
+            "slug": "fifwc-col-cdr-2026-06-23-cdr"
+          },
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "question": "Will Colombia vs. DR Congo end in a draw?",
+            "slug": "fifwc-col-cdr-2026-06-23-draw"
+          }
+        },
+        "pick": "Colombia",
+        "pickPct": 66.5,
+        "source": "polymarket",
+        "teams": [
+          "Colombia",
+          "Congo DR"
+        ]
+      }
+    },
+    "Colombia::Portugal": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN27COLPOR",
+        "eventTitle": "Colombia vs Portugal Winner?",
+        "outcomes": {
+          "Colombia": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 29.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN27COLPOR-COL"
+          },
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 26.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "ticker": "KXWCGAME-26JUN27COLPOR-TIE"
+          },
+          "Portugal": {
+            "askPct": 51.0,
+            "bidPct": 49.0,
+            "lastPct": 51.0,
+            "mid": 0.5,
+            "midPct": 50.0,
+            "ticker": "KXWCGAME-26JUN27COLPOR-POR"
+          }
+        },
+        "pick": "Portugal",
+        "pickPct": 50.0,
+        "source": "kalshi",
+        "teams": [
+          "Colombia",
+          "Portugal"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Colombia vs. Portugal",
+        "outcomes": {
+          "Colombia": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "question": "Will Colombia win on 2026-06-27?",
+            "slug": "fifwc-col-prt-2026-06-27-col"
+          },
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 29.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will Colombia vs. Portugal end in a draw?",
+            "slug": "fifwc-col-prt-2026-06-27-draw"
+          },
+          "Portugal": {
+            "askPct": 47.0,
+            "bidPct": 46.0,
+            "lastPct": 47.0,
+            "mid": 0.46499999999999997,
+            "midPct": 46.5,
+            "question": "Will Portugal win on 2026-06-27?",
+            "slug": "fifwc-col-prt-2026-06-27-prt"
+          }
+        },
+        "pick": "Portugal",
+        "pickPct": 46.5,
+        "source": "polymarket",
+        "teams": [
+          "Colombia",
+          "Portugal"
+        ]
+      }
+    },
+    "Colombia::Uzbekistan": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN17UZBCOL",
+        "eventTitle": "Uzbekistan vs Colombia Winner?",
+        "outcomes": {
+          "Colombia": {
+            "askPct": 72.0,
+            "bidPct": 71.0,
+            "lastPct": 72.0,
+            "mid": 0.715,
+            "midPct": 71.5,
+            "ticker": "KXWCGAME-26JUN17UZBCOL-COL"
+          },
+          "Draw": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "ticker": "KXWCGAME-26JUN17UZBCOL-TIE"
+          },
+          "Uzbekistan": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 10.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "ticker": "KXWCGAME-26JUN17UZBCOL-UZB"
+          }
+        },
+        "pick": "Colombia",
+        "pickPct": 71.5,
+        "source": "kalshi",
+        "teams": [
+          "Uzbekistan",
+          "Colombia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Uzbekistan vs. Colombia",
+        "outcomes": {
+          "Colombia": {
+            "askPct": 71.0,
+            "bidPct": 70.0,
+            "lastPct": 70.0,
+            "mid": 0.705,
+            "midPct": 70.5,
+            "question": "Will Colombia win on 2026-06-17?",
+            "slug": "fifwc-uzb-col-2026-06-17-col"
+          },
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 20.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Uzbekistan vs. Colombia end in a draw?",
+            "slug": "fifwc-uzb-col-2026-06-17-draw"
+          },
+          "Uzbekistan": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 9.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "question": "Will Uzbekistan win on 2026-06-17?",
+            "slug": "fifwc-uzb-col-2026-06-17-uzb"
+          }
+        },
+        "pick": "Colombia",
+        "pickPct": 70.5,
+        "source": "polymarket",
+        "teams": [
+          "Uzbekistan",
+          "Colombia"
+        ]
+      }
+    },
+    "Congo DR::Portugal": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN17PORCOD",
+        "eventTitle": "Portugal vs Congo DR Winner?",
+        "outcomes": {
+          "Congo DR": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "ticker": "KXWCGAME-26JUN17PORCOD-COD"
+          },
+          "Draw": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "ticker": "KXWCGAME-26JUN17PORCOD-TIE"
+          },
+          "Portugal": {
+            "askPct": 77.0,
+            "bidPct": 76.0,
+            "lastPct": 77.0,
+            "mid": 0.765,
+            "midPct": 76.5,
+            "ticker": "KXWCGAME-26JUN17PORCOD-POR"
+          }
+        },
+        "pick": "Portugal",
+        "pickPct": 76.5,
+        "source": "kalshi",
+        "teams": [
+          "Portugal",
+          "Congo DR"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Portugal vs. DR Congo",
+        "outcomes": {
+          "Congo DR": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "question": "Will DR Congo win on 2026-06-17?",
+            "slug": "fifwc-prt-cdr-2026-06-17-cdr"
+          },
+          "Draw": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "question": "Will Portugal vs. DR Congo end in a draw?",
+            "slug": "fifwc-prt-cdr-2026-06-17-draw"
+          },
+          "Portugal": {
+            "askPct": 76.0,
+            "bidPct": 75.0,
+            "lastPct": 76.0,
+            "mid": 0.755,
+            "midPct": 75.5,
+            "question": "Will Portugal win on 2026-06-17?",
+            "slug": "fifwc-prt-cdr-2026-06-17-prt"
+          }
+        },
+        "pick": "Portugal",
+        "pickPct": 75.5,
+        "source": "polymarket",
+        "teams": [
+          "Portugal",
+          "Congo DR"
+        ]
+      }
+    },
+    "Congo DR::Uzbekistan": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN27CODUZB",
+        "eventTitle": "Congo DR vs Uzbekistan Winner?",
+        "outcomes": {
+          "Congo DR": {
+            "askPct": 42.0,
+            "bidPct": 41.0,
+            "lastPct": 42.0,
+            "mid": 0.415,
+            "midPct": 41.5,
+            "ticker": "KXWCGAME-26JUN27CODUZB-COD"
+          },
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN27CODUZB-TIE"
+          },
+          "Uzbekistan": {
+            "askPct": 32.0,
+            "bidPct": 31.0,
+            "lastPct": 32.0,
+            "mid": 0.315,
+            "midPct": 31.5,
+            "ticker": "KXWCGAME-26JUN27CODUZB-UZB"
+          }
+        },
+        "pick": "Congo DR",
+        "pickPct": 41.5,
+        "source": "kalshi",
+        "teams": [
+          "Congo DR",
+          "Uzbekistan"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "DR Congo vs. Uzbekistan",
+        "outcomes": {
+          "Congo DR": {
+            "askPct": 41.0,
+            "bidPct": 40.0,
+            "lastPct": 41.0,
+            "mid": 0.405,
+            "midPct": 40.5,
+            "question": "Will DR Congo win on 2026-06-27?",
+            "slug": "fifwc-cdr-uzb-2026-06-27-cdr"
+          },
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will DR Congo vs. Uzbekistan end in a draw?",
+            "slug": "fifwc-cdr-uzb-2026-06-27-draw"
+          },
+          "Uzbekistan": {
+            "askPct": 32.0,
+            "bidPct": 31.0,
+            "lastPct": 32.0,
+            "mid": 0.315,
+            "midPct": 31.5,
+            "question": "Will Uzbekistan win on 2026-06-27?",
+            "slug": "fifwc-cdr-uzb-2026-06-27-uzb"
+          }
+        },
+        "pick": "Congo DR",
+        "pickPct": 40.5,
+        "source": "polymarket",
+        "teams": [
+          "Congo DR",
+          "Uzbekistan"
+        ]
+      }
+    },
+    "Croatia::England": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN17ENGCRO",
+        "eventTitle": "England vs Croatia Winner?",
+        "outcomes": {
+          "Croatia": {
+            "askPct": 19.0,
+            "bidPct": 18.0,
+            "lastPct": 19.0,
+            "mid": 0.185,
+            "midPct": 18.5,
+            "ticker": "KXWCGAME-26JUN17ENGCRO-CRO"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "ticker": "KXWCGAME-26JUN17ENGCRO-TIE"
+          },
+          "England": {
+            "askPct": 58.0,
+            "bidPct": 57.0,
+            "lastPct": 58.0,
+            "mid": 0.575,
+            "midPct": 57.5,
+            "ticker": "KXWCGAME-26JUN17ENGCRO-ENG"
+          }
+        },
+        "pick": "England",
+        "pickPct": 57.5,
+        "source": "kalshi",
+        "teams": [
+          "England",
+          "Croatia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "England vs. Croatia",
+        "outcomes": {
+          "Croatia": {
+            "askPct": 19.0,
+            "bidPct": 18.0,
+            "lastPct": 18.0,
+            "mid": 0.185,
+            "midPct": 18.5,
+            "question": "Will Croatia win on 2026-06-17?",
+            "slug": "fifwc-eng-hrv-2026-06-17-hrv"
+          },
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will England vs. Croatia end in a draw?",
+            "slug": "fifwc-eng-hrv-2026-06-17-draw"
+          },
+          "England": {
+            "askPct": 57.0,
+            "bidPct": 56.0,
+            "lastPct": 57.0,
+            "mid": 0.565,
+            "midPct": 56.5,
+            "question": "Will England win on 2026-06-17?",
+            "slug": "fifwc-eng-hrv-2026-06-17-eng"
+          }
+        },
+        "pick": "England",
+        "pickPct": 56.5,
+        "source": "polymarket",
+        "teams": [
+          "England",
+          "Croatia"
+        ]
+      }
+    },
+    "Croatia::Ghana": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN27CROGHA",
+        "eventTitle": "Croatia vs Ghana Winner?",
+        "outcomes": {
+          "Croatia": {
+            "askPct": 61.0,
+            "bidPct": 60.0,
+            "lastPct": 61.0,
+            "mid": 0.605,
+            "midPct": 60.5,
+            "ticker": "KXWCGAME-26JUN27CROGHA-CRO"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "ticker": "KXWCGAME-26JUN27CROGHA-TIE"
+          },
+          "Ghana": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN27CROGHA-GHA"
+          }
+        },
+        "pick": "Croatia",
+        "pickPct": 60.5,
+        "source": "kalshi",
+        "teams": [
+          "Croatia",
+          "Ghana"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Croatia vs. Ghana",
+        "outcomes": {
+          "Croatia": {
+            "askPct": 60.0,
+            "bidPct": 59.0,
+            "lastPct": 60.0,
+            "mid": 0.595,
+            "midPct": 59.5,
+            "question": "Will Croatia win on 2026-06-27?",
+            "slug": "fifwc-hrv-gha-2026-06-27-hrv"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 26.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "question": "Will Croatia vs. Ghana end in a draw?",
+            "slug": "fifwc-hrv-gha-2026-06-27-draw"
+          },
+          "Ghana": {
+            "askPct": 17.0,
+            "bidPct": 15.0,
+            "lastPct": 15.0,
+            "mid": 0.16,
+            "midPct": 16.0,
+            "question": "Will Ghana win on 2026-06-27?",
+            "slug": "fifwc-hrv-gha-2026-06-27-gha"
+          }
+        },
+        "pick": "Croatia",
+        "pickPct": 59.5,
+        "source": "polymarket",
+        "teams": [
+          "Croatia",
+          "Ghana"
+        ]
+      }
+    },
+    "Croatia::Panama": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN23PANCRO",
+        "eventTitle": "Panama vs Croatia Winner?",
+        "outcomes": {
+          "Croatia": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 64.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "ticker": "KXWCGAME-26JUN23PANCRO-CRO"
+          },
+          "Draw": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 24.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "ticker": "KXWCGAME-26JUN23PANCRO-TIE"
+          },
+          "Panama": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "ticker": "KXWCGAME-26JUN23PANCRO-PAN"
+          }
+        },
+        "pick": "Croatia",
+        "pickPct": 63.5,
+        "source": "kalshi",
+        "teams": [
+          "Panama",
+          "Croatia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Panama vs. Croatia",
+        "outcomes": {
+          "Croatia": {
+            "askPct": 64.0,
+            "bidPct": 62.0,
+            "lastPct": 64.0,
+            "mid": 0.63,
+            "midPct": 63.0,
+            "question": "Will Croatia win on 2026-06-23?",
+            "slug": "fifwc-pan-hrv-2026-06-23-hrv"
+          },
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "question": "Will Panama vs. Croatia end in a draw?",
+            "slug": "fifwc-pan-hrv-2026-06-23-draw"
+          },
+          "Panama": {
+            "askPct": 15.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.14,
+            "midPct": 14.0,
+            "question": "Will Panama win on 2026-06-23?",
+            "slug": "fifwc-pan-hrv-2026-06-23-pan"
+          }
+        },
+        "pick": "Croatia",
+        "pickPct": 63.0,
+        "source": "polymarket",
+        "teams": [
+          "Panama",
+          "Croatia"
+        ]
+      }
+    },
+    "Cura\u00e7ao::Ecuador": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN20ECUCUW",
+        "eventTitle": "Ecuador vs Curacao Winner?",
+        "outcomes": {
+          "Cura\u00e7ao": {
+            "askPct": 7.0,
+            "bidPct": 6.0,
+            "lastPct": 7.0,
+            "mid": 0.065,
+            "midPct": 6.5,
+            "ticker": "KXWCGAME-26JUN20ECUCUW-CUW"
+          },
+          "Draw": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "ticker": "KXWCGAME-26JUN20ECUCUW-TIE"
+          },
+          "Ecuador": {
+            "askPct": 82.0,
+            "bidPct": 81.0,
+            "lastPct": 82.0,
+            "mid": 0.815,
+            "midPct": 81.5,
+            "ticker": "KXWCGAME-26JUN20ECUCUW-ECU"
+          }
+        },
+        "pick": "Ecuador",
+        "pickPct": 81.5,
+        "source": "kalshi",
+        "teams": [
+          "Ecuador",
+          "Cura\u00e7ao"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Ecuador vs. Cura\u00e7ao",
+        "outcomes": {
+          "Cura\u00e7ao": {
+            "askPct": 6.7,
+            "bidPct": 6.5,
+            "lastPct": 6.6,
+            "mid": 0.066,
+            "midPct": 6.6,
+            "question": "Will Cura\u00e7ao win on 2026-06-20?",
+            "slug": "fifwc-ecu-kor-2026-06-20-kor"
+          },
+          "Draw": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "question": "Will Ecuador vs. Cura\u00e7ao end in a draw?",
+            "slug": "fifwc-ecu-kor-2026-06-20-draw"
+          },
+          "Ecuador": {
+            "askPct": 82.0,
+            "bidPct": 81.0,
+            "lastPct": 82.0,
+            "mid": 0.815,
+            "midPct": 81.5,
+            "question": "Will Ecuador win on 2026-06-20?",
+            "slug": "fifwc-ecu-kor-2026-06-20-ecu"
+          }
+        },
+        "pick": "Ecuador",
+        "pickPct": 81.5,
+        "source": "polymarket",
+        "teams": [
+          "Ecuador",
+          "Cura\u00e7ao"
+        ]
+      }
+    },
+    "Cura\u00e7ao::Germany": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN14GERCUW",
+        "eventTitle": "Germany vs Curacao Winner?",
+        "outcomes": {
+          "Cura\u00e7ao": {
+            "askPct": 3.0,
+            "bidPct": 2.0,
+            "lastPct": 3.0,
+            "mid": 0.025,
+            "midPct": 2.5,
+            "ticker": "KXWCGAME-26JUN14GERCUW-CUW"
+          },
+          "Draw": {
+            "askPct": 5.0,
+            "bidPct": 4.0,
+            "lastPct": 5.0,
+            "mid": 0.045,
+            "midPct": 4.5,
+            "ticker": "KXWCGAME-26JUN14GERCUW-TIE"
+          },
+          "Germany": {
+            "askPct": 94.0,
+            "bidPct": 93.0,
+            "lastPct": 94.0,
+            "mid": 0.935,
+            "midPct": 93.5,
+            "ticker": "KXWCGAME-26JUN14GERCUW-GER"
+          }
+        },
+        "pick": "Germany",
+        "pickPct": 93.5,
+        "source": "kalshi",
+        "teams": [
+          "Germany",
+          "Cura\u00e7ao"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Germany vs. Cura\u00e7ao",
+        "outcomes": {
+          "Cura\u00e7ao": {
+            "askPct": 2.3,
+            "bidPct": 2.2,
+            "lastPct": 2.2,
+            "mid": 0.0225,
+            "midPct": 2.25,
+            "question": "Will Cura\u00e7ao win on 2026-06-14?",
+            "slug": "fifwc-ger-kor-2026-06-14-kor"
+          },
+          "Draw": {
+            "askPct": 4.4,
+            "bidPct": 4.2,
+            "lastPct": 4.2,
+            "mid": 0.043,
+            "midPct": 4.3,
+            "question": "Will Germany vs. Cura\u00e7ao end in a draw?",
+            "slug": "fifwc-ger-kor-2026-06-14-draw"
+          },
+          "Germany": {
+            "askPct": 93.9,
+            "bidPct": 93.8,
+            "lastPct": 93.9,
+            "mid": 0.9384999999999999,
+            "midPct": 93.85,
+            "question": "Will Germany win on 2026-06-14?",
+            "slug": "fifwc-ger-kor-2026-06-14-ger"
+          }
+        },
+        "pick": "Germany",
+        "pickPct": 93.85,
+        "source": "polymarket",
+        "teams": [
+          "Germany",
+          "Cura\u00e7ao"
+        ]
+      }
+    },
+    "Cura\u00e7ao::Ivory Coast": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN25CUWCIV",
+        "eventTitle": "Curacao vs Ivory Coast Winner?",
+        "outcomes": {
+          "Cura\u00e7ao": {
+            "askPct": 7.0,
+            "bidPct": 6.0,
+            "lastPct": 7.0,
+            "mid": 0.065,
+            "midPct": 6.5,
+            "ticker": "KXWCGAME-26JUN25CUWCIV-CUW"
+          },
+          "Draw": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 14.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "ticker": "KXWCGAME-26JUN25CUWCIV-TIE"
+          },
+          "Ivory Coast": {
+            "askPct": 80.0,
+            "bidPct": 79.0,
+            "lastPct": 80.0,
+            "mid": 0.795,
+            "midPct": 79.5,
+            "ticker": "KXWCGAME-26JUN25CUWCIV-CIV"
+          }
+        },
+        "pick": "Ivory Coast",
+        "pickPct": 79.5,
+        "source": "kalshi",
+        "teams": [
+          "Cura\u00e7ao",
+          "Ivory Coast"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Cura\u00e7ao vs. C\u00f4te d'Ivoire",
+        "outcomes": {
+          "Cura\u00e7ao": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "question": "Will Cura\u00e7ao win on 2026-06-25?",
+            "slug": "fifwc-kor-civ-2026-06-25-kor"
+          },
+          "Draw": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 15.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "question": "Will Cura\u00e7ao vs. C\u00f4te d'Ivoire end in a draw?",
+            "slug": "fifwc-kor-civ-2026-06-25-draw"
+          },
+          "Ivory Coast": {
+            "askPct": 80.0,
+            "bidPct": 79.0,
+            "lastPct": 80.0,
+            "mid": 0.795,
+            "midPct": 79.5,
+            "question": "Will C\u00f4te d'Ivoire win on 2026-06-25?",
+            "slug": "fifwc-kor-civ-2026-06-25-civ"
+          }
+        },
+        "pick": "Ivory Coast",
+        "pickPct": 79.5,
+        "source": "polymarket",
+        "teams": [
+          "Cura\u00e7ao",
+          "Ivory Coast"
+        ]
+      }
+    },
+    "Czechia::Mexico": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN24CZEMEX",
+        "eventTitle": "Czechia vs Mexico Winner?",
+        "outcomes": {
+          "Czechia": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "ticker": "KXWCGAME-26JUN24CZEMEX-CZE"
+          },
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "ticker": "KXWCGAME-26JUN24CZEMEX-TIE"
+          },
+          "Mexico": {
+            "askPct": 56.0,
+            "bidPct": 55.0,
+            "lastPct": 56.0,
+            "mid": 0.555,
+            "midPct": 55.5,
+            "ticker": "KXWCGAME-26JUN24CZEMEX-MEX"
+          }
+        },
+        "pick": "Mexico",
+        "pickPct": 55.5,
+        "source": "kalshi",
+        "teams": [
+          "Czechia",
+          "Mexico"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Czechia vs. Mexico",
+        "outcomes": {
+          "Czechia": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "question": "Will Czechia win on 2026-06-24?",
+            "slug": "fifwc-cze-mex-2026-06-24-cze"
+          },
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "question": "Will Czechia vs. Mexico end in a draw?",
+            "slug": "fifwc-cze-mex-2026-06-24-draw"
+          },
+          "Mexico": {
+            "askPct": 55.0,
+            "bidPct": 53.0,
+            "lastPct": 55.0,
+            "mid": 0.54,
+            "midPct": 54.0,
+            "question": "Will Mexico win on 2026-06-24?",
+            "slug": "fifwc-cze-mex-2026-06-24-mex"
+          }
+        },
+        "pick": "Mexico",
+        "pickPct": 54.0,
+        "source": "polymarket",
+        "teams": [
+          "Czechia",
+          "Mexico"
+        ]
+      }
+    },
+    "Czechia::South Africa": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN18CZERSA",
+        "eventTitle": "Czechia vs South Africa Winner?",
+        "outcomes": {
+          "Czechia": {
+            "askPct": 55.0,
+            "bidPct": 54.0,
+            "lastPct": 55.0,
+            "mid": 0.545,
+            "midPct": 54.5,
+            "ticker": "KXWCGAME-26JUN18CZERSA-CZE"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "ticker": "KXWCGAME-26JUN18CZERSA-TIE"
+          },
+          "South Africa": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN18CZERSA-RSA"
+          }
+        },
+        "pick": "Czechia",
+        "pickPct": 54.5,
+        "source": "kalshi",
+        "teams": [
+          "Czechia",
+          "South Africa"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Czechia vs. South Africa",
+        "outcomes": {
+          "Czechia": {
+            "askPct": 55.0,
+            "bidPct": 54.0,
+            "lastPct": 55.0,
+            "mid": 0.545,
+            "midPct": 54.5,
+            "question": "Will Czechia win on 2026-06-18?",
+            "slug": "fifwc-cze-rsa-2026-06-18-cze"
+          },
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "question": "Will Czechia vs. South Africa end in a draw?",
+            "slug": "fifwc-cze-rsa-2026-06-18-draw"
+          },
+          "South Africa": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will South Africa win on 2026-06-18?",
+            "slug": "fifwc-cze-rsa-2026-06-18-rsa"
+          }
+        },
+        "pick": "Czechia",
+        "pickPct": 54.5,
+        "source": "polymarket",
+        "teams": [
+          "Czechia",
+          "South Africa"
+        ]
+      }
+    },
+    "Ecuador::Germany": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN25ECUGER",
+        "eventTitle": "Ecuador vs Germany Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN25ECUGER-TIE"
+          },
+          "Ecuador": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN25ECUGER-ECU"
+          },
+          "Germany": {
+            "askPct": 57.0,
+            "bidPct": 56.0,
+            "lastPct": 56.0,
+            "mid": 0.565,
+            "midPct": 56.5,
+            "ticker": "KXWCGAME-26JUN25ECUGER-GER"
+          }
+        },
+        "pick": "Germany",
+        "pickPct": 56.5,
+        "source": "kalshi",
+        "teams": [
+          "Ecuador",
+          "Germany"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Ecuador vs. Germany",
+        "outcomes": {
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "question": "Will Ecuador vs. Germany end in a draw?",
+            "slug": "fifwc-ecu-ger-2026-06-25-draw"
+          },
+          "Ecuador": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Ecuador win on 2026-06-25?",
+            "slug": "fifwc-ecu-ger-2026-06-25-ecu"
+          },
+          "Germany": {
+            "askPct": 57.0,
+            "bidPct": 56.0,
+            "lastPct": 57.0,
+            "mid": 0.565,
+            "midPct": 56.5,
+            "question": "Will Germany win on 2026-06-25?",
+            "slug": "fifwc-ecu-ger-2026-06-25-ger"
+          }
+        },
+        "pick": "Germany",
+        "pickPct": 56.5,
+        "source": "polymarket",
+        "teams": [
+          "Ecuador",
+          "Germany"
+        ]
+      }
+    },
+    "Ecuador::Ivory Coast": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN14CIVECU",
+        "eventTitle": "Ivory Coast vs Ecuador Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 34.0,
+            "bidPct": 33.0,
+            "lastPct": 34.0,
+            "mid": 0.335,
+            "midPct": 33.5,
+            "ticker": "KXWCGAME-26JUN14CIVECU-TIE"
+          },
+          "Ecuador": {
+            "askPct": 41.0,
+            "bidPct": 40.0,
+            "lastPct": 41.0,
+            "mid": 0.405,
+            "midPct": 40.5,
+            "ticker": "KXWCGAME-26JUN14CIVECU-ECU"
+          },
+          "Ivory Coast": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN14CIVECU-CIV"
+          }
+        },
+        "pick": "Ecuador",
+        "pickPct": 40.5,
+        "source": "kalshi",
+        "teams": [
+          "Ivory Coast",
+          "Ecuador"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "C\u00f4te d'Ivoire vs. Ecuador",
+        "outcomes": {
+          "Draw": {
+            "askPct": 33.0,
+            "bidPct": 32.0,
+            "lastPct": 33.0,
+            "mid": 0.325,
+            "midPct": 32.5,
+            "question": "Will C\u00f4te d'Ivoire vs. Ecuador end in a draw?",
+            "slug": "fifwc-civ-ecu-2026-06-14-draw"
+          },
+          "Ecuador": {
+            "askPct": 39.0,
+            "bidPct": 38.0,
+            "lastPct": 39.0,
+            "mid": 0.385,
+            "midPct": 38.5,
+            "question": "Will Ecuador win on 2026-06-14?",
+            "slug": "fifwc-civ-ecu-2026-06-14-ecu"
+          },
+          "Ivory Coast": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will C\u00f4te d'Ivoire win on 2026-06-14?",
+            "slug": "fifwc-civ-ecu-2026-06-14-civ"
+          }
+        },
+        "pick": "Ecuador",
+        "pickPct": 38.5,
+        "source": "polymarket",
+        "teams": [
+          "Ivory Coast",
+          "Ecuador"
+        ]
+      }
+    },
+    "Egypt::Iran": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN26EGYIRI",
+        "eventTitle": "Egypt vs IR Iran Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 30.0,
+            "bidPct": 29.0,
+            "lastPct": 31.0,
+            "mid": 0.295,
+            "midPct": 29.5,
+            "ticker": "KXWCGAME-26JUN26EGYIRI-TIE"
+          },
+          "Egypt": {
+            "askPct": 44.0,
+            "bidPct": 43.0,
+            "lastPct": 44.0,
+            "mid": 0.435,
+            "midPct": 43.5,
+            "ticker": "KXWCGAME-26JUN26EGYIRI-EGY"
+          },
+          "Iran": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN26EGYIRI-IRI"
+          }
+        },
+        "pick": "Egypt",
+        "pickPct": 43.5,
+        "source": "kalshi",
+        "teams": [
+          "Egypt",
+          "Iran"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Egypt vs. IR Iran",
+        "outcomes": {
+          "Draw": {
+            "askPct": 32.0,
+            "bidPct": 30.0,
+            "lastPct": 32.0,
+            "mid": 0.31,
+            "midPct": 31.0,
+            "question": "Will Egypt vs. IR Iran end in a draw?",
+            "slug": "fifwc-egy-irn-2026-06-26-draw"
+          },
+          "Egypt": {
+            "askPct": 44.0,
+            "bidPct": 43.0,
+            "lastPct": 44.0,
+            "mid": 0.435,
+            "midPct": 43.5,
+            "question": "Will Egypt win on 2026-06-26?",
+            "slug": "fifwc-egy-irn-2026-06-26-egy"
+          },
+          "Iran": {
+            "askPct": 28.0,
+            "bidPct": 26.0,
+            "lastPct": 28.0,
+            "mid": 0.27,
+            "midPct": 27.0,
+            "question": "Will IR Iran win on 2026-06-26?",
+            "slug": "fifwc-egy-irn-2026-06-26-irn"
+          }
+        },
+        "pick": "Egypt",
+        "pickPct": 43.5,
+        "source": "polymarket",
+        "teams": [
+          "Egypt",
+          "Iran"
+        ]
+      }
+    },
+    "Egypt::New Zealand": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN21NZLEGY",
+        "eventTitle": "New Zealand vs Egypt Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "ticker": "KXWCGAME-26JUN21NZLEGY-TIE"
+          },
+          "Egypt": {
+            "askPct": 56.0,
+            "bidPct": 55.0,
+            "lastPct": 56.0,
+            "mid": 0.555,
+            "midPct": 55.5,
+            "ticker": "KXWCGAME-26JUN21NZLEGY-EGY"
+          },
+          "New Zealand": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 21.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "ticker": "KXWCGAME-26JUN21NZLEGY-NZL"
+          }
+        },
+        "pick": "Egypt",
+        "pickPct": 55.5,
+        "source": "kalshi",
+        "teams": [
+          "New Zealand",
+          "Egypt"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "New Zealand vs. Egypt",
+        "outcomes": {
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will New Zealand vs. Egypt end in a draw?",
+            "slug": "fifwc-nzl-egy-2026-06-21-draw"
+          },
+          "Egypt": {
+            "askPct": 56.0,
+            "bidPct": 55.0,
+            "lastPct": 56.0,
+            "mid": 0.555,
+            "midPct": 55.5,
+            "question": "Will Egypt win on 2026-06-21?",
+            "slug": "fifwc-nzl-egy-2026-06-21-egy"
+          },
+          "New Zealand": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "question": "Will New Zealand win on 2026-06-21?",
+            "slug": "fifwc-nzl-egy-2026-06-21-nzl"
+          }
+        },
+        "pick": "Egypt",
+        "pickPct": 55.5,
+        "source": "polymarket",
+        "teams": [
+          "New Zealand",
+          "Egypt"
+        ]
+      }
+    },
+    "England::Ghana": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN23ENGGHA",
+        "eventTitle": "England vs Ghana Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN23ENGGHA-TIE"
+          },
+          "England": {
+            "askPct": 75.0,
+            "bidPct": 74.0,
+            "lastPct": 75.0,
+            "mid": 0.745,
+            "midPct": 74.5,
+            "ticker": "KXWCGAME-26JUN23ENGGHA-ENG"
+          },
+          "Ghana": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 10.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "ticker": "KXWCGAME-26JUN23ENGGHA-GHA"
+          }
+        },
+        "pick": "England",
+        "pickPct": 74.5,
+        "source": "kalshi",
+        "teams": [
+          "England",
+          "Ghana"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "England vs. Ghana",
+        "outcomes": {
+          "Draw": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "question": "Will England vs. Ghana end in a draw?",
+            "slug": "fifwc-eng-gha-2026-06-23-draw"
+          },
+          "England": {
+            "askPct": 76.0,
+            "bidPct": 75.0,
+            "lastPct": 76.0,
+            "mid": 0.755,
+            "midPct": 75.5,
+            "question": "Will England win on 2026-06-23?",
+            "slug": "fifwc-eng-gha-2026-06-23-eng"
+          },
+          "Ghana": {
+            "askPct": 11.0,
+            "bidPct": 9.0,
+            "lastPct": 11.0,
+            "mid": 0.1,
+            "midPct": 10.0,
+            "question": "Will Ghana win on 2026-06-23?",
+            "slug": "fifwc-eng-gha-2026-06-23-gha"
+          }
+        },
+        "pick": "England",
+        "pickPct": 75.5,
+        "source": "polymarket",
+        "teams": [
+          "England",
+          "Ghana"
+        ]
+      }
+    },
+    "England::Panama": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN27PANENG",
+        "eventTitle": "Panama vs England Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 15.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "ticker": "KXWCGAME-26JUN27PANENG-TIE"
+          },
+          "England": {
+            "askPct": 77.0,
+            "bidPct": 75.0,
+            "lastPct": 77.0,
+            "mid": 0.76,
+            "midPct": 76.0,
+            "ticker": "KXWCGAME-26JUN27PANENG-ENG"
+          },
+          "Panama": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 10.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "ticker": "KXWCGAME-26JUN27PANENG-PAN"
+          }
+        },
+        "pick": "England",
+        "pickPct": 76.0,
+        "source": "kalshi",
+        "teams": [
+          "Panama",
+          "England"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Panama vs. England",
+        "outcomes": {
+          "Draw": {
+            "askPct": 15.0,
+            "bidPct": 14.0,
+            "lastPct": 15.0,
+            "mid": 0.14500000000000002,
+            "midPct": 14.5,
+            "question": "Will Panama vs. England end in a draw?",
+            "slug": "fifwc-pan-eng-2026-06-27-draw"
+          },
+          "England": {
+            "askPct": 76.0,
+            "bidPct": 75.0,
+            "lastPct": 77.0,
+            "mid": 0.755,
+            "midPct": 75.5,
+            "question": "Will England win on 2026-06-27?",
+            "slug": "fifwc-pan-eng-2026-06-27-eng"
+          },
+          "Panama": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 10.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "question": "Will Panama win on 2026-06-27?",
+            "slug": "fifwc-pan-eng-2026-06-27-pan"
+          }
+        },
+        "pick": "England",
+        "pickPct": 75.5,
+        "source": "polymarket",
+        "teams": [
+          "Panama",
+          "England"
+        ]
+      }
+    },
+    "France::Iraq": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN22FRAIRQ",
+        "eventTitle": "France vs Iraq Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 10.0,
+            "bidPct": 9.0,
+            "lastPct": 10.0,
+            "mid": 0.095,
+            "midPct": 9.5,
+            "ticker": "KXWCGAME-26JUN22FRAIRQ-TIE"
+          },
+          "France": {
+            "askPct": 89.0,
+            "bidPct": 88.0,
+            "lastPct": 88.0,
+            "mid": 0.885,
+            "midPct": 88.5,
+            "ticker": "KXWCGAME-26JUN22FRAIRQ-FRA"
+          },
+          "Iraq": {
+            "askPct": 4.0,
+            "bidPct": 3.0,
+            "lastPct": 4.0,
+            "mid": 0.035,
+            "midPct": 3.5,
+            "ticker": "KXWCGAME-26JUN22FRAIRQ-IRQ"
+          }
+        },
+        "pick": "France",
+        "pickPct": 88.5,
+        "source": "kalshi",
+        "teams": [
+          "France",
+          "Iraq"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "France vs. Iraq",
+        "outcomes": {
+          "Draw": {
+            "askPct": 9.0,
+            "bidPct": 8.0,
+            "lastPct": 9.0,
+            "mid": 0.08499999999999999,
+            "midPct": 8.5,
+            "question": "Will France vs. Iraq end in a draw?",
+            "slug": "fifwc-fra-irq-2026-06-22-draw"
+          },
+          "France": {
+            "askPct": 89.0,
+            "bidPct": 88.0,
+            "lastPct": 89.0,
+            "mid": 0.885,
+            "midPct": 88.5,
+            "question": "Will France win on 2026-06-22?",
+            "slug": "fifwc-fra-irq-2026-06-22-fra"
+          },
+          "Iraq": {
+            "askPct": 3.8,
+            "bidPct": 3.7,
+            "lastPct": 3.8,
+            "mid": 0.0375,
+            "midPct": 3.75,
+            "question": "Will Iraq win on 2026-06-22?",
+            "slug": "fifwc-fra-irq-2026-06-22-irq"
+          }
+        },
+        "pick": "France",
+        "pickPct": 88.5,
+        "source": "polymarket",
+        "teams": [
+          "France",
+          "Iraq"
+        ]
+      }
+    },
+    "France::Norway": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN26NORFRA",
+        "eventTitle": "Norway vs France Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "ticker": "KXWCGAME-26JUN26NORFRA-TIE"
+          },
+          "France": {
+            "askPct": 54.0,
+            "bidPct": 53.0,
+            "lastPct": 53.0,
+            "mid": 0.535,
+            "midPct": 53.5,
+            "ticker": "KXWCGAME-26JUN26NORFRA-FRA"
+          },
+          "Norway": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 21.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN26NORFRA-NOR"
+          }
+        },
+        "pick": "France",
+        "pickPct": 53.5,
+        "source": "kalshi",
+        "teams": [
+          "Norway",
+          "France"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Norway vs. France",
+        "outcomes": {
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will Norway vs. France end in a draw?",
+            "slug": "fifwc-nor-fra-2026-06-26-draw"
+          },
+          "France": {
+            "askPct": 54.0,
+            "bidPct": 53.0,
+            "lastPct": 54.0,
+            "mid": 0.535,
+            "midPct": 53.5,
+            "question": "Will France win on 2026-06-26?",
+            "slug": "fifwc-nor-fra-2026-06-26-fra"
+          },
+          "Norway": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 23.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "question": "Will Norway win on 2026-06-26?",
+            "slug": "fifwc-nor-fra-2026-06-26-nor"
+          }
+        },
+        "pick": "France",
+        "pickPct": 53.5,
+        "source": "polymarket",
+        "teams": [
+          "Norway",
+          "France"
+        ]
+      }
+    },
+    "France::Senegal": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN16FRASEN",
+        "eventTitle": "France vs Senegal Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN16FRASEN-TIE"
+          },
+          "France": {
+            "askPct": 68.0,
+            "bidPct": 67.0,
+            "lastPct": 68.0,
+            "mid": 0.675,
+            "midPct": 67.5,
+            "ticker": "KXWCGAME-26JUN16FRASEN-FRA"
+          },
+          "Senegal": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "ticker": "KXWCGAME-26JUN16FRASEN-SEN"
+          }
+        },
+        "pick": "France",
+        "pickPct": 67.5,
+        "source": "kalshi",
+        "teams": [
+          "France",
+          "Senegal"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "France vs. Senegal",
+        "outcomes": {
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "question": "Will France vs. Senegal end in a draw?",
+            "slug": "fifwc-fra-sen-2026-06-16-draw"
+          },
+          "France": {
+            "askPct": 67.0,
+            "bidPct": 66.0,
+            "lastPct": 67.0,
+            "mid": 0.665,
+            "midPct": 66.5,
+            "question": "Will France win on 2026-06-16?",
+            "slug": "fifwc-fra-sen-2026-06-16-fra"
+          },
+          "Senegal": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "question": "Will Senegal win on 2026-06-16?",
+            "slug": "fifwc-fra-sen-2026-06-16-sen"
+          }
+        },
+        "pick": "France",
+        "pickPct": 66.5,
+        "source": "polymarket",
+        "teams": [
+          "France",
+          "Senegal"
+        ]
+      }
+    },
+    "Germany::Ivory Coast": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN20GERCIV",
+        "eventTitle": "Germany vs Ivory Coast Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN20GERCIV-TIE"
+          },
+          "Germany": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 64.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "ticker": "KXWCGAME-26JUN20GERCIV-GER"
+          },
+          "Ivory Coast": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN20GERCIV-CIV"
+          }
+        },
+        "pick": "Germany",
+        "pickPct": 63.5,
+        "source": "kalshi",
+        "teams": [
+          "Germany",
+          "Ivory Coast"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Germany vs. C\u00f4te d'Ivoire",
+        "outcomes": {
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 20.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Germany vs. C\u00f4te d'Ivoire end in a draw?",
+            "slug": "fifwc-ger-civ-2026-06-20-draw"
+          },
+          "Germany": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 64.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "question": "Will Germany win on 2026-06-20?",
+            "slug": "fifwc-ger-civ-2026-06-20-ger"
+          },
+          "Ivory Coast": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "question": "Will C\u00f4te d'Ivoire win on 2026-06-20?",
+            "slug": "fifwc-ger-civ-2026-06-20-civ"
+          }
+        },
+        "pick": "Germany",
+        "pickPct": 63.5,
+        "source": "polymarket",
+        "teams": [
+          "Germany",
+          "Ivory Coast"
+        ]
+      }
+    },
+    "Ghana::Panama": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN17GHAPAN",
+        "eventTitle": "Ghana vs Panama Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "ticker": "KXWCGAME-26JUN17GHAPAN-TIE"
+          },
+          "Ghana": {
+            "askPct": 44.0,
+            "bidPct": 43.0,
+            "lastPct": 44.0,
+            "mid": 0.435,
+            "midPct": 43.5,
+            "ticker": "KXWCGAME-26JUN17GHAPAN-GHA"
+          },
+          "Panama": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "ticker": "KXWCGAME-26JUN17GHAPAN-PAN"
+          }
+        },
+        "pick": "Ghana",
+        "pickPct": 43.5,
+        "source": "kalshi",
+        "teams": [
+          "Ghana",
+          "Panama"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Ghana vs. Panama",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will Ghana vs. Panama end in a draw?",
+            "slug": "fifwc-gha-pan-2026-06-17-draw"
+          },
+          "Ghana": {
+            "askPct": 44.0,
+            "bidPct": 43.0,
+            "lastPct": 43.0,
+            "mid": 0.435,
+            "midPct": 43.5,
+            "question": "Will Ghana win on 2026-06-17?",
+            "slug": "fifwc-gha-pan-2026-06-17-gha"
+          },
+          "Panama": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will Panama win on 2026-06-17?",
+            "slug": "fifwc-gha-pan-2026-06-17-pan"
+          }
+        },
+        "pick": "Ghana",
+        "pickPct": 43.5,
+        "source": "polymarket",
+        "teams": [
+          "Ghana",
+          "Panama"
+        ]
+      }
+    },
+    "Group A 2nd Place::Group B 2nd Place": {},
+    "Group A Winner::Third Place Group C/E/F/H/I": {},
+    "Group B Winner::Third Place Group E/F/G/I/J": {},
+    "Group C 2nd Place::Group F Winner": {},
+    "Group C Winner::Group F 2nd Place": {},
+    "Group D 2nd Place::Group G 2nd Place": {},
+    "Group D Winner::Third Place Group B/E/F/I/J": {},
+    "Group E 2nd Place::Group I 2nd Place": {},
+    "Group E Winner::Third Place Group A/B/C/D/F": {},
+    "Group G Winner::Third Place Group A/E/H/I/J": {},
+    "Group H 2nd Place::Group J Winner": {},
+    "Group H Winner::Group J 2nd Place": {},
+    "Group I Winner::Third Place Group C/D/F/G/H": {},
+    "Group K 2nd Place::Group L 2nd Place": {},
+    "Group K Winner::Third Place Group D/E/I/J/L": {},
+    "Group L Winner::Third Place Group E/H/I/J/K": {},
+    "Haiti::Morocco": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN24MARHTI",
+        "eventTitle": "Morocco vs Haiti Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 17.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "ticker": "KXWCGAME-26JUN24MARHTI-TIE"
+          },
+          "Haiti": {
+            "askPct": 11.0,
+            "bidPct": 10.0,
+            "lastPct": 11.0,
+            "mid": 0.10500000000000001,
+            "midPct": 10.5,
+            "ticker": "KXWCGAME-26JUN24MARHTI-HTI"
+          },
+          "Morocco": {
+            "askPct": 74.0,
+            "bidPct": 73.0,
+            "lastPct": 73.0,
+            "mid": 0.735,
+            "midPct": 73.5,
+            "ticker": "KXWCGAME-26JUN24MARHTI-MAR"
+          }
+        },
+        "pick": "Morocco",
+        "pickPct": 73.5,
+        "source": "kalshi",
+        "teams": [
+          "Morocco",
+          "Haiti"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Morocco vs. Haiti",
+        "outcomes": {
+          "Draw": {
+            "askPct": 18.0,
+            "bidPct": 16.0,
+            "lastPct": 18.0,
+            "mid": 0.16999999999999998,
+            "midPct": 17.0,
+            "question": "Will Morocco vs. Haiti end in a draw?",
+            "slug": "fifwc-mar-hai-2026-06-24-draw"
+          },
+          "Haiti": {
+            "askPct": 11.0,
+            "bidPct": 10.0,
+            "lastPct": 10.0,
+            "mid": 0.10500000000000001,
+            "midPct": 10.5,
+            "question": "Will Haiti win on 2026-06-24?",
+            "slug": "fifwc-mar-hai-2026-06-24-hai"
+          },
+          "Morocco": {
+            "askPct": 74.0,
+            "bidPct": 73.0,
+            "lastPct": 73.0,
+            "mid": 0.735,
+            "midPct": 73.5,
+            "question": "Will Morocco win on 2026-06-24?",
+            "slug": "fifwc-mar-hai-2026-06-24-mar"
+          }
+        },
+        "pick": "Morocco",
+        "pickPct": 73.5,
+        "source": "polymarket",
+        "teams": [
+          "Morocco",
+          "Haiti"
+        ]
+      }
+    },
+    "Haiti::Scotland": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN13HTISCO",
+        "eventTitle": "Haiti vs Scotland Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN13HTISCO-TIE"
+          },
+          "Haiti": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "ticker": "KXWCGAME-26JUN13HTISCO-HTI"
+          },
+          "Scotland": {
+            "askPct": 64.0,
+            "bidPct": 63.0,
+            "lastPct": 64.0,
+            "mid": 0.635,
+            "midPct": 63.5,
+            "ticker": "KXWCGAME-26JUN13HTISCO-SCO"
+          }
+        },
+        "pick": "Scotland",
+        "pickPct": 63.5,
+        "source": "kalshi",
+        "teams": [
+          "Haiti",
+          "Scotland"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Haiti vs. Scotland",
+        "outcomes": {
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Haiti vs. Scotland end in a draw?",
+            "slug": "fifwc-hai-sco-2026-06-13-draw"
+          },
+          "Haiti": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "question": "Will Haiti win on 2026-06-13?",
+            "slug": "fifwc-hai-sco-2026-06-13-hai"
+          },
+          "Scotland": {
+            "askPct": 65.0,
+            "bidPct": 64.0,
+            "lastPct": 64.0,
+            "mid": 0.645,
+            "midPct": 64.5,
+            "question": "Will Scotland win on 2026-06-13?",
+            "slug": "fifwc-hai-sco-2026-06-13-sco"
+          }
+        },
+        "pick": "Scotland",
+        "pickPct": 64.5,
+        "source": "polymarket",
+        "teams": [
+          "Haiti",
+          "Scotland"
+        ]
+      }
+    },
+    "Iran::New Zealand": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN15IRINZL",
+        "eventTitle": "IR Iran vs New Zealand Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN15IRINZL-TIE"
+          },
+          "Iran": {
+            "askPct": 53.0,
+            "bidPct": 52.0,
+            "lastPct": 53.0,
+            "mid": 0.525,
+            "midPct": 52.5,
+            "ticker": "KXWCGAME-26JUN15IRINZL-IRI"
+          },
+          "New Zealand": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN15IRINZL-NZL"
+          }
+        },
+        "pick": "Iran",
+        "pickPct": 52.5,
+        "source": "kalshi",
+        "teams": [
+          "Iran",
+          "New Zealand"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "IR Iran vs. New Zealand",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will IR Iran vs. New Zealand end in a draw?",
+            "slug": "fifwc-irn-nzl-2026-06-15-draw"
+          },
+          "Iran": {
+            "askPct": 53.0,
+            "bidPct": 52.0,
+            "lastPct": 53.0,
+            "mid": 0.525,
+            "midPct": 52.5,
+            "question": "Will IR Iran win on 2026-06-15?",
+            "slug": "fifwc-irn-nzl-2026-06-15-irn"
+          },
+          "New Zealand": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 19.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "question": "Will New Zealand win on 2026-06-15?",
+            "slug": "fifwc-irn-nzl-2026-06-15-nzl"
+          }
+        },
+        "pick": "Iran",
+        "pickPct": 52.5,
+        "source": "polymarket",
+        "teams": [
+          "Iran",
+          "New Zealand"
+        ]
+      }
+    },
+    "Iraq::Norway": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN16IRQNOR",
+        "eventTitle": "Iraq vs Norway Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "ticker": "KXWCGAME-26JUN16IRQNOR-TIE"
+          },
+          "Iraq": {
+            "askPct": 6.0,
+            "bidPct": 5.0,
+            "lastPct": 6.0,
+            "mid": 0.055,
+            "midPct": 5.5,
+            "ticker": "KXWCGAME-26JUN16IRQNOR-IRQ"
+          },
+          "Norway": {
+            "askPct": 83.0,
+            "bidPct": 82.0,
+            "lastPct": 83.0,
+            "mid": 0.825,
+            "midPct": 82.5,
+            "ticker": "KXWCGAME-26JUN16IRQNOR-NOR"
+          }
+        },
+        "pick": "Norway",
+        "pickPct": 82.5,
+        "source": "kalshi",
+        "teams": [
+          "Iraq",
+          "Norway"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Iraq vs. Norway",
+        "outcomes": {
+          "Draw": {
+            "askPct": 13.0,
+            "bidPct": 12.0,
+            "lastPct": 13.0,
+            "mid": 0.125,
+            "midPct": 12.5,
+            "question": "Will Iraq vs. Norway end in a draw?",
+            "slug": "fifwc-irq-nor-2026-06-16-draw"
+          },
+          "Iraq": {
+            "askPct": 6.0,
+            "bidPct": 5.0,
+            "lastPct": 6.0,
+            "mid": 0.055,
+            "midPct": 5.5,
+            "question": "Will Iraq win on 2026-06-16?",
+            "slug": "fifwc-irq-nor-2026-06-16-irq"
+          },
+          "Norway": {
+            "askPct": 83.0,
+            "bidPct": 82.0,
+            "lastPct": 82.0,
+            "mid": 0.825,
+            "midPct": 82.5,
+            "question": "Will Norway win on 2026-06-16?",
+            "slug": "fifwc-irq-nor-2026-06-16-nor"
+          }
+        },
+        "pick": "Norway",
+        "pickPct": 82.5,
+        "source": "polymarket",
+        "teams": [
+          "Iraq",
+          "Norway"
+        ]
+      }
+    },
+    "Iraq::Senegal": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN26SENIRQ",
+        "eventTitle": "Senegal vs Iraq Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 20.0,
+            "bidPct": 19.0,
+            "lastPct": 20.0,
+            "mid": 0.195,
+            "midPct": 19.5,
+            "ticker": "KXWCGAME-26JUN26SENIRQ-TIE"
+          },
+          "Iraq": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "ticker": "KXWCGAME-26JUN26SENIRQ-IRQ"
+          },
+          "Senegal": {
+            "askPct": 70.0,
+            "bidPct": 69.0,
+            "lastPct": 70.0,
+            "mid": 0.695,
+            "midPct": 69.5,
+            "ticker": "KXWCGAME-26JUN26SENIRQ-SEN"
+          }
+        },
+        "pick": "Senegal",
+        "pickPct": 69.5,
+        "source": "kalshi",
+        "teams": [
+          "Senegal",
+          "Iraq"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Senegal vs. Iraq",
+        "outcomes": {
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Senegal vs. Iraq end in a draw?",
+            "slug": "fifwc-sen-irq-2026-06-26-draw"
+          },
+          "Iraq": {
+            "askPct": 12.0,
+            "bidPct": 10.0,
+            "lastPct": 12.0,
+            "mid": 0.11,
+            "midPct": 11.0,
+            "question": "Will Iraq win on 2026-06-26?",
+            "slug": "fifwc-sen-irq-2026-06-26-irq"
+          },
+          "Senegal": {
+            "askPct": 69.0,
+            "bidPct": 68.0,
+            "lastPct": 69.0,
+            "mid": 0.685,
+            "midPct": 68.5,
+            "question": "Will Senegal win on 2026-06-26?",
+            "slug": "fifwc-sen-irq-2026-06-26-sen"
+          }
+        },
+        "pick": "Senegal",
+        "pickPct": 68.5,
+        "source": "polymarket",
+        "teams": [
+          "Senegal",
+          "Iraq"
+        ]
+      }
+    },
+    "Japan::Netherlands": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN14NEDJPN",
+        "eventTitle": "Netherlands vs Japan Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "ticker": "KXWCGAME-26JUN14NEDJPN-TIE"
+          },
+          "Japan": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "ticker": "KXWCGAME-26JUN14NEDJPN-JPN"
+          },
+          "Netherlands": {
+            "askPct": 49.0,
+            "bidPct": 48.0,
+            "lastPct": 49.0,
+            "mid": 0.485,
+            "midPct": 48.5,
+            "ticker": "KXWCGAME-26JUN14NEDJPN-NED"
+          }
+        },
+        "pick": "Netherlands",
+        "pickPct": 48.5,
+        "source": "kalshi",
+        "teams": [
+          "Netherlands",
+          "Japan"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Netherlands vs. Japan",
+        "outcomes": {
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "question": "Will Netherlands vs. Japan end in a draw?",
+            "slug": "fifwc-nld-jpn-2026-06-14-draw"
+          },
+          "Japan": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 26.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "question": "Will Japan win on 2026-06-14?",
+            "slug": "fifwc-nld-jpn-2026-06-14-jpn"
+          },
+          "Netherlands": {
+            "askPct": 48.0,
+            "bidPct": 47.0,
+            "lastPct": 48.0,
+            "mid": 0.475,
+            "midPct": 47.5,
+            "question": "Will Netherlands win on 2026-06-14?",
+            "slug": "fifwc-nld-jpn-2026-06-14-nld"
+          }
+        },
+        "pick": "Netherlands",
+        "pickPct": 47.5,
+        "source": "polymarket",
+        "teams": [
+          "Netherlands",
+          "Japan"
+        ]
+      }
+    },
+    "Japan::Sweden": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN25JPNSWE",
+        "eventTitle": "Japan vs Sweden Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 27.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN25JPNSWE-TIE"
+          },
+          "Japan": {
+            "askPct": 47.0,
+            "bidPct": 46.0,
+            "lastPct": 47.0,
+            "mid": 0.46499999999999997,
+            "midPct": 46.5,
+            "ticker": "KXWCGAME-26JUN25JPNSWE-JPN"
+          },
+          "Sweden": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "ticker": "KXWCGAME-26JUN25JPNSWE-SWE"
+          }
+        },
+        "pick": "Japan",
+        "pickPct": 46.5,
+        "source": "kalshi",
+        "teams": [
+          "Japan",
+          "Sweden"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Japan vs. Sweden",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will Japan vs. Sweden end in a draw?",
+            "slug": "fifwc-jpn-swe-2026-06-25-draw"
+          },
+          "Japan": {
+            "askPct": 47.0,
+            "bidPct": 46.0,
+            "lastPct": 47.0,
+            "mid": 0.46499999999999997,
+            "midPct": 46.5,
+            "question": "Will Japan win on 2026-06-25?",
+            "slug": "fifwc-jpn-swe-2026-06-25-jpn"
+          },
+          "Sweden": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "question": "Will Sweden win on 2026-06-25?",
+            "slug": "fifwc-jpn-swe-2026-06-25-swe"
+          }
+        },
+        "pick": "Japan",
+        "pickPct": 46.5,
+        "source": "polymarket",
+        "teams": [
+          "Japan",
+          "Sweden"
+        ]
+      }
+    },
+    "Japan::Tunisia": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN21TUNJPN",
+        "eventTitle": "Tunisia vs Japan Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 26.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "ticker": "KXWCGAME-26JUN21TUNJPN-TIE"
+          },
+          "Japan": {
+            "askPct": 59.0,
+            "bidPct": 58.0,
+            "lastPct": 59.0,
+            "mid": 0.585,
+            "midPct": 58.5,
+            "ticker": "KXWCGAME-26JUN21TUNJPN-JPN"
+          },
+          "Tunisia": {
+            "askPct": 17.0,
+            "bidPct": 16.0,
+            "lastPct": 17.0,
+            "mid": 0.165,
+            "midPct": 16.5,
+            "ticker": "KXWCGAME-26JUN21TUNJPN-TUN"
+          }
+        },
+        "pick": "Japan",
+        "pickPct": 58.5,
+        "source": "kalshi",
+        "teams": [
+          "Tunisia",
+          "Japan"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Tunisia vs. Japan",
+        "outcomes": {
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "question": "Will Tunisia vs. Japan end in a draw?",
+            "slug": "fifwc-tun-jpn-2026-06-21-draw"
+          },
+          "Japan": {
+            "askPct": 59.0,
+            "bidPct": 58.0,
+            "lastPct": 58.0,
+            "mid": 0.585,
+            "midPct": 58.5,
+            "question": "Will Japan win on 2026-06-21?",
+            "slug": "fifwc-tun-jpn-2026-06-21-jpn"
+          },
+          "Tunisia": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 17.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "question": "Will Tunisia win on 2026-06-21?",
+            "slug": "fifwc-tun-jpn-2026-06-21-tun"
+          }
+        },
+        "pick": "Japan",
+        "pickPct": 58.5,
+        "source": "polymarket",
+        "teams": [
+          "Tunisia",
+          "Japan"
+        ]
+      }
+    },
+    "Mexico::South Korea": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN18MEXKOR",
+        "eventTitle": "Mexico vs Korea Republic Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN18MEXKOR-TIE"
+          },
+          "Mexico": {
+            "askPct": 51.0,
+            "bidPct": 50.0,
+            "lastPct": 51.0,
+            "mid": 0.505,
+            "midPct": 50.5,
+            "ticker": "KXWCGAME-26JUN18MEXKOR-MEX"
+          },
+          "South Korea": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN18MEXKOR-KOR"
+          }
+        },
+        "pick": "Mexico",
+        "pickPct": 50.5,
+        "source": "kalshi",
+        "teams": [
+          "Mexico",
+          "South Korea"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Mexico vs. Korea Republic",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will Mexico vs. Korea Republic end in a draw?",
+            "slug": "fifwc-mex-kr-2026-06-18-draw"
+          },
+          "Mexico": {
+            "askPct": 50.0,
+            "bidPct": 49.0,
+            "lastPct": 50.0,
+            "mid": 0.495,
+            "midPct": 49.5,
+            "question": "Will Mexico win on 2026-06-18?",
+            "slug": "fifwc-mex-kr-2026-06-18-mex"
+          },
+          "South Korea": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 23.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "question": "Will Korea Republic win on 2026-06-18?",
+            "slug": "fifwc-mex-kr-2026-06-18-kr"
+          }
+        },
+        "pick": "Mexico",
+        "pickPct": 49.5,
+        "source": "polymarket",
+        "teams": [
+          "Mexico",
+          "South Korea"
+        ]
+      }
+    },
+    "Morocco::Scotland": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN19SCOMAR",
+        "eventTitle": "Scotland vs Morocco Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 28.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "ticker": "KXWCGAME-26JUN19SCOMAR-TIE"
+          },
+          "Morocco": {
+            "askPct": 52.0,
+            "bidPct": 51.0,
+            "lastPct": 52.0,
+            "mid": 0.515,
+            "midPct": 51.5,
+            "ticker": "KXWCGAME-26JUN19SCOMAR-MAR"
+          },
+          "Scotland": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN19SCOMAR-SCO"
+          }
+        },
+        "pick": "Morocco",
+        "pickPct": 51.5,
+        "source": "kalshi",
+        "teams": [
+          "Scotland",
+          "Morocco"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Scotland vs. Morocco",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will Scotland vs. Morocco end in a draw?",
+            "slug": "fifwc-sco-mar-2026-06-19-draw"
+          },
+          "Morocco": {
+            "askPct": 53.0,
+            "bidPct": 52.0,
+            "lastPct": 53.0,
+            "mid": 0.525,
+            "midPct": 52.5,
+            "question": "Will Morocco win on 2026-06-19?",
+            "slug": "fifwc-sco-mar-2026-06-19-mar"
+          },
+          "Scotland": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 23.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "question": "Will Scotland win on 2026-06-19?",
+            "slug": "fifwc-sco-mar-2026-06-19-sco"
+          }
+        },
+        "pick": "Morocco",
+        "pickPct": 52.5,
+        "source": "polymarket",
+        "teams": [
+          "Scotland",
+          "Morocco"
+        ]
+      }
+    },
+    "Netherlands::Sweden": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN20NEDSWE",
+        "eventTitle": "Netherlands vs Sweden Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN20NEDSWE-TIE"
+          },
+          "Netherlands": {
+            "askPct": 60.0,
+            "bidPct": 59.0,
+            "lastPct": 60.0,
+            "mid": 0.595,
+            "midPct": 59.5,
+            "ticker": "KXWCGAME-26JUN20NEDSWE-NED"
+          },
+          "Sweden": {
+            "askPct": 19.0,
+            "bidPct": 18.0,
+            "lastPct": 19.0,
+            "mid": 0.185,
+            "midPct": 18.5,
+            "ticker": "KXWCGAME-26JUN20NEDSWE-SWE"
+          }
+        },
+        "pick": "Netherlands",
+        "pickPct": 59.5,
+        "source": "kalshi",
+        "teams": [
+          "Netherlands",
+          "Sweden"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Netherlands vs. Sweden",
+        "outcomes": {
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "question": "Will Netherlands vs. Sweden end in a draw?",
+            "slug": "fifwc-nld-swe-2026-06-20-draw"
+          },
+          "Netherlands": {
+            "askPct": 60.0,
+            "bidPct": 59.0,
+            "lastPct": 60.0,
+            "mid": 0.595,
+            "midPct": 59.5,
+            "question": "Will Netherlands win on 2026-06-20?",
+            "slug": "fifwc-nld-swe-2026-06-20-nld"
+          },
+          "Sweden": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "question": "Will Sweden win on 2026-06-20?",
+            "slug": "fifwc-nld-swe-2026-06-20-swe"
+          }
+        },
+        "pick": "Netherlands",
+        "pickPct": 59.5,
+        "source": "polymarket",
+        "teams": [
+          "Netherlands",
+          "Sweden"
+        ]
+      }
+    },
+    "Netherlands::Tunisia": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN25TUNNED",
+        "eventTitle": "Tunisia vs Netherlands Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN25TUNNED-TIE"
+          },
+          "Netherlands": {
+            "askPct": 67.0,
+            "bidPct": 66.0,
+            "lastPct": 67.0,
+            "mid": 0.665,
+            "midPct": 66.5,
+            "ticker": "KXWCGAME-26JUN25TUNNED-NED"
+          },
+          "Tunisia": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "ticker": "KXWCGAME-26JUN25TUNNED-TUN"
+          }
+        },
+        "pick": "Netherlands",
+        "pickPct": 66.5,
+        "source": "kalshi",
+        "teams": [
+          "Tunisia",
+          "Netherlands"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Tunisia vs. Netherlands",
+        "outcomes": {
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "question": "Will Tunisia vs. Netherlands end in a draw?",
+            "slug": "fifwc-tun-nld-2026-06-25-draw"
+          },
+          "Netherlands": {
+            "askPct": 67.0,
+            "bidPct": 66.0,
+            "lastPct": 67.0,
+            "mid": 0.665,
+            "midPct": 66.5,
+            "question": "Will Netherlands win on 2026-06-25?",
+            "slug": "fifwc-tun-nld-2026-06-25-nld"
+          },
+          "Tunisia": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "question": "Will Tunisia win on 2026-06-25?",
+            "slug": "fifwc-tun-nld-2026-06-25-tun"
+          }
+        },
+        "pick": "Netherlands",
+        "pickPct": 66.5,
+        "source": "polymarket",
+        "teams": [
+          "Tunisia",
+          "Netherlands"
+        ]
+      }
+    },
+    "Norway::Senegal": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN22NORSEN",
+        "eventTitle": "Norway vs Senegal Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "ticker": "KXWCGAME-26JUN22NORSEN-TIE"
+          },
+          "Norway": {
+            "askPct": 46.0,
+            "bidPct": 45.0,
+            "lastPct": 46.0,
+            "mid": 0.455,
+            "midPct": 45.5,
+            "ticker": "KXWCGAME-26JUN22NORSEN-NOR"
+          },
+          "Senegal": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "ticker": "KXWCGAME-26JUN22NORSEN-SEN"
+          }
+        },
+        "pick": "Norway",
+        "pickPct": 45.5,
+        "source": "kalshi",
+        "teams": [
+          "Norway",
+          "Senegal"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Norway vs. Senegal",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will Norway vs. Senegal end in a draw?",
+            "slug": "fifwc-nor-sen-2026-06-22-draw"
+          },
+          "Norway": {
+            "askPct": 45.0,
+            "bidPct": 44.0,
+            "lastPct": 45.0,
+            "mid": 0.445,
+            "midPct": 44.5,
+            "question": "Will Norway win on 2026-06-22?",
+            "slug": "fifwc-nor-sen-2026-06-22-nor"
+          },
+          "Senegal": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will Senegal win on 2026-06-22?",
+            "slug": "fifwc-nor-sen-2026-06-22-sen"
+          }
+        },
+        "pick": "Norway",
+        "pickPct": 44.5,
+        "source": "polymarket",
+        "teams": [
+          "Norway",
+          "Senegal"
+        ]
+      }
+    },
+    "Paraguay::Turkey": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN19TURPAR",
+        "eventTitle": "Turkiye vs Paraguay Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "ticker": "KXWCGAME-26JUN19TURPAR-TIE"
+          },
+          "Paraguay": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 23.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "ticker": "KXWCGAME-26JUN19TURPAR-PAR"
+          },
+          "Turkey": {
+            "askPct": 50.0,
+            "bidPct": 49.0,
+            "lastPct": 50.0,
+            "mid": 0.495,
+            "midPct": 49.5,
+            "ticker": "KXWCGAME-26JUN19TURPAR-TUR"
+          }
+        },
+        "pick": "Turkey",
+        "pickPct": 49.5,
+        "source": "kalshi",
+        "teams": [
+          "Turkey",
+          "Paraguay"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "T\u00fcrkiye vs. Paraguay",
+        "outcomes": {
+          "Draw": {
+            "askPct": 29.0,
+            "bidPct": 28.0,
+            "lastPct": 29.0,
+            "mid": 0.28500000000000003,
+            "midPct": 28.5,
+            "question": "Will T\u00fcrkiye vs. Paraguay end in a draw?",
+            "slug": "fifwc-tur-par-2026-06-19-draw"
+          },
+          "Paraguay": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "question": "Will Paraguay win on 2026-06-19?",
+            "slug": "fifwc-tur-par-2026-06-19-par"
+          },
+          "Turkey": {
+            "askPct": 49.0,
+            "bidPct": 48.0,
+            "lastPct": 49.0,
+            "mid": 0.485,
+            "midPct": 48.5,
+            "question": "Will T\u00fcrkiye win on 2026-06-19?",
+            "slug": "fifwc-tur-par-2026-06-19-tur"
+          }
+        },
+        "pick": "Turkey",
+        "pickPct": 48.5,
+        "source": "polymarket",
+        "teams": [
+          "Turkey",
+          "Paraguay"
+        ]
+      }
+    },
+    "Portugal::Uzbekistan": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN23PORUZB",
+        "eventTitle": "Portugal vs Uzbekistan Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "ticker": "KXWCGAME-26JUN23PORUZB-TIE"
+          },
+          "Portugal": {
+            "askPct": 80.0,
+            "bidPct": 79.0,
+            "lastPct": 79.0,
+            "mid": 0.795,
+            "midPct": 79.5,
+            "ticker": "KXWCGAME-26JUN23PORUZB-POR"
+          },
+          "Uzbekistan": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "ticker": "KXWCGAME-26JUN23PORUZB-UZB"
+          }
+        },
+        "pick": "Portugal",
+        "pickPct": 79.5,
+        "source": "kalshi",
+        "teams": [
+          "Portugal",
+          "Uzbekistan"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Portugal vs. Uzbekistan",
+        "outcomes": {
+          "Draw": {
+            "askPct": 14.0,
+            "bidPct": 13.0,
+            "lastPct": 14.0,
+            "mid": 0.135,
+            "midPct": 13.5,
+            "question": "Will Portugal vs. Uzbekistan end in a draw?",
+            "slug": "fifwc-prt-uzb-2026-06-23-draw"
+          },
+          "Portugal": {
+            "askPct": 80.0,
+            "bidPct": 79.0,
+            "lastPct": 80.0,
+            "mid": 0.795,
+            "midPct": 79.5,
+            "question": "Will Portugal win on 2026-06-23?",
+            "slug": "fifwc-prt-uzb-2026-06-23-prt"
+          },
+          "Uzbekistan": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "question": "Will Uzbekistan win on 2026-06-23?",
+            "slug": "fifwc-prt-uzb-2026-06-23-uzb"
+          }
+        },
+        "pick": "Portugal",
+        "pickPct": 79.5,
+        "source": "polymarket",
+        "teams": [
+          "Portugal",
+          "Uzbekistan"
+        ]
+      }
+    },
+    "Quarterfinal 1 Winner::Quarterfinal 2 Winner": {},
+    "Quarterfinal 3 Winner::Quarterfinal 4 Winner": {},
+    "Round of 16 1 Winner::Round of 16 2 Winner": {},
+    "Round of 16 3 Winner::Round of 16 4 Winner": {},
+    "Round of 16 5 Winner::Round of 16 6 Winner": {},
+    "Round of 16 7 Winner::Round of 16 8 Winner": {},
+    "Round of 32 1 Winner::Round of 32 3 Winner": {},
+    "Round of 32 10 Winner::Round of 32 9 Winner": {},
+    "Round of 32 11 Winner::Round of 32 12 Winner": {},
+    "Round of 32 13 Winner::Round of 32 15 Winner": {},
+    "Round of 32 14 Winner::Round of 32 16 Winner": {},
+    "Round of 32 2 Winner::Round of 32 5 Winner": {},
+    "Round of 32 4 Winner::Round of 32 6 Winner": {},
+    "Round of 32 7 Winner::Round of 32 8 Winner": {},
+    "Saudi Arabia::Spain": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN21ESPKSA",
+        "eventTitle": "Spain vs Saudi Arabia Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 7.0,
+            "bidPct": 6.0,
+            "lastPct": 8.0,
+            "mid": 0.065,
+            "midPct": 6.5,
+            "ticker": "KXWCGAME-26JUN21ESPKSA-TIE"
+          },
+          "Saudi Arabia": {
+            "askPct": 5.0,
+            "bidPct": 4.0,
+            "lastPct": 4.0,
+            "mid": 0.045,
+            "midPct": 4.5,
+            "ticker": "KXWCGAME-26JUN21ESPKSA-KSA"
+          },
+          "Spain": {
+            "askPct": 90.0,
+            "bidPct": 89.0,
+            "lastPct": 90.0,
+            "mid": 0.895,
+            "midPct": 89.5,
+            "ticker": "KXWCGAME-26JUN21ESPKSA-ESP"
+          }
+        },
+        "pick": "Spain",
+        "pickPct": 89.5,
+        "source": "kalshi",
+        "teams": [
+          "Spain",
+          "Saudi Arabia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Spain vs. Saudi Arabia",
+        "outcomes": {
+          "Draw": {
+            "askPct": 8.0,
+            "bidPct": 7.0,
+            "lastPct": 8.0,
+            "mid": 0.07500000000000001,
+            "midPct": 7.5,
+            "question": "Will Spain vs. Saudi Arabia end in a draw?",
+            "slug": "fifwc-esp-ksa-2026-06-21-draw"
+          },
+          "Saudi Arabia": {
+            "askPct": 3.6,
+            "bidPct": 3.5,
+            "lastPct": 3.8,
+            "mid": 0.035500000000000004,
+            "midPct": 3.55,
+            "question": "Will Saudi Arabia win on 2026-06-21?",
+            "slug": "fifwc-esp-ksa-2026-06-21-ksa"
+          },
+          "Spain": {
+            "askPct": 90.0,
+            "bidPct": 89.0,
+            "lastPct": 89.0,
+            "mid": 0.895,
+            "midPct": 89.5,
+            "question": "Will Spain win on 2026-06-21?",
+            "slug": "fifwc-esp-ksa-2026-06-21-esp"
+          }
+        },
+        "pick": "Spain",
+        "pickPct": 89.5,
+        "source": "polymarket",
+        "teams": [
+          "Spain",
+          "Saudi Arabia"
+        ]
+      }
+    },
+    "Saudi Arabia::Uruguay": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN15KSAURU",
+        "eventTitle": "Saudi Arabia vs Uruguay Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 21.0,
+            "bidPct": 20.0,
+            "lastPct": 21.0,
+            "mid": 0.20500000000000002,
+            "midPct": 20.5,
+            "ticker": "KXWCGAME-26JUN15KSAURU-TIE"
+          },
+          "Saudi Arabia": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "ticker": "KXWCGAME-26JUN15KSAURU-KSA"
+          },
+          "Uruguay": {
+            "askPct": 68.0,
+            "bidPct": 67.0,
+            "lastPct": 68.0,
+            "mid": 0.675,
+            "midPct": 67.5,
+            "ticker": "KXWCGAME-26JUN15KSAURU-URU"
+          }
+        },
+        "pick": "Uruguay",
+        "pickPct": 67.5,
+        "source": "kalshi",
+        "teams": [
+          "Saudi Arabia",
+          "Uruguay"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Saudi Arabia vs. Uruguay",
+        "outcomes": {
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "question": "Will Saudi Arabia vs. Uruguay end in a draw?",
+            "slug": "fifwc-ksa-ury-2026-06-15-draw"
+          },
+          "Saudi Arabia": {
+            "askPct": 12.0,
+            "bidPct": 11.0,
+            "lastPct": 12.0,
+            "mid": 0.11499999999999999,
+            "midPct": 11.5,
+            "question": "Will Saudi Arabia win on 2026-06-15?",
+            "slug": "fifwc-ksa-ury-2026-06-15-ksa"
+          },
+          "Uruguay": {
+            "askPct": 68.0,
+            "bidPct": 67.0,
+            "lastPct": 68.0,
+            "mid": 0.675,
+            "midPct": 67.5,
+            "question": "Will Uruguay win on 2026-06-15?",
+            "slug": "fifwc-ksa-ury-2026-06-15-ury"
+          }
+        },
+        "pick": "Uruguay",
+        "pickPct": 67.5,
+        "source": "polymarket",
+        "teams": [
+          "Saudi Arabia",
+          "Uruguay"
+        ]
+      }
+    },
+    "Semifinal 1 Loser::Semifinal 2 Loser": {},
+    "Semifinal 1 Winner::Semifinal 2 Winner": {},
+    "South Africa::South Korea": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN24RSAKOR",
+        "eventTitle": "South Africa vs Korea Republic Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN24RSAKOR-TIE"
+          },
+          "South Africa": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "ticker": "KXWCGAME-26JUN24RSAKOR-RSA"
+          },
+          "South Korea": {
+            "askPct": 63.0,
+            "bidPct": 62.0,
+            "lastPct": 63.0,
+            "mid": 0.625,
+            "midPct": 62.5,
+            "ticker": "KXWCGAME-26JUN24RSAKOR-KOR"
+          }
+        },
+        "pick": "South Korea",
+        "pickPct": 62.5,
+        "source": "kalshi",
+        "teams": [
+          "South Africa",
+          "South Korea"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "South Africa vs. Korea Republic",
+        "outcomes": {
+          "Draw": {
+            "askPct": 23.0,
+            "bidPct": 22.0,
+            "lastPct": 23.0,
+            "mid": 0.225,
+            "midPct": 22.5,
+            "question": "Will South Africa vs. Korea Republic end in a draw?",
+            "slug": "fifwc-rsa-kr-2026-06-24-draw"
+          },
+          "South Africa": {
+            "askPct": 16.0,
+            "bidPct": 15.0,
+            "lastPct": 16.0,
+            "mid": 0.155,
+            "midPct": 15.5,
+            "question": "Will South Africa win on 2026-06-24?",
+            "slug": "fifwc-rsa-kr-2026-06-24-rsa"
+          },
+          "South Korea": {
+            "askPct": 63.0,
+            "bidPct": 62.0,
+            "lastPct": 63.0,
+            "mid": 0.625,
+            "midPct": 62.5,
+            "question": "Will Korea Republic win on 2026-06-24?",
+            "slug": "fifwc-rsa-kr-2026-06-24-kr"
+          }
+        },
+        "pick": "South Korea",
+        "pickPct": 62.5,
+        "source": "polymarket",
+        "teams": [
+          "South Africa",
+          "South Korea"
+        ]
+      }
+    },
+    "Spain::Uruguay": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN26URUESP",
+        "eventTitle": "Uruguay vs Spain Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 24.0,
+            "bidPct": 23.0,
+            "lastPct": 24.0,
+            "mid": 0.235,
+            "midPct": 23.5,
+            "ticker": "KXWCGAME-26JUN26URUESP-TIE"
+          },
+          "Spain": {
+            "askPct": 60.0,
+            "bidPct": 59.0,
+            "lastPct": 60.0,
+            "mid": 0.595,
+            "midPct": 59.5,
+            "ticker": "KXWCGAME-26JUN26URUESP-ESP"
+          },
+          "Uruguay": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "ticker": "KXWCGAME-26JUN26URUESP-URU"
+          }
+        },
+        "pick": "Spain",
+        "pickPct": 59.5,
+        "source": "kalshi",
+        "teams": [
+          "Uruguay",
+          "Spain"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Uruguay vs. Spain",
+        "outcomes": {
+          "Draw": {
+            "askPct": 25.0,
+            "bidPct": 24.0,
+            "lastPct": 25.0,
+            "mid": 0.245,
+            "midPct": 24.5,
+            "question": "Will Uruguay vs. Spain end in a draw?",
+            "slug": "fifwc-ury-esp-2026-06-26-draw"
+          },
+          "Spain": {
+            "askPct": 60.0,
+            "bidPct": 59.0,
+            "lastPct": 60.0,
+            "mid": 0.595,
+            "midPct": 59.5,
+            "question": "Will Spain win on 2026-06-26?",
+            "slug": "fifwc-ury-esp-2026-06-26-esp"
+          },
+          "Uruguay": {
+            "askPct": 18.0,
+            "bidPct": 17.0,
+            "lastPct": 18.0,
+            "mid": 0.175,
+            "midPct": 17.5,
+            "question": "Will Uruguay win on 2026-06-26?",
+            "slug": "fifwc-ury-esp-2026-06-26-ury"
+          }
+        },
+        "pick": "Spain",
+        "pickPct": 59.5,
+        "source": "polymarket",
+        "teams": [
+          "Uruguay",
+          "Spain"
+        ]
+      }
+    },
+    "Sweden::Tunisia": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN14SWETUN",
+        "eventTitle": "Sweden vs Tunisia Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "ticker": "KXWCGAME-26JUN14SWETUN-TIE"
+          },
+          "Sweden": {
+            "askPct": 52.0,
+            "bidPct": 51.0,
+            "lastPct": 52.0,
+            "mid": 0.515,
+            "midPct": 51.5,
+            "ticker": "KXWCGAME-26JUN14SWETUN-SWE"
+          },
+          "Tunisia": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "ticker": "KXWCGAME-26JUN14SWETUN-TUN"
+          }
+        },
+        "pick": "Sweden",
+        "pickPct": 51.5,
+        "source": "kalshi",
+        "teams": [
+          "Sweden",
+          "Tunisia"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "Sweden vs. Tunisia",
+        "outcomes": {
+          "Draw": {
+            "askPct": 28.0,
+            "bidPct": 27.0,
+            "lastPct": 28.0,
+            "mid": 0.275,
+            "midPct": 27.5,
+            "question": "Will Sweden vs. Tunisia end in a draw?",
+            "slug": "fifwc-swe-tun-2026-06-14-draw"
+          },
+          "Sweden": {
+            "askPct": 51.0,
+            "bidPct": 50.0,
+            "lastPct": 51.0,
+            "mid": 0.505,
+            "midPct": 50.5,
+            "question": "Will Sweden win on 2026-06-14?",
+            "slug": "fifwc-swe-tun-2026-06-14-swe"
+          },
+          "Tunisia": {
+            "askPct": 22.0,
+            "bidPct": 21.0,
+            "lastPct": 22.0,
+            "mid": 0.215,
+            "midPct": 21.5,
+            "question": "Will Tunisia win on 2026-06-14?",
+            "slug": "fifwc-swe-tun-2026-06-14-tun"
+          }
+        },
+        "pick": "Sweden",
+        "pickPct": 50.5,
+        "source": "polymarket",
+        "teams": [
+          "Sweden",
+          "Tunisia"
+        ]
+      }
+    },
+    "Turkey::USA": {
+      "kalshi": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTicker": "KXWCGAME-26JUN25TURUSA",
+        "eventTitle": "Turkiye vs USA Winner?",
+        "outcomes": {
+          "Draw": {
+            "askPct": 26.0,
+            "bidPct": 25.0,
+            "lastPct": 25.0,
+            "mid": 0.255,
+            "midPct": 25.5,
+            "ticker": "KXWCGAME-26JUN25TURUSA-TIE"
+          },
+          "Turkey": {
+            "askPct": 35.0,
+            "bidPct": 34.0,
+            "lastPct": 34.0,
+            "mid": 0.345,
+            "midPct": 34.5,
+            "ticker": "KXWCGAME-26JUN25TURUSA-TUR"
+          },
+          "USA": {
+            "askPct": 46.0,
+            "bidPct": 45.0,
+            "lastPct": 46.0,
+            "mid": 0.455,
+            "midPct": 45.5,
+            "ticker": "KXWCGAME-26JUN25TURUSA-USA"
+          }
+        },
+        "pick": "USA",
+        "pickPct": 45.5,
+        "source": "kalshi",
+        "teams": [
+          "Turkey",
+          "USA"
+        ]
+      },
+      "polymarket": {
+        "capturedAt": "2026-06-13T22:24:36.577772+00:00",
+        "eventTitle": "T\u00fcrkiye vs. United States",
+        "outcomes": {
+          "Draw": {
+            "askPct": 27.0,
+            "bidPct": 26.0,
+            "lastPct": 27.0,
+            "mid": 0.265,
+            "midPct": 26.5,
+            "question": "Will T\u00fcrkiye vs. United States end in a draw?",
+            "slug": "fifwc-tur-usa-2026-06-25-draw"
+          },
+          "Turkey": {
+            "askPct": 35.0,
+            "bidPct": 34.0,
+            "lastPct": 35.0,
+            "mid": 0.345,
+            "midPct": 34.5,
+            "question": "Will T\u00fcrkiye win on 2026-06-25?",
+            "slug": "fifwc-tur-usa-2026-06-25-tur"
+          },
+          "USA": {
+            "askPct": 41.0,
+            "bidPct": 40.0,
+            "lastPct": 41.0,
+            "mid": 0.405,
+            "midPct": 40.5,
+            "question": "Will United States win on 2026-06-25?",
+            "slug": "fifwc-tur-usa-2026-06-25-usa"
+          }
+        },
+        "pick": "USA",
+        "pickPct": 40.5,
+        "source": "polymarket",
+        "teams": [
+          "Turkey",
+          "USA"
+        ]
+      }
+    }
+  },
+  "updatedAt": "2026-06-13T22:24:36.577772+00:00"
+}
