@@ -2,4 +2,4 @@
 __pycache__/
 *.pyc
 work/
-
+outputs/world-cup-tracker/.bracket-generation-state.json

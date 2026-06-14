@@ -1,5 +1,6 @@
 const state = {
   snapshot: null,
+  bracketStatus: null,
   filter: "all",
   search: "",
   loading: false,
@@ -51,9 +52,10 @@ function predictionText(label, pick, pickPct, source) {
   return parts.join(" · ");
 }
 
-function currentMarketLine(label, pick, pickPct, source) {
+function currentMarketLine(label, pick, pickPct, source, lockedPick) {
   if (!pick) return "";
-  return `<div class="currentLine">${predictionText(label, pick, pickPct, source)}</div>`;
+  const changedClass = lockedPick && pick !== lockedPick ? " currentChanged" : "";
+  return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source)}</div>`;
 }
 
 function accuracy(hits, misses) {
@@ -69,6 +71,29 @@ function accuracyValue(hits, misses) {
 function setText(id, value) {
   const node = $(id);
   if (node) node.textContent = value;
+}
+
+function renderBracketStatus(status) {
+  const node = $("#bracketButton");
+  if (!node) return;
+
+  node.classList.toggle("needsGeneration", Boolean(status?.changed));
+  node.title = status?.changed
+    ? "Team composition changed since latest FINALS generation"
+    : "Open current finals bracket";
+}
+
+async function loadBracketStatus() {
+  const response = await fetch(`/api/bracket-status?ts=${Date.now()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Bracket status failed: ${response.status}`);
+  state.bracketStatus = await response.json();
+  renderBracketStatus(state.bracketStatus);
+}
+
+function loadBracketStatusQuietly() {
+  loadBracketStatus().catch((error) => {
+    console.error(error);
+  });
 }
 
 function markBestPerformance(summary) {
@@ -157,8 +182,9 @@ function renderMatches(data) {
   node.innerHTML = matches
     .map((match) => {
       const isPending = !match.status.completed && match.status.state !== "in";
-      const statusClass = match.status.state === "in" ? "live" : isPending ? "pending" : "";
-      const matchClass = isPending ? "match pending" : "match";
+      const isLive = match.status.state === "in";
+      const statusClass = isLive ? "live" : isPending ? "pending" : "";
+      const matchClass = isLive ? "match liveMatch" : isPending ? "match pending" : "match";
       const pmResult = match.prediction.polymarketResult;
       const ksResult = match.prediction.kalshiResult;
       return `
@@ -188,7 +214,8 @@ function renderMatches(data) {
             "PM now",
             match.prediction.polymarketCurrentPick,
             match.prediction.polymarketCurrentPickPct,
-            match.prediction.polymarketCurrentSource
+            match.prediction.polymarketCurrentSource,
+            match.prediction.polymarketPick
           )}
           <div class="leanLine">
             <span class="leanPick">${predictionText(
@@ -203,7 +230,8 @@ function renderMatches(data) {
             "Kalshi now",
             match.prediction.kalshiCurrentPick,
             match.prediction.kalshiCurrentPickPct,
-            match.prediction.kalshiCurrentSource
+            match.prediction.kalshiCurrentSource,
+            match.prediction.kalshiPick
           )}
         </article>
       `;
@@ -351,6 +379,13 @@ $("#refreshButton").addEventListener("click", () => {
     console.error(error);
     setText("#refreshStamp", "Refresh failed");
   });
+  loadBracketStatusQuietly();
+});
+
+$("#bracketButton").addEventListener("click", () => {
+  window.open(`/bracket?ts=${Date.now()}`, "_blank", "noopener");
+  renderBracketStatus({ changed: false });
+  setTimeout(loadBracketStatusQuietly, 2500);
 });
 
 $$(".segment").forEach((button) => {
@@ -371,10 +406,12 @@ loadSnapshot().catch((error) => {
   console.error(error);
   setText("#refreshStamp", "Load failed");
 });
+loadBracketStatusQuietly();
 
 setInterval(() => {
   loadSnapshot().catch((error) => {
     console.error(error);
     setText("#refreshStamp", "Refresh failed");
   });
+  loadBracketStatusQuietly();
 }, 60_000);
