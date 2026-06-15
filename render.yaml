@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: wc2026
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # 1 worker (free tier RAM) + threads so a slow upstream fetch doesn't block
+    # other requests; timeout above the 25s per-request upstream fetch timeout.
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
