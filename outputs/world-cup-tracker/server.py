@@ -6,6 +6,7 @@ import re
 import sys
 import time
 import csv
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
 from html import escape
@@ -30,6 +31,7 @@ ESPN_STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.w
 
 CACHE_TTL_SECONDS = 60
 _CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
+_BRACKET_STATUS_CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
 
 COUNTRY_CODE_BY_NAME = {
     "ca": "CA",
@@ -631,41 +633,13 @@ def current_match_pick(source_name: str, match_key: str | None, live_match_sourc
 
 
 def build_projection(odds: dict[str, Any]) -> dict[str, Any]:
-    def build_round(pairings: list[tuple[str, str]]) -> tuple[list[dict[str, Any]], list[str]]:
-        matches = []
-        winners = []
-        for team_a, team_b in pairings:
-            winner = pick_between(team_a, team_b, odds)
-            loser = team_b if winner == team_a else team_a
-            matches.append({"teams": [team_a, team_b], "winner": winner, "loser": loser})
-            winners.append(winner)
-        return matches, winners
-
-    def next_pairings(winners: list[str]) -> list[tuple[str, str]]:
-        return [(winners[i], winners[i + 1]) for i in range(0, len(winners), 2)]
-
-    left_rounds, right_rounds = [], []
-    left_matches, left_winners = build_round(LEFT_R32)
-    right_matches, right_winners = build_round(RIGHT_R32)
-    left_rounds.append(left_matches)
-    right_rounds.append(right_matches)
-
-    for _ in range(3):
-        left_matches, left_winners = build_round(next_pairings(left_winners))
-        right_matches, right_winners = build_round(next_pairings(right_winners))
-        left_rounds.append(left_matches)
-        right_rounds.append(right_matches)
-
-    left_finalist = left_rounds[-1][0]["winner"]
-    right_finalist = right_rounds[-1][0]["winner"]
-    champion = pick_between(left_finalist, right_finalist, odds)
-    runner_up = right_finalist if champion == left_finalist else left_finalist
-
+    # Pure market projection: a fact projection with no completed results to override picks.
+    projection = build_fact_projection(odds, {})
     return {
-        "champion": champion,
-        "finalists": [left_finalist, right_finalist],
-        "runnerUp": runner_up,
-        "rounds": {"left": left_rounds, "right": right_rounds},
+        "champion": projection["champion"],
+        "finalists": projection["final"]["teams"],
+        "runnerUp": projection["runnerUp"],
+        "rounds": projection["rounds"],
     }
 
 
@@ -876,24 +850,49 @@ def build_team_rows(groups: list[dict[str, Any]], polymarket: dict[str, Any], ka
     return rows
 
 
-def build_snapshot() -> dict[str, Any]:
-    baseline_polymarket, baseline_kalshi, baseline_path = load_baseline_odds()
-    if baseline_polymarket and baseline_kalshi:
-        polymarket = baseline_polymarket
-        kalshi = baseline_kalshi
-    else:
-        polymarket = fetch_polymarket()
-        kalshi = fetch_kalshi()
+def top_leader(odds: dict[str, Any]) -> dict[str, Any] | None:
+    if not odds:
+        return None
+    return max(odds.values(), key=lambda item: item.get("mid") or 0)
 
-    scoreboard = fetch_scoreboard()
-    live_match_sources, match_market_errors = fetch_live_match_sources()
+
+def _resolve(future: Any, fallback: Any, errors: dict[str, str], label: str) -> Any:
+    try:
+        return future.result()
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+        errors[label] = str(exc)
+        return fallback
+
+
+def build_snapshot() -> dict[str, Any]:
+    fetch_errors: dict[str, str] = {}
+    baseline_polymarket, baseline_kalshi, baseline_path = load_baseline_odds()
+    use_baseline = bool(baseline_polymarket and baseline_kalshi)
+
+    # Independent network calls run concurrently so a cold snapshot is not the sum of every timeout.
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        scoreboard_future = pool.submit(fetch_scoreboard)
+        standings_future = pool.submit(fetch_standings)
+        live_sources_future = pool.submit(fetch_live_match_sources)
+        polymarket_future = None if use_baseline else pool.submit(fetch_polymarket)
+        kalshi_future = None if use_baseline else pool.submit(fetch_kalshi)
+
+        scoreboard = _resolve(scoreboard_future, [], fetch_errors, "espnScoreboard")
+        standings = _resolve(standings_future, [], fetch_errors, "espnStandings")
+        # fetch_live_match_sources already isolates per-source failures and never raises.
+        live_match_sources, match_market_errors = live_sources_future.result()
+        if use_baseline:
+            polymarket, kalshi = baseline_polymarket, baseline_kalshi
+        else:
+            polymarket = _resolve(polymarket_future, baseline_polymarket, fetch_errors, "polymarket")
+            kalshi = _resolve(kalshi_future, baseline_kalshi, fetch_errors, "kalshi")
+
     match_markets, match_baseline_path = merge_match_baseline(scoreboard, live_match_sources)
-    standings = fetch_standings()
     comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets, live_match_sources)
     team_rows = build_team_rows(standings, polymarket, kalshi)
 
-    pm_top = max(polymarket.values(), key=lambda item: item.get("mid") or 0)
-    ks_top = max(kalshi.values(), key=lambda item: item.get("mid") or 0)
+    pm_top = top_leader(polymarket)
+    ks_top = top_leader(kalshi)
 
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
@@ -907,8 +906,9 @@ def build_snapshot() -> dict[str, Any]:
             "kalshiMatchMarkets": f"{KALSHI_MARKETS_URL}?series_ticker=KXWCGAME",
             "matchMarketBaseline": match_baseline_path,
         },
-        "predictionMode": "baselineCsv" if baseline_path else "liveMarkets",
+        "predictionMode": "baselineCsv" if use_baseline else "liveMarkets",
         "matchMarketErrors": match_market_errors,
+        "fetchErrors": fetch_errors,
         "matchMarketsCaptured": sum(len(source) for source in live_match_sources.values()),
         "leaders": {"polymarket": pm_top, "kalshi": ks_top},
         "projections": {
@@ -1190,22 +1190,9 @@ def render_bracket_svg(
             + "".join(rows)
         )
 
-    def connector_left(prev_x: int, prev_ys: list[int], next_x: int, next_ys: list[int]) -> str:
+    def connector(prev_x: int, prev_ys: list[int], next_x: int, next_ys: list[int], *, leftward: bool) -> str:
         lines = []
-        x1, x2 = prev_x + box_w, next_x
-        xm = (x1 + x2) / 2
-        for idx, next_y in enumerate(next_ys):
-            y_a = prev_ys[idx * 2] + box_h / 2
-            y_b = prev_ys[idx * 2 + 1] + box_h / 2
-            y_n = next_y + box_h / 2
-            lines.append(
-                f'<path d="M{x1},{y_a} H{xm} M{x1},{y_b} H{xm} M{xm},{y_a} V{y_b} M{xm},{y_n} H{x2}" class="connector" />'
-            )
-        return "".join(lines)
-
-    def connector_right(prev_x: int, prev_ys: list[int], next_x: int, next_ys: list[int]) -> str:
-        lines = []
-        x1, x2 = prev_x, next_x + box_w
+        x1, x2 = (prev_x + box_w, next_x) if leftward else (prev_x, next_x + box_w)
         xm = (x1 + x2) / 2
         for idx, next_y in enumerate(next_ys):
             y_a = prev_ys[idx * 2] + box_h / 2
@@ -1257,8 +1244,8 @@ def render_bracket_svg(
     svg_parts.extend(f'<text x="{x}" y="145" class="round" text-anchor="middle">{label}</text>' for label, x in headers)
 
     for round_idx in range(3):
-        svg_parts.append(connector_left(left_x[round_idx], round_ys[round_idx], left_x[round_idx + 1], round_ys[round_idx + 1]))
-        svg_parts.append(connector_right(right_x[round_idx], round_ys[round_idx], right_x[round_idx + 1], round_ys[round_idx + 1]))
+        svg_parts.append(connector(left_x[round_idx], round_ys[round_idx], left_x[round_idx + 1], round_ys[round_idx + 1], leftward=True))
+        svg_parts.append(connector(right_x[round_idx], round_ys[round_idx], right_x[round_idx + 1], round_ys[round_idx + 1], leftward=False))
     svg_parts.append(f'<path d="M{left_x[3] + box_w},{round_ys[3][0] + box_h / 2} H{final_x}" class="connector" />')
     svg_parts.append(f'<path d="M{right_x[3]},{round_ys[3][0] + box_h / 2} H{final_x + box_w}" class="connector" />')
 
@@ -1283,7 +1270,7 @@ def render_bracket_svg(
     return "".join(svg_parts)
 
 
-def build_bracket_payload(mark_generated: bool = False) -> dict[str, Any]:
+def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True) -> dict[str, Any]:
     odds, sources = current_consensus_odds()
     if not odds:
         baseline_polymarket, baseline_kalshi, _ = load_baseline_odds()
@@ -1299,17 +1286,8 @@ def build_bracket_payload(mark_generated: bool = False) -> dict[str, Any]:
     initial_odds = baseline_consensus_odds()
     initial_projection = build_fact_projection(initial_odds, {}) if initial_odds else None
     generated_at = datetime.now(timezone.utc)
-    svg = render_bracket_svg(
-        projection,
-        odds,
-        fact_sources,
-        generated_at,
-        changed_projection_slots(projection, initial_projection, odds, initial_odds),
-        initial_projection.get("champion") if initial_projection else None,
-    )
     composition = projection_composition(projection)
     payload = {
-        "svg": svg,
         "projection": projection,
         "odds": odds,
         "sources": fact_sources,
@@ -1317,6 +1295,16 @@ def build_bracket_payload(mark_generated: bool = False) -> dict[str, Any]:
         "composition": composition,
         "compositionHash": projection_composition_hash(composition),
     }
+    # The status poll only needs the composition hash, so skip the (relatively costly) SVG render there.
+    if render_svg:
+        payload["svg"] = render_bracket_svg(
+            projection,
+            odds,
+            fact_sources,
+            generated_at,
+            changed_projection_slots(projection, initial_projection, odds, initial_odds),
+            initial_projection.get("champion") if initial_projection else None,
+        )
     if mark_generated:
         write_latest_bracket_generation(payload)
     return payload
@@ -1337,7 +1325,13 @@ def snapshot():
     if _CACHE["payload"] is not None and now - _CACHE["at"] < CACHE_TTL_SECONDS:
         return jsonify({**_CACHE["payload"], "cached": True})
 
-    payload = build_snapshot()
+    try:
+        payload = build_snapshot()
+    except Exception as exc:  # last-resort guard: serve the last good snapshot instead of a 500
+        if _CACHE["payload"] is not None:
+            return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "error": str(exc)})
+        return jsonify({"error": str(exc)}), 503
+
     _CACHE["payload"] = payload
     _CACHE["at"] = now
     return jsonify({**payload, "cached": False})
@@ -1362,7 +1356,11 @@ def desktop_alert():
 
 @APP.get("/api/bracket-status")
 def bracket_status():
-    payload = build_bracket_payload(mark_generated=False)
+    now = time.time()
+    if _BRACKET_STATUS_CACHE["payload"] is None or now - _BRACKET_STATUS_CACHE["at"] >= CACHE_TTL_SECONDS:
+        _BRACKET_STATUS_CACHE["payload"] = build_bracket_payload(mark_generated=False, render_svg=False)
+        _BRACKET_STATUS_CACHE["at"] = now
+    payload = _BRACKET_STATUS_CACHE["payload"]
     latest = read_latest_bracket_generation()
     latest_hash = latest.get("compositionHash") if latest else None
     return jsonify(
