@@ -636,8 +636,14 @@ def pick_for_event(
     match_markets: dict[str, Any],
     outright_odds: dict[str, Any],
 ) -> dict[str, Any]:
-    # "Locked" = the last pre-game market read, falling back to outright title odds.
-    return capture_pick(match_markets, source_name, match_key, "preGame") or outright_pick(team_a, team_b, outright_odds)
+    # "Locked" = the last pre-game market read. If we never captured one (e.g. the
+    # market only appeared after kick-off, or the baseline reset), prefer the in-play
+    # market over outright — outright is only a last resort when no match market exists.
+    return (
+        capture_pick(match_markets, source_name, match_key, "preGame")
+        or capture_pick(match_markets, source_name, match_key, "inPlay")
+        or outright_pick(team_a, team_b, outright_odds)
+    )
 
 
 def current_match_pick(
