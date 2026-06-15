@@ -114,3 +114,35 @@ def test_top_leader_handles_empty():
     assert server.top_leader({}) is None
     leader = server.top_leader({"A": {"mid": 0.1}, "B": {"mid": 0.4}})
     assert leader["mid"] == 0.4
+
+
+@pytest.mark.parametrize(
+    "note,expected",
+    [
+        ("FIFA World Cup, Group A", "A"),
+        ("FIFA World Cup, Group L", "L"),
+        ("FIFA World Cup", None),
+        (None, None),
+    ],
+)
+def test_match_group(note, expected):
+    assert server.match_group(note) == expected
+
+
+@pytest.mark.parametrize(
+    "slug,group,expected",
+    [
+        ("group-stage", "A", "Group A"),
+        ("group-stage", None, None),
+        ("round-of-32", None, "1/16 Finals"),
+        ("round-of-16", None, "1/8 Finals"),
+        ("quarterfinals", None, "1/4 Finals"),
+        ("semifinals", None, "1/2 Finals"),
+        ("final", None, "FINAL"),
+        ("3rd-place-match", None, "3rd Place"),
+        (None, None, None),
+        ("unknown-stage", None, None),
+    ],
+)
+def test_stage_label(slug, group, expected):
+    assert server.stage_label(slug, group) == expected

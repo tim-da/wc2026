@@ -362,9 +362,11 @@ function scoreLine(match) {
 function matchLocation(match) {
   const location = match.location || {};
   const city = location.city || match.venue;
-  if (!city) return "";
+  const stage = match.stageLabel ? `(${match.stageLabel})` : "";
+  if (!city && !stage) return "";
 
-  const label = `${location.flag ? `${location.flag} ` : ""}${city}`;
+  const cityLabel = city ? `${location.flag ? `${location.flag} ` : ""}${city}` : "";
+  const label = [cityLabel, stage].filter(Boolean).join(" ");
   const titleParts = [match.venue, location.city && location.countryCode ? location.countryCode : null].filter(Boolean);
   return `<span class="matchLocation" title="${escapeHtml(titleParts.join(" · "))}">${escapeHtml(label)}</span>`;
 }

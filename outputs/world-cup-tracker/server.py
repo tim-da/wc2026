@@ -643,6 +643,27 @@ def build_projection(odds: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+KNOCKOUT_STAGE_LABELS = {
+    "round-of-32": "1/16 Finals",
+    "round-of-16": "1/8 Finals",
+    "quarterfinals": "1/4 Finals",
+    "semifinals": "1/2 Finals",
+    "final": "FINAL",
+    "3rd-place-match": "3rd Place",
+}
+
+
+def match_group(note: str | None) -> str | None:
+    found = re.search(r"Group\s+([A-Z])", note or "")
+    return found.group(1) if found else None
+
+
+def stage_label(slug: str | None, group: str | None) -> str | None:
+    if slug == "group-stage":
+        return f"Group {group}" if group else None
+    return KNOCKOUT_STAGE_LABELS.get(slug or "")
+
+
 def fetch_scoreboard() -> list[dict[str, Any]]:
     data = fetch_json(ESPN_SCOREBOARD_URL, {"dates": "20260611-20260719", "limit": 500})
     events = []
@@ -653,6 +674,8 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
         status_type = status.get("type", {})
         venue = competition.get("venue") or {}
         competitors = competition.get("competitors") or []
+        stage_slug = (event.get("season") or {}).get("slug")
+        group_letter = match_group(competition.get("altGameNote"))
 
         sides: dict[str, Any] = {}
         for competitor in competitors:
@@ -686,6 +709,9 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
                 "date": event.get("date") or competition.get("date"),
                 "venue": venue.get("fullName"),
                 "location": venue_location(venue),
+                "stage": stage_slug,
+                "group": group_letter,
+                "stageLabel": stage_label(stage_slug, group_letter),
                 "status": {
                     "state": status_type.get("state"),
                     "completed": bool(status_type.get("completed")),
