@@ -346,13 +346,9 @@ small {
   font-weight: 800;
 }
 
-.leanLine,
-.currentLine {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 32px;
+.leanLine {
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 12px;
@@ -365,7 +361,16 @@ small {
   white-space: nowrap;
 }
 
-.currentLine.currentChanged .leanPick {
+.currentLine {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.currentLine.currentChanged {
   color: var(--red);
   font-weight: 800;
 }
