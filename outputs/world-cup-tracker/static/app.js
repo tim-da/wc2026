@@ -164,7 +164,12 @@ function playAlertSound(type) {
   if (!context || context.state === "suspended") return;
 
   const now = context.currentTime;
-  const tones = type === "liveScoreChange" ? [880, 1175] : [784, 1046];
+  const tonesByType = {
+    liveScoreChange: [880, 1175],
+    kickoff: [659, 988],
+    favoriteChange: [988, 1319],
+  };
+  const tones = tonesByType[type] || [784, 1046];
   playAlertTone(context, tones[0], now, 0.16);
   playAlertTone(context, tones[1], now + 0.12, 0.22);
 }
@@ -399,9 +404,26 @@ function timedScoreLine(match) {
   return minute ? `${minute}: ${scoreLine(match)}` : scoreLine(match);
 }
 
+function kickoffText(match) {
+  const home = match.home?.displayName || match.home?.team || "Home";
+  const away = match.away?.displayName || match.away?.team || "Away";
+  const parts = [`${home} vs ${away}`];
+  if (match.stageLabel) parts.push(match.stageLabel); // "Group A" or e.g. "1/16 Finals"
+  const city = (match.location || {}).city || match.venue;
+  if (city) parts.push(city);
+  return parts.join(" · ");
+}
+
 function scoreNotification(previous, current) {
+  if (!previous) return null;
+
+  // Kick-off: the match flipped to live since the previous poll.
+  if (current.status?.state === "in" && previous.status?.state !== "in" && !current.status?.completed) {
+    return { type: "kickoff", title: "Kick-off", text: kickoffText(current) };
+  }
+
   const currentScore = scorePair(current);
-  if (!previous || !currentScore) return null;
+  if (!currentScore) return null;
 
   if (current.status.completed && !previous.status?.completed) {
     return { type: "finalScore", title: "Final score", text: timedScoreLine(current) };
@@ -461,6 +483,21 @@ function showToast(notification) {
   }, 9000);
 }
 
+function favoriteTeam(snapshot) {
+  return snapshot?.odds?.consensus?.[0]?.team || null;
+}
+
+function showFavoriteNotification(previous, current) {
+  const prev = favoriteTeam(previous);
+  const next = favoriteTeam(current);
+  // Only alert on an actual change between two known snapshots (never on first load).
+  if (!prev || !next || prev === next) return;
+
+  const notification = { type: "favoriteChange", title: "New favorite", text: `We have a new favorite - ${next}` };
+  showToast(notification);
+  sendDesktopNotification(notification);
+}
+
 function showMatchNotifications(previousMatches = [], currentMatches = []) {
   if (!previousMatches.length) return;
 
@@ -496,11 +533,13 @@ async function loadSnapshot() {
   try {
     const response = await fetch("/api/snapshot");
     if (!response.ok) throw new Error(`Snapshot failed: ${response.status}`);
-    const previousMatches = state.snapshot?.matches || [];
+    const previousSnapshot = state.snapshot;
+    const previousMatches = previousSnapshot?.matches || [];
     const nextSnapshot = await response.json();
     state.snapshot = nextSnapshot;
     render();
     showMatchNotifications(previousMatches, nextSnapshot.matches);
+    showFavoriteNotification(previousSnapshot, nextSnapshot);
   } finally {
     state.loading = false;
   }

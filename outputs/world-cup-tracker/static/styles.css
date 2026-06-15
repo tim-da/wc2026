@@ -450,6 +450,24 @@ small {
   color: #166534;
 }
 
+.toast.kickoff {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.toast.kickoff strong {
+  color: #92400e;
+}
+
+.toast.favoriteChange {
+  border-color: #e9d5ff;
+  background: #faf5ff;
+}
+
+.toast.favoriteChange strong {
+  color: #6b21a8;
+}
+
 .toast.leaving {
   opacity: 0;
   transform: translateY(-6px);
