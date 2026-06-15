@@ -6,6 +6,7 @@ const state = {
   filter: "all",
   search: "",
   team: "",
+  group: "",
   loading: false,
 };
 
@@ -546,6 +547,7 @@ function isUpset(match) {
 
 function matchVisible(match) {
   if (state.team && match.home?.team !== state.team && match.away?.team !== state.team) return false;
+  if (state.group && match.group !== state.group) return false;
   if (state.filter === "today") return isToday(match.date);
   if (state.filter === "live") return match.status.state === "in";
   if (state.filter === "completed") return match.status.completed;
@@ -627,13 +629,16 @@ function renderMatches(data) {
 const BLUE_GROUPS = new Set(["A", "C", "E", "G", "I", "K"]);
 const QUALIFYING_THIRD_PLACES = 8;
 
-function teamRowClass(group) {
-  const groupLetter = String(group || "")
+function groupLetterOf(value) {
+  return String(value || "")
     .trim()
     .replace(/^Group\s+/i, "")
     .slice(0, 1)
     .toUpperCase();
-  return BLUE_GROUPS.has(groupLetter) ? "groupBlue" : "";
+}
+
+function teamRowClass(group) {
+  return BLUE_GROUPS.has(groupLetterOf(group)) ? "groupBlue" : "";
 }
 
 function standingValue(value) {
@@ -691,6 +696,7 @@ function renderTeams(data) {
   const filteredRows = [...data.teams].filter(
     (team) =>
       (!state.team || team.team === state.team) &&
+      (!state.group || groupLetterOf(team.group) === state.group) &&
       (!query || team.displayName.toLowerCase().includes(query) || team.team.toLowerCase().includes(query))
   );
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
@@ -736,12 +742,18 @@ function renderTeams(data) {
 
 function renderOdds(data) {
   const globalMax = data.odds.consensus[0]?.pct || 1;
-  const scoped = state.team
-    ? data.odds.consensus.filter((row) => row.team === state.team)
-    : data.odds.consensus;
+  let scoped = data.odds.consensus;
+  if (state.team) {
+    scoped = scoped.filter((row) => row.team === state.team);
+  } else if (state.group) {
+    const groupTeams = new Set(
+      (data.teams || []).filter((t) => groupLetterOf(t.group) === state.group).map((t) => t.team)
+    );
+    scoped = scoped.filter((row) => groupTeams.has(row.team));
+  }
   const top = scoped.slice(0, 18);
   if (!top.length) {
-    $("#oddsBars").innerHTML = `<div class="empty">No consensus odds for this team.</div>`;
+    $("#oddsBars").innerHTML = `<div class="empty">No consensus odds in this view.</div>`;
     return;
   }
   $("#oddsBars").innerHTML = top
@@ -785,8 +797,71 @@ function applyTeamFocus(value) {
   // Narrow only on an exact match; partial typing keeps the full view.
   state.team = raw ? lookup.get(raw.toLowerCase()) || "" : "";
 
+  // Team and group focus are mutually exclusive.
+  if (state.team) resetGroupFocus();
+
   const clearButton = $("#teamFocusClear");
   if (clearButton) clearButton.hidden = !state.team;
+
+  if (!data) return;
+  renderMatches(data);
+  renderTeams(data);
+  renderOdds(data);
+}
+
+function groupFocusLabels(data) {
+  return Array.from(new Set((data.teams || []).map((row) => row.group).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b)
+  );
+}
+
+function groupFocusLookup(data) {
+  // Map of lowercased "Group A" / "A" -> group letter.
+  const map = new Map();
+  groupFocusLabels(data).forEach((label) => {
+    const letter = groupLetterOf(label);
+    map.set(label.toLowerCase(), letter);
+    map.set(letter.toLowerCase(), letter);
+  });
+  return map;
+}
+
+function renderGroupFocusOptions(data) {
+  const datalist = $("#groupFocusOptions");
+  if (!datalist) return;
+  datalist.innerHTML = groupFocusLabels(data)
+    .map((label) => `<option value="${escapeHtml(label)}"></option>`)
+    .join("");
+}
+
+function resetTeamFocus() {
+  state.team = "";
+  const input = $("#teamFocus");
+  if (input) input.value = "";
+  const clearButton = $("#teamFocusClear");
+  if (clearButton) clearButton.hidden = true;
+}
+
+function resetGroupFocus() {
+  state.group = "";
+  const input = $("#groupFocus");
+  if (input) input.value = "";
+  const clearButton = $("#groupFocusClear");
+  if (clearButton) clearButton.hidden = true;
+}
+
+function applyGroupFocus(value) {
+  const data = state.snapshot;
+  const raw = String(value || "").trim();
+  const lookup = data ? groupFocusLookup(data) : new Map();
+  // Narrow only when the value resolves to a known group; partial typing keeps the full view.
+  state.group = raw ? lookup.get(raw.toLowerCase()) || "" : "";
+
+  // Team and group focus are mutually exclusive.
+  if (state.group) resetTeamFocus();
+
+  const clearButton = $("#groupFocusClear");
+  if (clearButton) clearButton.hidden = !state.group;
 
   if (!data) return;
   renderMatches(data);
@@ -800,6 +875,7 @@ function render() {
   renderMetrics(data);
   renderProjections(data);
   renderTeamFocusOptions(data);
+  renderGroupFocusOptions(data);
   renderMatches(data);
   renderTeams(data);
   renderOdds(data);
@@ -848,6 +924,16 @@ $("#teamFocusClear").addEventListener("click", () => {
   teamFocusInput.value = "";
   applyTeamFocus("");
   teamFocusInput.focus();
+});
+
+const groupFocusInput = $("#groupFocus");
+["input", "change"].forEach((evt) =>
+  groupFocusInput.addEventListener(evt, (event) => applyGroupFocus(event.target.value))
+);
+$("#groupFocusClear").addEventListener("click", () => {
+  groupFocusInput.value = "";
+  applyGroupFocus("");
+  groupFocusInput.focus();
 });
 
 window.addEventListener("focus", () => {
