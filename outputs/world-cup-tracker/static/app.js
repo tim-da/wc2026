@@ -82,7 +82,9 @@ function predictionText(label, pick, pickPct, source) {
 }
 
 function currentMarketLine(label, pick, pickPct, source, lockedPick) {
-  if (!pick) return "";
+  // Always render the row (a placeholder before kick-off) so every card reserves
+  // the same height and the dividers line up across adjacent cards in the grid.
+  if (!pick) return `<div class="currentLine currentEmpty">${label}: awaiting kick-off</div>`;
   const changedClass = lockedPick && pick !== lockedPick ? " currentChanged" : "";
   return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source)}</div>`;
 }
