@@ -60,9 +60,9 @@ function sourceLabel(source) {
 }
 
 function predictionText(label, pick, pickPct, source) {
-  const parts = [`${label}: ${pick || "n/a"}`];
+  const parts = [`${label}: ${escapeHtml(pick || "n/a")}`];
   if (pickPct != null) parts.push(fmtPct(pickPct));
-  if (source) parts.push(sourceLabel(source));
+  if (source) parts.push(escapeHtml(sourceLabel(source)));
   return parts.join(" · ");
 }
 
@@ -494,10 +494,10 @@ function renderMetrics(data) {
   const pm = data.leaders.polymarket;
   const ks = data.leaders.kalshi;
 
-  setText("#pmLeader", pm.team);
-  setText("#pmLeaderPrice", fmtPct(pm.midPct));
-  setText("#ksLeader", ks.team);
-  setText("#ksLeaderPrice", fmtPct(ks.midPct));
+  setText("#pmLeader", pm?.team || "n/a");
+  setText("#pmLeaderPrice", fmtPct(pm?.midPct));
+  setText("#ksLeader", ks?.team || "n/a");
+  setText("#ksLeaderPrice", fmtPct(ks?.midPct));
   setText("#completedCount", String(summary.completed));
   setText("#liveCount", `${summary.live} live, ${summary.draws} draws`);
   setText("#hitRate", accuracy(summary.polymarketHits + summary.kalshiHits, summary.polymarketMisses + summary.kalshiMisses));
@@ -558,14 +558,14 @@ function renderMatches(data) {
               <span>${fmtDate(match.date)}</span>
               ${matchLocation(match)}
             </span>
-            <span class="tag ${statusClass}">${match.status.shortDetail || match.status.detail || "Scheduled"}</span>
+            <span class="tag ${statusClass}">${escapeHtml(match.status.shortDetail || match.status.detail || "Scheduled")}</span>
           </div>
           <div class="teamLine">
-            <span class="teamName">${match.home.displayName || match.home.team}</span>
+            <span class="teamName">${escapeHtml(match.home.displayName || match.home.team)}</span>
             <span class="score">${fmtScore(match.home.score)}</span>
           </div>
           <div class="teamLine">
-            <span class="teamName">${match.away.displayName || match.away.team}</span>
+            <span class="teamName">${escapeHtml(match.away.displayName || match.away.team)}</span>
             <span class="score">${fmtScore(match.away.score)}</span>
           </div>
           <div class="leanLine">
@@ -696,11 +696,11 @@ function renderTeams(data) {
         <tr class="${[teamRowClass(row.group), thirdQualifiers.has(teamKey(row)) ? "thirdQualified" : ""].filter(Boolean).join(" ")}">
           <td>
             <span class="teamCell">
-              ${row.logo ? `<img class="logo" src="${row.logo}" alt="" />` : ""}
-              ${row.displayName}
+              ${row.logo ? `<img class="logo" src="${escapeHtml(row.logo)}" alt="" />` : ""}
+              ${escapeHtml(row.displayName)}
             </span>
           </td>
-          <td>${row.group || ""}</td>
+          <td>${escapeHtml(row.group || "")}</td>
           <td class="num">${row.points ?? "-"}</td>
           <td class="num">${row.gd ?? "-"}</td>
           <td class="num">${fmtPct(row.polymarketPct)}</td>
@@ -722,7 +722,7 @@ function renderOdds(data) {
       const width = Math.max(2, (row.pct / max) * 100);
       return `
         <div class="barRow">
-          <span class="barLabel">${row.team}</span>
+          <span class="barLabel">${escapeHtml(row.team)}</span>
           <span class="barTrack"><span class="barFill" style="width:${width}%"></span></span>
           <span class="barValue">${fmtPct(row.pct)}</span>
         </div>
