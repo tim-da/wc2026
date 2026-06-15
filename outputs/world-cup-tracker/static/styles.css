@@ -346,12 +346,21 @@ small {
   font-weight: 800;
 }
 
-.leanLine {
+.predGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 12px;
+}
+
+.predBody {
+  min-width: 0;
+  flex: 1;
 }
 
 .leanPick {

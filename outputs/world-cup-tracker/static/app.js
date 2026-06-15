@@ -87,6 +87,17 @@ function currentMarketLine(label, pick, pickPct, source, lockedPick) {
   return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source)}</div>`;
 }
 
+function predictionGroup(lockedLabel, lockedPick, lockedPct, lockedSource, result, nowLine) {
+  return `
+        <div class="predGroup">
+          <div class="predBody">
+            <div class="leanPick">${predictionText(lockedLabel, lockedPick, lockedPct, lockedSource)}</div>
+            ${nowLine}
+          </div>
+          <span class="tag ${result}">${resultLabel(result)}</span>
+        </div>`;
+}
+
 function accuracy(hits, misses) {
   const total = hits + misses;
   return total ? `${Math.round((hits / total) * 100)}%` : "n/a";
@@ -627,37 +638,33 @@ function renderMatches(data) {
             <span class="teamName">${escapeHtml(match.away.displayName || match.away.team)}</span>
             <span class="score">${fmtScore(match.away.score)}</span>
           </div>
-          <div class="leanLine">
-            <span class="leanPick">${predictionText(
-              "PM locked",
-              match.prediction.polymarketPick,
-              match.prediction.polymarketPickPct,
-              match.prediction.polymarketSource
-            )}</span>
-            <span class="tag ${pmResult}">${resultLabel(pmResult)}</span>
-          </div>
-          ${currentMarketLine(
-            "PM now",
-            match.prediction.polymarketCurrentPick,
-            match.prediction.polymarketCurrentPickPct,
-            match.prediction.polymarketCurrentSource,
-            match.prediction.polymarketPick
+          ${predictionGroup(
+            "PM locked",
+            match.prediction.polymarketPick,
+            match.prediction.polymarketPickPct,
+            match.prediction.polymarketSource,
+            pmResult,
+            currentMarketLine(
+              "PM now",
+              match.prediction.polymarketCurrentPick,
+              match.prediction.polymarketCurrentPickPct,
+              match.prediction.polymarketCurrentSource,
+              match.prediction.polymarketPick
+            )
           )}
-          <div class="leanLine">
-            <span class="leanPick">${predictionText(
-              "Kalshi locked",
-              match.prediction.kalshiPick,
-              match.prediction.kalshiPickPct,
-              match.prediction.kalshiSource
-            )}</span>
-            <span class="tag ${ksResult}">${resultLabel(ksResult)}</span>
-          </div>
-          ${currentMarketLine(
-            "Kalshi now",
-            match.prediction.kalshiCurrentPick,
-            match.prediction.kalshiCurrentPickPct,
-            match.prediction.kalshiCurrentSource,
-            match.prediction.kalshiPick
+          ${predictionGroup(
+            "Kalshi locked",
+            match.prediction.kalshiPick,
+            match.prediction.kalshiPickPct,
+            match.prediction.kalshiSource,
+            ksResult,
+            currentMarketLine(
+              "Kalshi now",
+              match.prediction.kalshiCurrentPick,
+              match.prediction.kalshiCurrentPickPct,
+              match.prediction.kalshiCurrentSource,
+              match.prediction.kalshiPick
+            )
           )}
         </article>
       `;
