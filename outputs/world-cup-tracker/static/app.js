@@ -5,6 +5,7 @@ const state = {
   macosNativeAlerts: false,
   filter: "all",
   search: "",
+  team: "",
   loading: false,
 };
 
@@ -542,6 +543,7 @@ function isUpset(match) {
 }
 
 function matchVisible(match) {
+  if (state.team && match.home?.team !== state.team && match.away?.team !== state.team) return false;
   if (state.filter === "today") return isToday(match.date);
   if (state.filter === "live") return match.status.state === "in";
   if (state.filter === "completed") return match.status.completed;
@@ -685,7 +687,9 @@ function thirdPlaceQualifierKeys(rows) {
 function renderTeams(data) {
   const query = state.search.trim().toLowerCase();
   const filteredRows = [...data.teams].filter(
-    (team) => !query || team.displayName.toLowerCase().includes(query) || team.team.toLowerCase().includes(query)
+    (team) =>
+      (!state.team || team.team === state.team) &&
+      (!query || team.displayName.toLowerCase().includes(query) || team.team.toLowerCase().includes(query))
   );
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
   const rows = filteredRows.sort((a, b) => {
@@ -729,11 +733,18 @@ function renderTeams(data) {
 }
 
 function renderOdds(data) {
-  const top = data.odds.consensus.slice(0, 18);
-  const max = top[0]?.pct || 1;
+  const globalMax = data.odds.consensus[0]?.pct || 1;
+  const scoped = state.team
+    ? data.odds.consensus.filter((row) => row.team === state.team)
+    : data.odds.consensus;
+  const top = scoped.slice(0, 18);
+  if (!top.length) {
+    $("#oddsBars").innerHTML = `<div class="empty">No consensus odds for this team.</div>`;
+    return;
+  }
   $("#oddsBars").innerHTML = top
     .map((row) => {
-      const width = Math.max(2, (row.pct / max) * 100);
+      const width = Math.max(2, (row.pct / globalMax) * 100);
       return `
         <div class="barRow">
           <span class="barLabel">${escapeHtml(row.team)}</span>
@@ -745,11 +756,48 @@ function renderOdds(data) {
     .join("");
 }
 
+function teamFocusLookup(data) {
+  // Map of lowercased display name / normalized name -> normalized team.
+  const map = new Map();
+  (data.teams || []).forEach((row) => {
+    if (!row.team) return;
+    map.set(row.team.toLowerCase(), row.team);
+    if (row.displayName) map.set(row.displayName.toLowerCase(), row.team);
+  });
+  return map;
+}
+
+function renderTeamFocusOptions(data) {
+  const datalist = $("#teamFocusOptions");
+  if (!datalist) return;
+  const labels = Array.from(
+    new Set((data.teams || []).map((row) => row.displayName || row.team).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+  datalist.innerHTML = labels.map((label) => `<option value="${escapeHtml(label)}"></option>`).join("");
+}
+
+function applyTeamFocus(value) {
+  const data = state.snapshot;
+  const raw = String(value || "").trim();
+  const lookup = data ? teamFocusLookup(data) : new Map();
+  // Narrow only on an exact match; partial typing keeps the full view.
+  state.team = raw ? lookup.get(raw.toLowerCase()) || "" : "";
+
+  const clearButton = $("#teamFocusClear");
+  if (clearButton) clearButton.hidden = !state.team;
+
+  if (!data) return;
+  renderMatches(data);
+  renderTeams(data);
+  renderOdds(data);
+}
+
 function render() {
   const data = state.snapshot;
   if (!data) return;
   renderMetrics(data);
   renderProjections(data);
+  renderTeamFocusOptions(data);
   renderMatches(data);
   renderTeams(data);
   renderOdds(data);
@@ -788,6 +836,16 @@ $$(".segment").forEach((button) => {
 $("#teamSearch").addEventListener("input", (event) => {
   state.search = event.target.value;
   renderTeams(state.snapshot);
+});
+
+const teamFocusInput = $("#teamFocus");
+["input", "change"].forEach((evt) =>
+  teamFocusInput.addEventListener(evt, (event) => applyTeamFocus(event.target.value))
+);
+$("#teamFocusClear").addEventListener("click", () => {
+  teamFocusInput.value = "";
+  applyTeamFocus("");
+  teamFocusInput.focus();
 });
 
 window.addEventListener("focus", () => {
