@@ -91,7 +91,14 @@
 
       <section class="panel">
         <div class="panelHead controls">
-          <h2>Matches</h2>
+          <div class="matchesHead">
+            <h2>Matches</h2>
+            <div class="teamFocus">
+              <input id="teamFocus" class="search teamFocusInput" type="search" list="teamFocusOptions" placeholder="Focus a team…" autocomplete="off" aria-label="Focus the page on one team" />
+              <datalist id="teamFocusOptions"></datalist>
+              <button id="teamFocusClear" class="teamFocusClear" type="button" title="Clear team focus" aria-label="Clear team focus" hidden>×</button>
+            </div>
+          </div>
           <div class="segmented" role="tablist" aria-label="Match filter">
             <button class="segment active" data-filter="all" type="button">All</button>
             <button class="segment" data-filter="today" type="button">Today</button>

@@ -516,6 +516,46 @@ small {
   color: var(--ink);
 }
 
+.matchesHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teamFocus {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.teamFocusInput {
+  width: 200px;
+  padding-right: 30px;
+}
+
+/* Hide the native search "clear" so only our × button shows. */
+.teamFocusInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.teamFocusClear {
+  position: absolute;
+  right: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.teamFocusClear:hover {
+  color: var(--ink);
+}
+
 .tableWrap {
   overflow: auto;
   border: 1px solid var(--line);
