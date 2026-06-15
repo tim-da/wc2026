@@ -157,13 +157,21 @@ def test_phase_container_migrates_legacy_flat():
     assert server.phase_container({}) == {}
 
 
-def test_pick_for_event_prefers_pregame_then_outright():
+def test_pick_for_event_prefers_pregame_then_inplay_then_outright():
     key = server.market_key("Spain", "France")
-    markets = {key: {"polymarket": {"preGame": {"pick": "France", "pickPct": 55.0}}}}
-    locked = server.pick_for_event("polymarket", key, "Spain", "France", markets, {})
+    odds = {"Spain": {"mid": 0.3, "midPct": 30.0}, "France": {"mid": 0.1, "midPct": 10.0}}
+
+    # Pre-game capture wins.
+    pregame = {key: {"polymarket": {"preGame": {"pick": "France", "pickPct": 55.0}, "inPlay": {"pick": "Spain", "pickPct": 80.0}}}}
+    locked = server.pick_for_event("polymarket", key, "Spain", "France", pregame, odds)
     assert (locked["pick"], locked["source"]) == ("France", "match")
 
-    odds = {"Spain": {"mid": 0.3, "midPct": 30.0}, "France": {"mid": 0.1, "midPct": 10.0}}
+    # No pre-game but an in-play market exists -> use it, NOT outright.
+    inplay_only = {key: {"polymarket": {"inPlay": {"pick": "Spain", "pickPct": 80.0}}}}
+    locked2 = server.pick_for_event("polymarket", key, "Spain", "France", inplay_only, odds)
+    assert (locked2["pick"], locked2["source"]) == ("Spain", "match")
+
+    # No market at all -> outright last resort.
     fallback = server.pick_for_event("polymarket", key, "Spain", "France", {}, odds)
     assert (fallback["pick"], fallback["source"]) == ("Spain", "outright")
 
