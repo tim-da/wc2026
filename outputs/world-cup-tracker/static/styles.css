@@ -363,6 +363,8 @@ small {
 
 .currentLine {
   margin-top: 5px;
+  min-height: 24px;
+  line-height: 24px;
   color: var(--muted);
   font-size: 12px;
   overflow: hidden;
