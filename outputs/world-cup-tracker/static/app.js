@@ -84,7 +84,7 @@ function predictionText(label, pick, pickPct, source) {
 function currentMarketLine(label, pick, pickPct, source, lockedPick) {
   if (!pick) return "";
   const changedClass = lockedPick && pick !== lockedPick ? " currentChanged" : "";
-  return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source)}</div>`;
+  return `<div class="currentLine${changedClass}"><span class="leanPick">${predictionText(label, pick, pickPct, source)}</span></div>`;
 }
 
 function accuracy(hits, misses) {
