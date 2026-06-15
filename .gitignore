@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 work/
 outputs/world-cup-tracker/.bracket-generation-state.json
+outputs/world_cup_2026_match_market_baseline.json
