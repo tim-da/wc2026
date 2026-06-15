@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import re
 import sys
@@ -32,6 +33,12 @@ ESPN_STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.w
 CACHE_TTL_SECONDS = 60
 _CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
 _BRACKET_STATUS_CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
+
+# Durable storage for the pre-game / in-play market captures (survives restarts).
+# When unset, the app falls back to the local JSON file (dev) / in-memory.
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_TABLE = "match_captures"
 
 COUNTRY_CODE_BY_NAME = {
     "ca": "CA",
@@ -540,37 +547,100 @@ def phase_container(source_entry: dict[str, Any]) -> dict[str, Any]:
     return source_entry
 
 
-def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], str | None]:
-    baseline = load_match_baseline()
-    markets = baseline.setdefault("markets", {})
+def _apply_phase_captures(
+    markets: dict[str, Any],
+    events: list[dict[str, Any]],
+    live_sources: dict[str, dict[str, Any]],
+    now: str,
+) -> list[dict[str, Any]]:
+    """Mutate `markets` with this poll's captures; return the rows that changed.
 
-    changed = False
-    now = datetime.now(timezone.utc).isoformat()
-    if baseline.get("createdAt") is None:
-        baseline["createdAt"] = now
-        changed = True
-
+    Overwrites the current phase's capture each poll so it tracks the most-current
+    odds, and freezes a capture once the match leaves that phase (completed -> None).
+    """
+    updates: list[dict[str, Any]] = []
     for event in events:
         key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
         if not key:
             continue
         phase = match_phase(event.get("status", {}))
-        if phase is None:  # match is over: freeze both captures
+        if phase is None:
             continue
-
         match_entry = markets.setdefault(key, {})
         for source_name, source_markets in live_sources.items():
             market = source_markets.get(key)
             if not market:
                 continue
-            # Overwrite the current phase's capture each poll, so it tracks the
-            # most-current odds and freezes when the match leaves that phase.
+            data = {**market, "capturedAt": now}
             source_entry = phase_container(match_entry.get(source_name) or {})
-            source_entry[phase] = {**market, "capturedAt": now}
+            source_entry[phase] = data
             match_entry[source_name] = source_entry
-            changed = True
+            updates.append({"match_key": key, "source": source_name, "phase": phase, "data": data})
+    return updates
 
-    if changed:
+
+def supabase_enabled() -> bool:
+    return bool(SUPABASE_URL and SUPABASE_KEY)
+
+
+def _supabase_headers(extra: dict[str, str] | None = None) -> dict[str, str]:
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+    }
+    if extra:
+        headers.update(extra)
+    return headers
+
+
+def supabase_load_markets() -> dict[str, Any]:
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/{SUPABASE_TABLE}",
+        params={"select": "match_key,source,phase,data"},
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    response.raise_for_status()
+    markets: dict[str, Any] = {}
+    for row in response.json():
+        markets.setdefault(row["match_key"], {}).setdefault(row["source"], {})[row["phase"]] = row["data"]
+    return markets
+
+
+def supabase_upsert_captures(rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        return
+    response = requests.post(
+        f"{SUPABASE_URL}/rest/v1/{SUPABASE_TABLE}",
+        headers=_supabase_headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+        json=rows,
+        timeout=15,
+    )
+    response.raise_for_status()
+
+
+def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], str | None]:
+    now = datetime.now(timezone.utc).isoformat()
+
+    if supabase_enabled():
+        try:
+            markets = supabase_load_markets()
+            supabase_upsert_captures(_apply_phase_captures(markets, events, live_sources, now))
+            return markets, "supabase"
+        except (requests.RequestException, ValueError, KeyError, TypeError):
+            # Supabase unreachable/paused: capture this poll in-memory so the current
+            # snapshot still reflects live markets; durable persistence resumes on recovery.
+            markets = {}
+            _apply_phase_captures(markets, events, live_sources, now)
+            return markets, None
+
+    # Local / file fallback (no Supabase configured).
+    baseline = load_match_baseline()
+    markets = baseline.setdefault("markets", {})
+    if baseline.get("createdAt") is None:
+        baseline["createdAt"] = now
+    if _apply_phase_captures(markets, events, live_sources, now):
         baseline["updatedAt"] = now
         MATCH_BASELINE_JSON.write_text(json.dumps(baseline, indent=2, sort_keys=True))
 
