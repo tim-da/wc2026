@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import re
+import sys
 import time
 import csv
 from datetime import datetime, timezone
@@ -11,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from flask import Flask, Response, jsonify, render_template
+from flask import Flask, Response, jsonify, render_template, request
 
 
 ROOT = Path(__file__).resolve().parent
@@ -28,6 +30,45 @@ ESPN_STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.w
 
 CACHE_TTL_SECONDS = 60
 _CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
+
+COUNTRY_CODE_BY_NAME = {
+    "ca": "CA",
+    "can": "CA",
+    "canada": "CA",
+    "mx": "MX",
+    "mex": "MX",
+    "mexico": "MX",
+    "us": "US",
+    "usa": "US",
+    "united states": "US",
+    "united states of america": "US",
+}
+
+HOST_CITY_COUNTRY_CODES = {
+    "arlington": "US",
+    "atlanta": "US",
+    "boston": "US",
+    "dallas": "US",
+    "east rutherford": "US",
+    "foxborough": "US",
+    "houston": "US",
+    "inglewood": "US",
+    "kansas city": "US",
+    "los angeles": "US",
+    "miami": "US",
+    "miami gardens": "US",
+    "new york": "US",
+    "new york new jersey": "US",
+    "philadelphia": "US",
+    "san francisco": "US",
+    "santa clara": "US",
+    "seattle": "US",
+    "guadalajara": "MX",
+    "mexico city": "MX",
+    "monterrey": "MX",
+    "toronto": "CA",
+    "vancouver": "CA",
+}
 
 
 LEFT_R32 = [
@@ -152,6 +193,76 @@ def as_float(value: Any) -> float | None:
 
 def pct(value: float | None) -> float | None:
     return None if value is None else round(value * 100, 3)
+
+
+def country_code_for(value: str | None, city: str | None = None) -> str | None:
+    raw = (value or "").strip()
+    if raw:
+        code = COUNTRY_CODE_BY_NAME.get(raw.casefold())
+        if code:
+            return code
+        if len(raw) == 2 and raw.isalpha():
+            return raw.upper()
+
+    city_key = (city or "").strip().casefold()
+    return HOST_CITY_COUNTRY_CODES.get(city_key)
+
+
+def country_flag(code: str | None) -> str | None:
+    if not code or len(code) != 2 or not code.isalpha():
+        return None
+    return "".join(chr(0x1F1E6 + ord(letter) - ord("A")) for letter in code.upper())
+
+
+def venue_city(value: str | None) -> str | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    return raw.split(",", 1)[0].strip() or None
+
+
+def venue_location(venue: dict[str, Any]) -> dict[str, Any]:
+    address = venue.get("address") or {}
+    city = venue_city(address.get("city") or venue.get("city"))
+    country = address.get("country") or venue.get("country")
+    country_code = country_code_for(country, city)
+    flag = country_flag(country_code)
+
+    return {
+        "city": city,
+        "country": country,
+        "countryCode": country_code,
+        "flag": flag,
+    }
+
+
+def applescript_string(value: str) -> str:
+    escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def send_macos_notification(title: str, message: str) -> bool:
+    if sys.platform != "darwin":
+        return False
+
+    safe_title = str(title or "World Cup Alert")[:80]
+    safe_message = str(message or "")[:240]
+    script = (
+        f"display notification {applescript_string(safe_message)} "
+        f"with title {applescript_string(safe_title)} "
+        'sound name "Glass"'
+    )
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=4,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0
 
 
 def market_key(team_a: str | None, team_b: str | None) -> str | None:
@@ -566,6 +677,7 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
         competition = (event.get("competitions") or [{}])[0]
         status = competition.get("status", {})
         status_type = status.get("type", {})
+        venue = competition.get("venue") or {}
         competitors = competition.get("competitors") or []
 
         sides: dict[str, Any] = {}
@@ -598,12 +710,16 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
                 "name": event.get("name"),
                 "shortName": event.get("shortName"),
                 "date": event.get("date") or competition.get("date"),
-                "venue": ((competition.get("venue") or {}).get("fullName")),
+                "venue": venue.get("fullName"),
+                "location": venue_location(venue),
                 "status": {
                     "state": status_type.get("state"),
                     "completed": bool(status_type.get("completed")),
                     "detail": status_type.get("detail") or status_type.get("description"),
                     "shortDetail": status_type.get("shortDetail"),
+                    "displayClock": status.get("displayClock"),
+                    "clock": as_float(status.get("clock")),
+                    "period": as_float(status.get("period")),
                 },
                 "home": home,
                 "away": away,
@@ -1225,6 +1341,23 @@ def snapshot():
     _CACHE["payload"] = payload
     _CACHE["at"] = now
     return jsonify({**payload, "cached": False})
+
+
+@APP.get("/api/desktop-alerts/capability")
+def desktop_alerts_capability():
+    return jsonify({"macosNative": sys.platform == "darwin"})
+
+
+@APP.post("/api/desktop-alert")
+def desktop_alert():
+    data = request.get_json(silent=True) or {}
+    title = f"World Cup: {data.get('title') or 'Score alert'}"
+    message = data.get("text") or ""
+    if not message:
+        return jsonify({"sent": False, "error": "missing text"}), 400
+
+    sent = send_macos_notification(title, message)
+    return jsonify({"sent": sent, "macosNative": sys.platform == "darwin"}), (200 if sent else 503)
 
 
 @APP.get("/api/bracket-status")

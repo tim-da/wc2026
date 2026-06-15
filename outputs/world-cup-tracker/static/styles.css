@@ -125,6 +125,28 @@ h2 {
   border-color: #172f70;
 }
 
+.textButton.alertsOn {
+  background: var(--green);
+  border-color: var(--green);
+  color: #ffffff;
+}
+
+.textButton.alertsOn:hover {
+  background: #0f6c4f;
+  border-color: #0f6c4f;
+}
+
+.textButton.alertsBlocked {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: var(--red);
+}
+
+.textButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -287,6 +309,25 @@ small {
   font-size: 12px;
 }
 
+.matchMeta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.matchLocation {
+  display: inline-flex;
+  align-items: center;
+  max-width: 190px;
+  overflow: hidden;
+  color: #334155;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .teamLine {
   min-height: 28px;
   color: var(--ink);
@@ -332,6 +373,98 @@ small {
 .currentLine.currentChanged {
   color: var(--red);
   font-weight: 800;
+}
+
+.toastStack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 40;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.18);
+  pointer-events: auto;
+  animation: toastIn 160ms ease-out;
+}
+
+.toast > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.toast strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.toast span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.toast button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.toast button:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--ink);
+}
+
+.toast.liveScoreChange {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.toast.liveScoreChange strong {
+  color: #1e3a8a;
+}
+
+.toast.finalScore {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.toast.finalScore strong {
+  color: #166534;
+}
+
+.toast.leaving {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .tag {
@@ -523,5 +656,11 @@ tbody tr.thirdQualified td {
 
   .search {
     width: 100%;
+  }
+
+  .toastStack {
+    top: 10px;
+    right: 10px;
+    width: calc(100vw - 20px);
   }
 }

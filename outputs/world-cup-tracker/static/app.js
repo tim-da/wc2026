@@ -1,10 +1,15 @@
 const state = {
   snapshot: null,
   bracketStatus: null,
+  desktopAlerts: false,
+  macosNativeAlerts: false,
   filter: "all",
   search: "",
   loading: false,
 };
+
+const DESKTOP_ALERTS_KEY = "wc2026DesktopAlerts";
+let alertAudioContext = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -25,6 +30,15 @@ function fmtDate(value) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function resultLabel(result) {
@@ -96,6 +110,353 @@ function loadBracketStatusQuietly() {
   });
 }
 
+function alertAudioSupported() {
+  return Boolean(window.AudioContext || window.webkitAudioContext);
+}
+
+function getAlertAudioContext() {
+  if (!alertAudioSupported()) return null;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!alertAudioContext) alertAudioContext = new AudioContextClass();
+  return alertAudioContext;
+}
+
+async function unlockAlertSound() {
+  const context = getAlertAudioContext();
+  if (context?.state === "suspended") {
+    await context.resume();
+  }
+}
+
+function playAlertTone(context, frequency, start, duration) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(0.07, start + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function playAlertSound(type) {
+  const context = getAlertAudioContext();
+  if (!context || context.state === "suspended") return;
+
+  const now = context.currentTime;
+  const tones = type === "liveScoreChange" ? [880, 1175] : [784, 1046];
+  playAlertTone(context, tones[0], now, 0.16);
+  playAlertTone(context, tones[1], now + 0.12, 0.22);
+}
+
+function desktopAlertsSupported() {
+  return state.macosNativeAlerts || ("Notification" in window && window.isSecureContext);
+}
+
+function desktopAlertsEnabled() {
+  const browserReady = "Notification" in window && window.isSecureContext && Notification.permission === "granted";
+  return state.desktopAlerts && (state.macosNativeAlerts || browserReady);
+}
+
+function saveDesktopAlerts(enabled) {
+  state.desktopAlerts = enabled;
+  try {
+    localStorage.setItem(DESKTOP_ALERTS_KEY, enabled ? "true" : "false");
+  } catch (error) {
+    console.error(error);
+  }
+  renderAlertsStatus();
+}
+
+function loadDesktopAlertPreference() {
+  try {
+    state.desktopAlerts = localStorage.getItem(DESKTOP_ALERTS_KEY) === "true";
+  } catch (error) {
+    state.desktopAlerts = false;
+    console.error(error);
+  }
+  if (!state.macosNativeAlerts && (!("Notification" in window) || !window.isSecureContext || Notification.permission !== "granted")) {
+    state.desktopAlerts = false;
+  }
+  renderAlertsStatus();
+}
+
+async function loadDesktopAlertCapability() {
+  try {
+    const response = await fetch("/api/desktop-alerts/capability", { cache: "no-store" });
+    if (!response.ok) throw new Error(`Desktop alert capability failed: ${response.status}`);
+    const capability = await response.json();
+    state.macosNativeAlerts = Boolean(capability.macosNative);
+  } catch (error) {
+    state.macosNativeAlerts = false;
+    console.error(error);
+  }
+  loadDesktopAlertPreference();
+}
+
+function renderAlertsStatus() {
+  const node = $("#alertsButton");
+  if (!node) return;
+
+  const browserSupported = "Notification" in window && window.isSecureContext;
+  const supported = state.macosNativeAlerts || browserSupported;
+  const denied = !state.macosNativeAlerts && browserSupported && Notification.permission === "denied";
+  const enabled = desktopAlertsEnabled();
+
+  node.disabled = !supported;
+  node.classList.toggle("alertsOn", enabled);
+  node.classList.toggle("alertsBlocked", denied);
+  node.textContent = enabled ? "ALERTS ON" : denied ? "BLOCKED" : "ALERTS";
+  node.title = !supported
+    ? "Desktop alerts are unavailable in this browser"
+    : denied
+      ? "Notifications are blocked in browser settings"
+      : enabled
+        ? state.macosNativeAlerts
+          ? "macOS score alerts enabled"
+          : "Browser score alerts enabled"
+        : state.macosNativeAlerts
+          ? "Enable macOS score alerts"
+          : "Enable browser score alerts";
+}
+
+async function sendNativeDesktopNotification(notification, force = false) {
+  if (!state.macosNativeAlerts || (!force && !desktopAlertsEnabled())) return false;
+
+  try {
+    const response = await fetch("/api/desktop-alert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: notification.title, text: notification.text, type: notification.type }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+function sendBrowserDesktopNotification(notification, force = false) {
+  if (!force && !desktopAlertsEnabled()) return;
+  if (!("Notification" in window) || !window.isSecureContext || Notification.permission !== "granted") return;
+
+  try {
+    const desktopNotification = new Notification(`World Cup: ${notification.title}`, {
+      body: notification.text,
+      tag: `wc2026-${notification.type}-${Date.now()}`,
+      renotify: false,
+      silent: false,
+    });
+
+    desktopNotification.onclick = () => {
+      window.focus();
+      desktopNotification.close();
+    };
+
+    setTimeout(() => desktopNotification.close(), 12_000);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function sendDesktopNotification(notification, force = false) {
+  if (state.macosNativeAlerts) {
+    sendNativeDesktopNotification(notification, force).then((sent) => {
+      if (!sent && !force) {
+        sendBrowserDesktopNotification(notification, force);
+      }
+    });
+    return;
+  }
+
+  sendBrowserDesktopNotification(notification, force);
+}
+
+async function toggleDesktopAlerts() {
+  await unlockAlertSound();
+
+  if (!desktopAlertsSupported()) {
+    showToast({ type: "finalScore", title: "Desktop alerts unavailable", text: "This browser cannot show system notifications for this page." });
+    return;
+  }
+
+  if (desktopAlertsEnabled()) {
+    saveDesktopAlerts(false);
+    showToast({ type: "finalScore", title: "Desktop alerts off", text: "Score updates will stay inside this page." });
+    return;
+  }
+
+  if (state.macosNativeAlerts) {
+    saveDesktopAlerts(true);
+    const notification = { type: "finalScore", title: "Desktop alerts on", text: "macOS score alerts are enabled." };
+    showToast(notification);
+    sendDesktopNotification(notification, true);
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    saveDesktopAlerts(false);
+    showToast({ type: "finalScore", title: "Notifications blocked", text: "Allow notifications for this site in browser settings to use desktop alerts." });
+    return;
+  }
+
+  if (Notification.permission !== "granted") {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      saveDesktopAlerts(false);
+      showToast({ type: "finalScore", title: "Desktop alerts off", text: "Notifications were not allowed." });
+      return;
+    }
+  }
+
+  saveDesktopAlerts(true);
+  const notification = { type: "finalScore", title: "Desktop alerts on", text: "Score updates will appear even when you are in another app." };
+  showToast(notification);
+  sendDesktopNotification(notification, true);
+}
+
+function matchKey(match) {
+  return match.id || `${match.date}|${match.home?.team}|${match.away?.team}`;
+}
+
+function scorePair(match) {
+  const home = match.home?.score;
+  const away = match.away?.score;
+  if (home == null || away == null) return null;
+  return { home: Number(home), away: Number(away) };
+}
+
+function matchMap(matches = []) {
+  const map = {};
+  matches.forEach((match) => {
+    map[matchKey(match)] = match;
+  });
+  return map;
+}
+
+function scoreLine(match) {
+  const home = match.home?.displayName || match.home?.team || "Home";
+  const away = match.away?.displayName || match.away?.team || "Away";
+  return `${home} ${fmtScore(match.home?.score)}-${fmtScore(match.away?.score)} ${away}`;
+}
+
+function matchLocation(match) {
+  const location = match.location || {};
+  const city = location.city || match.venue;
+  if (!city) return "";
+
+  const label = `${location.flag ? `${location.flag} ` : ""}${city}`;
+  const titleParts = [match.venue, location.city && location.countryCode ? location.countryCode : null].filter(Boolean);
+  return `<span class="matchLocation" title="${escapeHtml(titleParts.join(" · "))}">${escapeHtml(label)}</span>`;
+}
+
+function normalizeMinute(value) {
+  const text = String(value || "").trim();
+  if (!text || /scheduled/i.test(text) || /^ft$/i.test(text) || /^final/i.test(text)) return null;
+
+  const clockMatch = text.match(/^(\d{1,3})(?::\d{2})?$/);
+  if (clockMatch) return `${clockMatch[1]}'`;
+  return /\d/.test(text) ? text : null;
+}
+
+function minuteLabel(match) {
+  const status = match.status || {};
+  const candidates = [status.displayClock, status.shortDetail, status.detail];
+  for (const candidate of candidates) {
+    const minute = normalizeMinute(candidate);
+    if (minute) return minute;
+  }
+
+  const clock = Number(status.clock);
+  if (Number.isFinite(clock) && clock > 0) return `${Math.floor(clock / 60)}'`;
+  return null;
+}
+
+function timedScoreLine(match) {
+  const minute = minuteLabel(match);
+  return minute ? `${minute}: ${scoreLine(match)}` : scoreLine(match);
+}
+
+function scoreNotification(previous, current) {
+  const currentScore = scorePair(current);
+  if (!previous || !currentScore) return null;
+
+  if (current.status.completed && !previous.status?.completed) {
+    return { type: "finalScore", title: "Final score", text: timedScoreLine(current) };
+  }
+
+  if (current.status.state !== "in") return null;
+
+  const previousScore = scorePair(previous);
+  if (!previousScore || (previousScore.home === currentScore.home && previousScore.away === currentScore.away)) return null;
+
+  const scorers = [];
+  if (currentScore.home > previousScore.home) scorers.push(current.home?.displayName || current.home?.team);
+  if (currentScore.away > previousScore.away) scorers.push(current.away?.displayName || current.away?.team);
+  const minuteText = minuteLabel(current);
+  const scorerText = scorers.filter(Boolean).length ? `${scorers.filter(Boolean).join(" and ")} scored. ` : "";
+  return { type: "liveScoreChange", title: "Score change", text: `${minuteText ? `${minuteText}: ` : ""}${scorerText}${scoreLine(current)}` };
+}
+
+function ensureToastStack() {
+  let stack = $("#toastStack");
+  if (stack) return stack;
+
+  stack = document.createElement("div");
+  stack.id = "toastStack";
+  stack.className = "toastStack";
+  stack.setAttribute("aria-live", "polite");
+  stack.setAttribute("aria-atomic", "false");
+  document.body.append(stack);
+  return stack;
+}
+
+function showToast(notification) {
+  const stack = ensureToastStack();
+  const toast = document.createElement("div");
+  toast.className = `toast ${notification.type}`;
+
+  const copy = document.createElement("div");
+  const title = document.createElement("strong");
+  const text = document.createElement("span");
+  title.textContent = notification.title;
+  text.textContent = notification.text;
+  copy.append(title, text);
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Dismiss notification");
+  closeButton.textContent = "x";
+  closeButton.addEventListener("click", () => toast.remove());
+
+  toast.append(copy, closeButton);
+  stack.prepend(toast);
+  playAlertSound(notification.type);
+
+  setTimeout(() => {
+    toast.classList.add("leaving");
+    setTimeout(() => toast.remove(), 220);
+  }, 9000);
+}
+
+function showMatchNotifications(previousMatches = [], currentMatches = []) {
+  if (!previousMatches.length) return;
+
+  const previousByKey = matchMap(previousMatches);
+  currentMatches.forEach((match) => {
+    const notification = scoreNotification(previousByKey[matchKey(match)], match);
+    if (notification) {
+      showToast(notification);
+      sendDesktopNotification(notification);
+    }
+  });
+}
+
 function markBestPerformance(summary) {
   const pmNode = $("#pmPerformanceCard");
   const ksNode = $("#ksPerformanceCard");
@@ -118,8 +479,11 @@ async function loadSnapshot() {
   try {
     const response = await fetch("/api/snapshot");
     if (!response.ok) throw new Error(`Snapshot failed: ${response.status}`);
-    state.snapshot = await response.json();
+    const previousMatches = state.snapshot?.matches || [];
+    const nextSnapshot = await response.json();
+    state.snapshot = nextSnapshot;
     render();
+    showMatchNotifications(previousMatches, nextSnapshot.matches);
   } finally {
     state.loading = false;
   }
@@ -190,7 +554,10 @@ function renderMatches(data) {
       return `
         <article class="${matchClass}">
           <div class="matchTop">
-            <span>${fmtDate(match.date)}</span>
+            <span class="matchMeta">
+              <span>${fmtDate(match.date)}</span>
+              ${matchLocation(match)}
+            </span>
             <span class="tag ${statusClass}">${match.status.shortDetail || match.status.detail || "Scheduled"}</span>
           </div>
           <div class="teamLine">
@@ -388,6 +755,13 @@ $("#bracketButton").addEventListener("click", () => {
   setTimeout(loadBracketStatusQuietly, 2500);
 });
 
+$("#alertsButton").addEventListener("click", () => {
+  toggleDesktopAlerts().catch((error) => {
+    console.error(error);
+    showToast({ type: "finalScore", title: "Desktop alerts failed", text: "The browser could not update notification settings." });
+  });
+});
+
 $$(".segment").forEach((button) => {
   button.addEventListener("click", () => {
     $$(".segment").forEach((item) => item.classList.remove("active"));
@@ -402,6 +776,14 @@ $("#teamSearch").addEventListener("input", (event) => {
   renderTeams(state.snapshot);
 });
 
+window.addEventListener("focus", () => {
+  loadDesktopAlertCapability().catch((error) => {
+    console.error(error);
+    renderAlertsStatus();
+  });
+});
+
+loadDesktopAlertCapability();
 loadSnapshot().catch((error) => {
   console.error(error);
   setText("#refreshStamp", "Load failed");
