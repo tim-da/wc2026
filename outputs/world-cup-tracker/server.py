@@ -1383,6 +1383,7 @@ def bracket_page():
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>World Cup Current Bracket</title>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="868c8fa8-c8cf-4843-84b3-8231cd582298" data-domains="wc2026-m91b.onrender.com"></script>
     <style>
       body {{
         margin: 0;
