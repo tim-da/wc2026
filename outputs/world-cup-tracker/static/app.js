@@ -32,6 +32,19 @@ function fmtDate(value) {
   }).format(new Date(value));
 }
 
+function isToday(value) {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+
+  const today = new Date();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -529,6 +542,7 @@ function isUpset(match) {
 }
 
 function matchVisible(match) {
+  if (state.filter === "today") return isToday(match.date);
   if (state.filter === "live") return match.status.state === "in";
   if (state.filter === "completed") return match.status.completed;
   if (state.filter === "upset") return isUpset(match);
