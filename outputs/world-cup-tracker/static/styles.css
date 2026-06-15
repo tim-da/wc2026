@@ -372,8 +372,10 @@ small {
 
 .currentLine {
   margin-top: 5px;
+  min-height: 16px;
   color: var(--muted);
   font-size: 12px;
+  line-height: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -382,6 +384,11 @@ small {
 .currentLine.currentChanged {
   color: var(--red);
   font-weight: 800;
+}
+
+.currentLine.currentEmpty {
+  font-style: italic;
+  opacity: 0.6;
 }
 
 .toastStack {
