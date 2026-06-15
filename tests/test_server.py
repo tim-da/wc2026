@@ -129,6 +129,102 @@ def test_match_group(note, expected):
     assert server.match_group(note) == expected
 
 
+def test_outright_pick():
+    odds = {"Spain": {"mid": 0.2, "midPct": 20.0}, "France": {"mid": 0.1, "midPct": 10.0}}
+    assert server.outright_pick("Spain", "France", odds)["pick"] == "Spain"
+    assert server.outright_pick("France", "Spain", odds)["source"] == "outright"
+    assert server.outright_pick("A", "B", {"A": {"mid": 0.1}, "B": {"mid": 0.1}})["pick"] == "Draw"
+    assert server.outright_pick(None, "B", odds)["pick"] is None
+
+
+@pytest.mark.parametrize(
+    "status,expected",
+    [
+        ({"state": "pre", "completed": False}, "preGame"),
+        ({"state": "in", "completed": False}, "inPlay"),
+        ({"state": "post", "completed": True}, None),
+    ],
+)
+def test_match_phase(status, expected):
+    assert server.match_phase(status) == expected
+
+
+def test_phase_container_migrates_legacy_flat():
+    legacy = {"pick": "Spain", "pickPct": 60.0, "outcomes": {}}
+    assert server.phase_container(legacy) == {"preGame": legacy}
+    already = {"preGame": {"pick": "x"}}
+    assert server.phase_container(already) is already
+    assert server.phase_container({}) == {}
+
+
+def test_pick_for_event_prefers_pregame_then_outright():
+    key = server.market_key("Spain", "France")
+    markets = {key: {"polymarket": {"preGame": {"pick": "France", "pickPct": 55.0}}}}
+    locked = server.pick_for_event("polymarket", key, "Spain", "France", markets, {})
+    assert (locked["pick"], locked["source"]) == ("France", "match")
+
+    odds = {"Spain": {"mid": 0.3, "midPct": 30.0}, "France": {"mid": 0.1, "midPct": 10.0}}
+    fallback = server.pick_for_event("polymarket", key, "Spain", "France", {}, odds)
+    assert (fallback["pick"], fallback["source"]) == ("Spain", "outright")
+
+
+def test_current_match_pick_prefers_inplay_then_outright():
+    key = server.market_key("Spain", "France")
+    markets = {key: {"kalshi": {"inPlay": {"pick": "Spain", "pickPct": 70.0}}}}
+    now = server.current_match_pick("kalshi", key, "Spain", "France", markets, {})
+    assert (now["pick"], now["source"]) == ("Spain", "match")
+
+    # A pre-game-only capture must not leak into "now".
+    pregame_only = {key: {"kalshi": {"preGame": {"pick": "Spain", "pickPct": 70.0}}}}
+    odds = {"Spain": {"mid": 0.1}, "France": {"mid": 0.3, "midPct": 33.0}}
+    fallback = server.current_match_pick("kalshi", key, "Spain", "France", pregame_only, odds)
+    assert (fallback["pick"], fallback["source"]) == ("France", "outright")
+
+
+def _event(home, away, state, completed):
+    return {"home": {"team": home}, "away": {"team": away}, "status": {"state": state, "completed": completed}}
+
+
+def test_merge_match_baseline_phase_capture(tmp_path, monkeypatch):
+    path = tmp_path / "baseline.json"
+    monkeypatch.setattr(server, "MATCH_BASELINE_JSON", path)
+    key = server.market_key("Spain", "France")
+
+    def live(pick, pct):
+        return {"polymarket": {key: {"pick": pick, "pickPct": pct, "outcomes": {}}}}
+
+    # Scheduled -> preGame captured, no inPlay.
+    markets, _ = server.merge_match_baseline([_event("Spain", "France", "pre", False)], live("Spain", 60.0))
+    assert markets[key]["polymarket"]["preGame"]["pick"] == "Spain"
+    assert "inPlay" not in markets[key]["polymarket"]
+
+    # Still scheduled, new odds -> preGame overwritten (most current before start).
+    markets, _ = server.merge_match_baseline([_event("Spain", "France", "pre", False)], live("France", 52.0))
+    assert markets[key]["polymarket"]["preGame"]["pick"] == "France"
+
+    # Live -> inPlay captured, preGame frozen.
+    markets, _ = server.merge_match_baseline([_event("Spain", "France", "in", False)], live("Spain", 80.0))
+    assert markets[key]["polymarket"]["preGame"]["pick"] == "France"
+    assert markets[key]["polymarket"]["inPlay"]["pick"] == "Spain"
+
+    # Completed -> both frozen, ignores fresh odds.
+    markets, _ = server.merge_match_baseline([_event("Spain", "France", "post", True)], live("France", 99.0))
+    assert markets[key]["polymarket"]["preGame"]["pick"] == "France"
+    assert markets[key]["polymarket"]["inPlay"]["pick"] == "Spain"
+
+
+def test_merge_match_baseline_migrates_legacy(tmp_path, monkeypatch):
+    path = tmp_path / "baseline.json"
+    key = server.market_key("Spain", "France")
+    path.write_text(server.json.dumps({"createdAt": "x", "markets": {key: {"polymarket": {"pick": "Spain", "pickPct": 60.0, "outcomes": {}}}}}))
+    monkeypatch.setattr(server, "MATCH_BASELINE_JSON", path)
+
+    live = {"polymarket": {key: {"pick": "France", "pickPct": 51.0, "outcomes": {}}}}
+    markets, _ = server.merge_match_baseline([_event("Spain", "France", "in", False)], live)
+    assert markets[key]["polymarket"]["preGame"]["pick"] == "Spain"  # legacy flat migrated
+    assert markets[key]["polymarket"]["inPlay"]["pick"] == "France"
+
+
 @pytest.mark.parametrize(
     "slug,group,expected",
     [

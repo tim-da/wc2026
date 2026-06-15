@@ -522,15 +522,27 @@ def load_match_baseline() -> dict[str, Any]:
         return {"createdAt": None, "updatedAt": None, "markets": {}}
 
 
+def match_phase(status: dict[str, Any]) -> str | None:
+    """Which capture window a match is in: 'preGame', 'inPlay', or None once it has ended."""
+    if status.get("completed"):
+        return None
+    if status.get("state") == "in":
+        return "inPlay"
+    return "preGame"
+
+
+def phase_container(source_entry: dict[str, Any]) -> dict[str, Any]:
+    """Normalise a per-source entry to {preGame?, inPlay?}, migrating the legacy flat format."""
+    if "preGame" in source_entry or "inPlay" in source_entry:
+        return source_entry
+    if source_entry.get("pick") or source_entry.get("outcomes"):
+        return {"preGame": source_entry}  # legacy first-seen capture -> pre-game slot
+    return source_entry
+
+
 def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], str | None]:
     baseline = load_match_baseline()
-    baseline.setdefault("markets", {})
-    eligible_keys = {
-        market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
-        for event in events
-        if not event.get("status", {}).get("completed") and event.get("status", {}).get("state") != "in"
-    }
-    eligible_keys.discard(None)
+    markets = baseline.setdefault("markets", {})
 
     changed = False
     now = datetime.now(timezone.utc).isoformat()
@@ -538,19 +550,31 @@ def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, d
         baseline["createdAt"] = now
         changed = True
 
-    for key in sorted(eligible_keys):
-        match_entry = baseline["markets"].setdefault(key, {})
+    for event in events:
+        key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+        if not key:
+            continue
+        phase = match_phase(event.get("status", {}))
+        if phase is None:  # match is over: freeze both captures
+            continue
+
+        match_entry = markets.setdefault(key, {})
         for source_name, source_markets in live_sources.items():
-            if source_name in match_entry or key not in source_markets:
+            market = source_markets.get(key)
+            if not market:
                 continue
-            match_entry[source_name] = {**source_markets[key], "capturedAt": now}
+            # Overwrite the current phase's capture each poll, so it tracks the
+            # most-current odds and freezes when the match leaves that phase.
+            source_entry = phase_container(match_entry.get(source_name) or {})
+            source_entry[phase] = {**market, "capturedAt": now}
+            match_entry[source_name] = source_entry
             changed = True
 
     if changed:
         baseline["updatedAt"] = now
         MATCH_BASELINE_JSON.write_text(json.dumps(baseline, indent=2, sort_keys=True))
 
-    return baseline["markets"], str(MATCH_BASELINE_JSON) if MATCH_BASELINE_JSON.exists() else None
+    return markets, str(MATCH_BASELINE_JSON) if MATCH_BASELINE_JSON.exists() else None
 
 
 def fetch_live_match_sources() -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
@@ -584,6 +608,26 @@ def pick_between(team_a: str, team_b: str, odds: dict[str, Any]) -> str:
     return team_a if (odds.get(team_a, {}).get("mid") or 0) >= (odds.get(team_b, {}).get("mid") or 0) else team_b
 
 
+def outright_pick(team_a: str | None, team_b: str | None, outright_odds: dict[str, Any]) -> dict[str, Any]:
+    if not team_a or not team_b:
+        return {"pick": None, "pickPct": None, "source": "unknown"}
+
+    team_a_mid = outright_odds.get(team_a, {}).get("mid")
+    team_b_mid = outright_odds.get(team_b, {}).get("mid")
+    if team_a_mid is not None and team_b_mid is not None and team_a_mid == team_b_mid:
+        return {"pick": "Draw", "pickPct": None, "source": "outright"}
+
+    pick = pick_between(team_a, team_b, outright_odds)
+    return {"pick": pick, "pickPct": outright_odds.get(pick, {}).get("midPct"), "source": "outright"}
+
+
+def capture_pick(match_markets: dict[str, Any], source_name: str, match_key: str | None, phase: str) -> dict[str, Any] | None:
+    capture = ((match_markets.get(match_key or "") or {}).get(source_name) or {}).get(phase)
+    if capture and capture.get("pick"):
+        return {"pick": capture["pick"], "pickPct": capture.get("pickPct"), "source": "match"}
+    return None
+
+
 def pick_for_event(
     source_name: str,
     match_key: str | None,
@@ -592,44 +636,20 @@ def pick_for_event(
     match_markets: dict[str, Any],
     outright_odds: dict[str, Any],
 ) -> dict[str, Any]:
-    match_market = (match_markets.get(match_key or "") or {}).get(source_name)
-    if match_market and match_market.get("pick"):
-        return {
-            "pick": match_market.get("pick"),
-            "pickPct": match_market.get("pickPct"),
-            "source": "match",
-        }
-
-    if team_a and team_b:
-        team_a_mid = outright_odds.get(team_a, {}).get("mid")
-        team_b_mid = outright_odds.get(team_b, {}).get("mid")
-        if team_a_mid is not None and team_b_mid is not None and team_a_mid == team_b_mid:
-            return {
-                "pick": "Draw",
-                "pickPct": None,
-                "source": "outright",
-            }
-
-        pick = pick_between(team_a, team_b, outright_odds)
-        return {
-            "pick": pick,
-            "pickPct": outright_odds.get(pick, {}).get("midPct"),
-            "source": "outright",
-        }
-
-    return {"pick": None, "pickPct": None, "source": "unknown"}
+    # "Locked" = the last pre-game market read, falling back to outright title odds.
+    return capture_pick(match_markets, source_name, match_key, "preGame") or outright_pick(team_a, team_b, outright_odds)
 
 
-def current_match_pick(source_name: str, match_key: str | None, live_match_sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    match_market = live_match_sources.get(source_name, {}).get(match_key or "")
-    if not match_market or not match_market.get("pick"):
-        return {"pick": None, "pickPct": None, "source": None}
-
-    return {
-        "pick": match_market.get("pick"),
-        "pickPct": match_market.get("pickPct"),
-        "source": "match",
-    }
+def current_match_pick(
+    source_name: str,
+    match_key: str | None,
+    team_a: str | None,
+    team_b: str | None,
+    match_markets: dict[str, Any],
+    outright_odds: dict[str, Any],
+) -> dict[str, Any]:
+    # "Now" = the last in-play market read (frozen once the match ends), falling back to outright.
+    return capture_pick(match_markets, source_name, match_key, "inPlay") or outright_pick(team_a, team_b, outright_odds)
 
 
 def build_projection(odds: dict[str, Any]) -> dict[str, Any]:
@@ -772,10 +792,8 @@ def compare_events(
     polymarket: dict[str, Any],
     kalshi: dict[str, Any],
     match_markets: dict[str, Any] | None = None,
-    live_match_sources: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     match_markets = match_markets or {}
-    live_match_sources = live_match_sources or {}
     compared = []
     summary = {
         "completed": 0,
@@ -801,12 +819,15 @@ def compare_events(
         match_key_value = market_key(home_team, away_team)
         pm_prediction = pick_for_event("polymarket", match_key_value, home_team, away_team, match_markets, polymarket)
         ks_prediction = pick_for_event("kalshi", match_key_value, home_team, away_team, match_markets, kalshi)
-        if event.get("status", {}).get("completed"):
+        status = event.get("status", {})
+        started = bool(status.get("completed") or status.get("state") == "in")
+        if started:
+            # "Now" only exists once the match has kicked off; it stays (frozen) after it ends.
+            pm_current = current_match_pick("polymarket", match_key_value, home_team, away_team, match_markets, polymarket)
+            ks_current = current_match_pick("kalshi", match_key_value, home_team, away_team, match_markets, kalshi)
+        else:
             pm_current = {"pick": None, "pickPct": None, "source": None}
             ks_current = {"pick": None, "pickPct": None, "source": None}
-        else:
-            pm_current = current_match_pick("polymarket", match_key_value, live_match_sources)
-            ks_current = current_match_pick("kalshi", match_key_value, live_match_sources)
         pm_pick = pm_prediction["pick"]
         ks_pick = ks_prediction["pick"]
         pm_result = result_for(event.get("winner"), pm_pick)
@@ -914,7 +935,7 @@ def build_snapshot() -> dict[str, Any]:
             kalshi = _resolve(kalshi_future, baseline_kalshi, fetch_errors, "kalshi")
 
     match_markets, match_baseline_path = merge_match_baseline(scoreboard, live_match_sources)
-    comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets, live_match_sources)
+    comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets)
     team_rows = build_team_rows(standings, polymarket, kalshi)
 
     pm_top = top_leader(polymarket)
