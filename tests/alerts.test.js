@@ -47,7 +47,14 @@ function loadApp() {
     fetch: () => Promise.reject(new Error("stub fetch")),
     localStorage: { getItem: () => null, setItem: noop, removeItem: noop },
     Notification,
-    document: { querySelector: () => makeEl(), querySelectorAll: () => [], createElement: () => makeEl(), body: makeEl() },
+    document: {
+      querySelector: () => makeEl(),
+      querySelectorAll: () => [],
+      createElement: () => makeEl(),
+      addEventListener: noop,
+      removeEventListener: noop,
+      body: makeEl(),
+    },
   };
   sandbox.window = { addEventListener: noop, isSecureContext: true, Notification, focus: noop, open: noop };
 

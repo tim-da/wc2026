@@ -1012,15 +1012,34 @@ $("#messageForm").addEventListener("submit", async (event) => {
   const email = $("#messageEmail").value.trim();
   if (!message) return;
 
+  // Web3Forms free tier accepts client-side submissions only; the access key is
+  // injected into the page by the server (kept out of the repo).
+  const accessKey = document.body.dataset.web3formsKey;
+  if (!accessKey) {
+    showToast({ type: "liveScoreChange", title: "Messaging unavailable", text: "The message form isn't configured yet." });
+    return;
+  }
+
   const sendButton = $("#messageSend");
   sendButton.disabled = true;
   try {
-    const response = await fetch("/api/message", {
+    const payload = {
+      access_key: accessKey,
+      subject: "World Cup Tracker — new message",
+      from_name: "World Cup Tracker",
+      message,
+    };
+    if (email) {
+      payload.replyto = email;
+      payload.email = email;
+    }
+    const response = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, email }),
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error(`Message failed: ${response.status}`);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success) throw new Error(data.message || `Message failed: ${response.status}`);
     $("#messageText").value = "";
     $("#messageEmail").value = "";
     closeMessageModal();
