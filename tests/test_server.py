@@ -176,6 +176,16 @@ def test_pick_for_event_prefers_pregame_then_inplay_then_outright():
     assert (fallback["pick"], fallback["source"]) == ("Spain", "outright")
 
 
+def test_pick_for_event_outright_only_exception():
+    # Matches in LOCKED_OUTRIGHT_ONLY ignore any captured market and grade on outright.
+    key = next(iter(server.LOCKED_OUTRIGHT_ONLY))
+    team_a, team_b = key.split("::")
+    markets = {key: {"polymarket": {"preGame": {"pick": team_a, "pickPct": 99.0}, "inPlay": {"pick": team_a, "pickPct": 99.0}}}}
+    odds = {team_a: {"mid": 0.01, "midPct": 1.0}, team_b: {"mid": 0.9, "midPct": 90.0}}
+    locked = server.pick_for_event("polymarket", key, team_a, team_b, markets, odds)
+    assert (locked["pick"], locked["source"]) == (team_b, "outright")  # outright favourite, not the captured pick
+
+
 def test_current_match_pick_prefers_inplay_then_outright():
     key = server.market_key("Spain", "France")
     markets = {key: {"kalshi": {"inPlay": {"pick": "Spain", "pickPct": 70.0}}}}
