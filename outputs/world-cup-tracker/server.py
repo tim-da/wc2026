@@ -698,6 +698,12 @@ def capture_pick(match_markets: dict[str, Any], source_name: str, match_key: str
     return None
 
 
+# One-off exception: these matches were already live when durable capture began,
+# so their only "match" capture is a misleading mid-game read. Grade their locked
+# pick against the outright odds (the honest pre-kickoff signal) instead.
+LOCKED_OUTRIGHT_ONLY = {"Saudi Arabia::Uruguay"}
+
+
 def pick_for_event(
     source_name: str,
     match_key: str | None,
@@ -706,6 +712,8 @@ def pick_for_event(
     match_markets: dict[str, Any],
     outright_odds: dict[str, Any],
 ) -> dict[str, Any]:
+    if match_key in LOCKED_OUTRIGHT_ONLY:
+        return outright_pick(team_a, team_b, outright_odds)
     # "Locked" = the last pre-game market read. If we never captured one (e.g. the
     # market only appeared after kick-off, or the baseline reset), prefer the in-play
     # market over outright — outright is only a last resort when no match market exists.
