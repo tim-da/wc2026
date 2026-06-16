@@ -586,10 +586,12 @@ function renderMetrics(data) {
 function renderProjections(data) {
   const pm = data.projections.polymarket;
   const ks = data.projections.kalshi;
-  setText("#pmChampion", pm.champion);
-  setText("#pmFinal", `${pm.finalists[0]} vs ${pm.finalists[1]}`);
-  setText("#ksChampion", ks.champion);
-  setText("#ksFinal", `${ks.finalists[0]} vs ${ks.finalists[1]}`);
+  const thirdLine = (p) =>
+    p.thirdPlace ? `${p.thirdPlace}${p.fourthPlace ? ` (vs. ${p.fourthPlace})` : ""}` : "--";
+  setText("#pmRunnerUp", pm.runnerUp);
+  setText("#pmThird", thirdLine(pm));
+  setText("#ksRunnerUp", ks.runnerUp);
+  setText("#ksThird", thirdLine(ks));
 }
 
 function isUpset(match) {

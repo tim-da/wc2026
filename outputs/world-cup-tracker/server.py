@@ -747,6 +747,8 @@ def build_projection(odds: dict[str, Any]) -> dict[str, Any]:
         "champion": projection["champion"],
         "finalists": projection["final"]["teams"],
         "runnerUp": projection["runnerUp"],
+        "thirdPlace": projection["thirdPlace"],
+        "fourthPlace": projection["fourthPlace"],
         "rounds": projection["rounds"],
     }
 
