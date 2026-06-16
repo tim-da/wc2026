@@ -40,6 +40,10 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 SUPABASE_TABLE = "match_captures"
 
+# "Message us" form -> Web3Forms (free form-to-email). Key kept in a Render env var.
+WEB3FORMS_KEY = os.environ.get("WEB3FORMS_KEY", "")
+WEB3FORMS_URL = "https://api.web3forms.com/submit"
+
 COUNTRY_CODE_BY_NAME = {
     "ca": "CA",
     "can": "CA",
@@ -1483,6 +1487,35 @@ def desktop_alert():
 
     sent = send_macos_notification(title, message)
     return jsonify({"sent": sent, "macosNative": sys.platform == "darwin"}), (200 if sent else 503)
+
+
+@APP.post("/api/message")
+def post_message():
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+    sender = (data.get("email") or "").strip()
+    if not message:
+        return jsonify({"sent": False, "error": "empty message"}), 400
+    if not WEB3FORMS_KEY:
+        return jsonify({"sent": False, "error": "messaging not configured"}), 503
+
+    payload = {
+        "access_key": WEB3FORMS_KEY,
+        "subject": "World Cup Tracker — new message",
+        "from_name": "World Cup Tracker",
+        "message": message[:5000],
+    }
+    if sender:
+        payload["replyto"] = sender[:200]
+        payload["email"] = sender[:200]
+
+    try:
+        response = requests.post(WEB3FORMS_URL, json=payload, timeout=15)
+        ok = response.ok and bool((response.json() or {}).get("success"))
+    except (requests.RequestException, ValueError):
+        ok = False
+
+    return jsonify({"sent": ok}), (200 if ok else 502)
 
 
 @APP.get("/api/bracket-status")

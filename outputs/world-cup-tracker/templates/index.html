@@ -10,9 +10,14 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow"><span aria-hidden="true">⚽</span> FIFA World Cup 2026</p>
-          <h1>Market Tracker</h1>
+        <div class="titleBlock">
+          <div>
+            <p class="eyebrow"><span aria-hidden="true">⚽</span> FIFA World Cup 2026</p>
+            <h1>Market Tracker</h1>
+          </div>
+          <button id="messageButton" class="textButton messageButton" title="Send us a message" type="button">
+            <span aria-hidden="true">🦉</span> Message us
+          </button>
         </div>
         <div class="actions">
           <span id="refreshStamp" class="stamp">Loading...</span>
@@ -147,6 +152,26 @@
         <div id="oddsBars" class="oddsBars"></div>
       </section>
     </main>
+
+    <div id="messageModal" class="modalOverlay" hidden>
+      <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="messageTitle">
+        <div class="modalHead">
+          <h2 id="messageTitle">Message us</h2>
+          <button id="messageClose" class="modalClose" type="button" aria-label="Close">×</button>
+        </div>
+        <p class="modalIntro">Spotted a bug or have an idea? Drop us a note.</p>
+        <form id="messageForm">
+          <label class="modalLabel" for="messageText">Your message</label>
+          <textarea id="messageText" rows="5" required placeholder="What's on your mind?"></textarea>
+          <label class="modalLabel" for="messageEmail">Your email <span class="modalHint">(optional, for a reply)</span></label>
+          <input id="messageEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          <div class="modalActions">
+            <button id="messageCancel" class="textButton" type="button">Cancel</button>
+            <button id="messageSend" class="primaryButton" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script src="/static/app.js"></script>
   </body>

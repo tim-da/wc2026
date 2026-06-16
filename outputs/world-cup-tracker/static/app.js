@@ -984,6 +984,55 @@ $("#groupFocusClear").addEventListener("click", () => {
   groupFocusInput.focus();
 });
 
+const messageModal = $("#messageModal");
+
+function openMessageModal() {
+  if (!messageModal) return;
+  messageModal.hidden = false;
+  $("#messageText").focus();
+}
+
+function closeMessageModal() {
+  if (messageModal) messageModal.hidden = true;
+}
+
+$("#messageButton").addEventListener("click", openMessageModal);
+$("#messageClose").addEventListener("click", closeMessageModal);
+$("#messageCancel").addEventListener("click", closeMessageModal);
+messageModal.addEventListener("click", (event) => {
+  if (event.target === messageModal) closeMessageModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && messageModal && !messageModal.hidden) closeMessageModal();
+});
+
+$("#messageForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const message = $("#messageText").value.trim();
+  const email = $("#messageEmail").value.trim();
+  if (!message) return;
+
+  const sendButton = $("#messageSend");
+  sendButton.disabled = true;
+  try {
+    const response = await fetch("/api/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, email }),
+    });
+    if (!response.ok) throw new Error(`Message failed: ${response.status}`);
+    $("#messageText").value = "";
+    $("#messageEmail").value = "";
+    closeMessageModal();
+    showToast({ type: "finalScore", title: "Message sent", text: "Thanks — your message is on its way." });
+  } catch (error) {
+    console.error(error);
+    showToast({ type: "liveScoreChange", title: "Message not sent", text: "Something went wrong. Please try again later." });
+  } finally {
+    sendButton.disabled = false;
+  }
+});
+
 window.addEventListener("focus", () => {
   loadDesktopAlertCapability().catch((error) => {
     console.error(error);

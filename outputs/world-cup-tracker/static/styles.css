@@ -131,6 +131,144 @@ h2 {
   border-color: #172f70;
 }
 
+.titleBlock {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.messageButton {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.messageButton:hover {
+  background: #eef3ff;
+  border-color: var(--blue);
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(24, 32, 42, 0.45);
+}
+
+.modalOverlay[hidden] {
+  display: none;
+}
+
+.modalCard {
+  width: min(440px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px 22px;
+  box-shadow: 0 24px 64px rgba(24, 32, 42, 0.28);
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modalHead h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.modalClose {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.modalClose:hover {
+  color: var(--ink);
+}
+
+.modalIntro {
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.modalLabel {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modalHint {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+#messageText,
+#messageEmail {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+
+#messageText {
+  resize: vertical;
+  min-height: 92px;
+}
+
+#messageText:focus,
+#messageEmail:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.primaryButton {
+  height: 38px;
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  padding: 0 18px;
+  background: var(--blue);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton:hover {
+  background: #1d4ed8;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .textButton.alertsOn {
   background: var(--green);
   border-color: var(--green);
