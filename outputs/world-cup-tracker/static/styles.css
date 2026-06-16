@@ -134,7 +134,7 @@ h2 {
 .titleBlock {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 28px;
   min-width: 0;
 }
 
