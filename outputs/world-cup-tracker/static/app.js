@@ -588,10 +588,10 @@ function renderProjections(data) {
   const ks = data.projections.kalshi;
   const thirdLine = (p) =>
     p.thirdPlace ? `${p.thirdPlace}${p.fourthPlace ? ` (vs. ${p.fourthPlace})` : ""}` : "--";
-  setText("#pmRunnerUp", pm.runnerUp);
-  setText("#pmThird", thirdLine(pm));
-  setText("#ksRunnerUp", ks.runnerUp);
-  setText("#ksThird", thirdLine(ks));
+  setText("#pmRunnerUp", `2. ${pm.runnerUp || "--"}`);
+  setText("#pmThird", `3. ${thirdLine(pm)}`);
+  setText("#ksRunnerUp", `2. ${ks.runnerUp || "--"}`);
+  setText("#ksThird", `3. ${thirdLine(ks)}`);
 }
 
 function isUpset(match) {
