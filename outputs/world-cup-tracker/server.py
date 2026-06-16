@@ -1509,13 +1509,23 @@ def post_message():
         payload["replyto"] = sender[:200]
         payload["email"] = sender[:200]
 
+    reason = None
     try:
-        response = requests.post(WEB3FORMS_URL, json=payload, timeout=15)
-        ok = response.ok and bool((response.json() or {}).get("success"))
-    except (requests.RequestException, ValueError):
+        response = requests.post(
+            WEB3FORMS_URL, json=payload, timeout=15, headers={"User-Agent": "WorldCupTracker/1.0"}
+        )
+        body = response.json() if response.content else {}
+        ok = response.ok and bool(body.get("success"))
+        if not ok:
+            reason = str(body.get("message") or f"http {response.status_code}")[:200]
+    except (requests.RequestException, ValueError) as exc:
         ok = False
+        reason = str(exc)[:200]
 
-    return jsonify({"sent": ok}), (200 if ok else 502)
+    result: dict[str, Any] = {"sent": ok}
+    if not ok and reason:
+        result["error"] = reason
+    return jsonify(result), (200 if ok else 502)
 
 
 @APP.get("/api/bracket-status")
