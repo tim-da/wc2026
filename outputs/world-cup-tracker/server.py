@@ -880,8 +880,14 @@ def compare_events(
     polymarket: dict[str, Any],
     kalshi: dict[str, Any],
     match_markets: dict[str, Any] | None = None,
+    locked_polymarket: dict[str, Any] | None = None,
+    locked_kalshi: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     match_markets = match_markets or {}
+    # "Locked" grades against the pre-kickoff (baseline) outright odds; "now" uses the
+    # live outright odds passed as polymarket/kalshi. They differ once the market moves.
+    locked_polymarket = polymarket if locked_polymarket is None else locked_polymarket
+    locked_kalshi = kalshi if locked_kalshi is None else locked_kalshi
     compared = []
     summary = {
         "completed": 0,
@@ -905,8 +911,8 @@ def compare_events(
         home_team = event.get("home", {}).get("team")
         away_team = event.get("away", {}).get("team")
         match_key_value = market_key(home_team, away_team)
-        pm_prediction = pick_for_event("polymarket", match_key_value, home_team, away_team, match_markets, polymarket)
-        ks_prediction = pick_for_event("kalshi", match_key_value, home_team, away_team, match_markets, kalshi)
+        pm_prediction = pick_for_event("polymarket", match_key_value, home_team, away_team, match_markets, locked_polymarket)
+        ks_prediction = pick_for_event("kalshi", match_key_value, home_team, away_team, match_markets, locked_kalshi)
         status = event.get("status", {})
         started = bool(status.get("completed") or status.get("state") == "in")
         if started:
@@ -1002,28 +1008,30 @@ def _resolve(future: Any, fallback: Any, errors: dict[str, str], label: str) -> 
 def build_snapshot() -> dict[str, Any]:
     fetch_errors: dict[str, str] = {}
     baseline_polymarket, baseline_kalshi, baseline_path = load_baseline_odds()
-    use_baseline = bool(baseline_polymarket and baseline_kalshi)
 
     # Independent network calls run concurrently so a cold snapshot is not the sum of every timeout.
     with ThreadPoolExecutor(max_workers=5) as pool:
         scoreboard_future = pool.submit(fetch_scoreboard)
         standings_future = pool.submit(fetch_standings)
         live_sources_future = pool.submit(fetch_live_match_sources)
-        polymarket_future = None if use_baseline else pool.submit(fetch_polymarket)
-        kalshi_future = None if use_baseline else pool.submit(fetch_kalshi)
+        polymarket_future = pool.submit(fetch_polymarket)
+        kalshi_future = pool.submit(fetch_kalshi)
 
         scoreboard = _resolve(scoreboard_future, [], fetch_errors, "espnScoreboard")
         standings = _resolve(standings_future, [], fetch_errors, "espnStandings")
         # fetch_live_match_sources already isolates per-source failures and never raises.
         live_match_sources, match_market_errors = live_sources_future.result()
-        if use_baseline:
-            polymarket, kalshi = baseline_polymarket, baseline_kalshi
-        else:
-            polymarket = _resolve(polymarket_future, baseline_polymarket, fetch_errors, "polymarket")
-            kalshi = _resolve(kalshi_future, baseline_kalshi, fetch_errors, "kalshi")
+        # Live outright odds drive the dashboard display; fall back to the baseline snapshot.
+        polymarket = _resolve(polymarket_future, baseline_polymarket, fetch_errors, "polymarket")
+        kalshi = _resolve(kalshi_future, baseline_kalshi, fetch_errors, "kalshi")
+
+    live_odds = not fetch_errors.get("polymarket") and not fetch_errors.get("kalshi") and bool(polymarket) and bool(kalshi)
+    # Grade "locked" picks against the pre-kickoff baseline outright odds (fall back to live).
+    locked_polymarket = baseline_polymarket or polymarket
+    locked_kalshi = baseline_kalshi or kalshi
 
     match_markets, match_baseline_path = merge_match_baseline(scoreboard, live_match_sources)
-    comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets)
+    comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets, locked_polymarket, locked_kalshi)
     team_rows = build_team_rows(standings, polymarket, kalshi)
 
     pm_top = top_leader(polymarket)
@@ -1041,7 +1049,7 @@ def build_snapshot() -> dict[str, Any]:
             "kalshiMatchMarkets": f"{KALSHI_MARKETS_URL}?series_ticker=KXWCGAME",
             "matchMarketBaseline": match_baseline_path,
         },
-        "predictionMode": "baselineCsv" if use_baseline else "liveMarkets",
+        "predictionMode": "liveMarkets" if live_odds else "baselineCsv",
         "matchMarketErrors": match_market_errors,
         "fetchErrors": fetch_errors,
         "matchMarketsCaptured": sum(len(source) for source in live_match_sources.values()),
