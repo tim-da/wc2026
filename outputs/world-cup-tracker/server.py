@@ -40,9 +40,9 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 SUPABASE_TABLE = "match_captures"
 
-# "Message us" form -> Web3Forms (free form-to-email). Key kept in a Render env var.
+# "Message us" form -> Web3Forms (free form-to-email). The free tier only accepts
+# client-side submissions, so the key is injected into the page from this env var.
 WEB3FORMS_KEY = os.environ.get("WEB3FORMS_KEY", "")
-WEB3FORMS_URL = "https://api.web3forms.com/submit"
 
 COUNTRY_CODE_BY_NAME = {
     "ca": "CA",
@@ -1451,7 +1451,9 @@ def build_bracket_svg(mark_generated: bool = False) -> str:
 
 @APP.get("/")
 def index():
-    return render_template("index.html")
+    # Web3Forms free tier requires client-side submission, so inject the key into
+    # the page (from the env var, kept out of the repo) for the browser to use.
+    return render_template("index.html", web3forms_key=WEB3FORMS_KEY)
 
 
 @APP.get("/api/snapshot")
@@ -1487,45 +1489,6 @@ def desktop_alert():
 
     sent = send_macos_notification(title, message)
     return jsonify({"sent": sent, "macosNative": sys.platform == "darwin"}), (200 if sent else 503)
-
-
-@APP.post("/api/message")
-def post_message():
-    data = request.get_json(silent=True) or {}
-    message = (data.get("message") or "").strip()
-    sender = (data.get("email") or "").strip()
-    if not message:
-        return jsonify({"sent": False, "error": "empty message"}), 400
-    if not WEB3FORMS_KEY:
-        return jsonify({"sent": False, "error": "messaging not configured"}), 503
-
-    payload = {
-        "access_key": WEB3FORMS_KEY,
-        "subject": "World Cup Tracker — new message",
-        "from_name": "World Cup Tracker",
-        "message": message[:5000],
-    }
-    if sender:
-        payload["replyto"] = sender[:200]
-        payload["email"] = sender[:200]
-
-    reason = None
-    try:
-        response = requests.post(
-            WEB3FORMS_URL, json=payload, timeout=15, headers={"User-Agent": "WorldCupTracker/1.0"}
-        )
-        body = response.json() if response.content else {}
-        ok = response.ok and bool(body.get("success"))
-        if not ok:
-            reason = str(body.get("message") or f"http {response.status_code}")[:200]
-    except (requests.RequestException, ValueError) as exc:
-        ok = False
-        reason = str(exc)[:200]
-
-    result: dict[str, Any] = {"sent": ok}
-    if not ok and reason:
-        result["error"] = reason
-    return jsonify(result), (200 if ok else 502)
 
 
 @APP.get("/api/bracket-status")
