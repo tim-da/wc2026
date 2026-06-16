@@ -176,6 +176,21 @@ def test_pick_for_event_prefers_pregame_then_inplay_then_outright():
     assert (fallback["pick"], fallback["source"]) == ("Spain", "outright")
 
 
+def test_compare_events_locked_baseline_now_live():
+    # No captured market -> both picks fall back to outright; locked must use the
+    # baseline odds while "now" uses the live odds passed as polymarket/kalshi.
+    events = [{
+        "home": {"team": "Spain"}, "away": {"team": "France"},
+        "winner": None, "status": {"state": "in", "completed": False},
+    }]
+    baseline = {"Spain": {"mid": 0.5, "midPct": 50.0}, "France": {"mid": 0.1, "midPct": 10.0}}  # favours Spain
+    live = {"Spain": {"mid": 0.1, "midPct": 10.0}, "France": {"mid": 0.5, "midPct": 50.0}}  # favours France
+    out = server.compare_events(events, live, live, {}, baseline, baseline)
+    pred = out["events"][0]["prediction"]
+    assert pred["polymarketPick"] == "Spain"  # locked -> baseline favourite
+    assert pred["polymarketCurrentPick"] == "France"  # now -> live favourite
+
+
 def test_pick_for_event_outright_only_exception():
     # Matches in LOCKED_OUTRIGHT_ONLY ignore any captured market and grade on outright.
     key = next(iter(server.LOCKED_OUTRIGHT_ONLY))
