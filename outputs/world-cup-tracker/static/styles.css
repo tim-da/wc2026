@@ -74,8 +74,21 @@ h2 {
 
 .actions {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 10px;
+}
+
+.finalsWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.btnCaption {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .stamp {
