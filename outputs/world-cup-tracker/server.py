@@ -701,6 +701,22 @@ def goal_event_notification(old: dict[str, Any] | None, cur: dict[str, Any]) -> 
     return None
 
 
+_VAPID_PEM_PATH: str | None = None
+
+
+def vapid_pem_path() -> str:
+    """Write the base64-decoded PKCS8 PEM to a temp file once; pywebpush loads PEM files reliably."""
+    global _VAPID_PEM_PATH
+    if _VAPID_PEM_PATH is None:
+        import tempfile
+
+        fd, path = tempfile.mkstemp(suffix="-vapid.pem")
+        os.write(fd, base64.b64decode(VAPID_PRIVATE_KEY))
+        os.close(fd)
+        _VAPID_PEM_PATH = path
+    return _VAPID_PEM_PATH
+
+
 def send_web_push(subscription: dict[str, Any], payload: dict[str, Any]) -> None:
     webpush(
         subscription_info={
@@ -708,25 +724,27 @@ def send_web_push(subscription: dict[str, Any], payload: dict[str, Any]) -> None
             "keys": {"p256dh": subscription["p256dh"], "auth": subscription["auth"]},
         },
         data=json.dumps({**payload, "url": "/"}),
-        vapid_private_key=base64.b64decode(VAPID_PRIVATE_KEY).decode(),
+        vapid_private_key=vapid_pem_path(),
         vapid_claims={"sub": VAPID_SUBJECT},
         ttl=600,
     )
 
 
-def push_to_all(subscriptions: list[dict[str, Any]], payload: dict[str, Any]) -> int:
+def push_to_all(subscriptions: list[dict[str, Any]], payload: dict[str, Any]) -> tuple[int, list[str]]:
     sent = 0
+    errors: list[str] = []
     for subscription in subscriptions:
         try:
             send_web_push(subscription, payload)
             sent += 1
         except WebPushException as exc:
             status = getattr(getattr(exc, "response", None), "status_code", None)
+            errors.append(f"webpush {status}: {str(exc)[:140]}")
             if status in (404, 410):  # subscription gone -> prune it
                 supabase_delete_subscription(subscription["endpoint"])
-        except Exception:  # pragma: no cover - never let one bad sub break the loop
-            pass
-    return sent
+        except Exception as exc:  # pragma: no cover
+            errors.append(f"{type(exc).__name__}: {str(exc)[:140]}")
+    return sent, errors
 
 
 def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], str | None]:
@@ -1679,20 +1697,26 @@ def check_goals():
             changed.append(cur)
 
     sent = 0
+    push_errors: list[str] = []
     if notifications:
         try:
             subscriptions = supabase_load_subscriptions()
         except (requests.RequestException, ValueError):
             subscriptions = []
         for notification in notifications:
-            sent += push_to_all(subscriptions, notification)
+            count, errors = push_to_all(subscriptions, notification)
+            sent += count
+            push_errors.extend(errors)
 
     try:
         supabase_upsert_match_state(changed)
     except (requests.RequestException, ValueError):
         pass
 
-    return jsonify({"ok": True, "events": len(notifications), "pushes": sent, "tracked": len(changed)})
+    result = {"ok": True, "events": len(notifications), "pushes": sent, "tracked": len(changed)}
+    if push_errors:
+        result["pushErrors"] = push_errors[:5]
+    return jsonify(result)
 
 
 @APP.get("/api/bracket-status")
