@@ -796,6 +796,45 @@ function thirdPlaceQualifierKeys(rows) {
   return new Set(thirdPlaceRows.slice(0, QUALIFYING_THIRD_PLACES).map(teamKey));
 }
 
+function standingsComparator(groupsWithPoints) {
+  return (a, b) => {
+    const groupCompare = String(a.group).localeCompare(String(b.group));
+    if (groupCompare) return groupCompare;
+    if (!groupsWithPoints.has(a.group)) {
+      const consensusCompare = standingValue(b.consensusPct) - standingValue(a.consensusPct);
+      if (consensusCompare) return consensusCompare;
+    }
+    const standingsCompare = compareStandingRows(a, b);
+    if (standingsCompare) return standingsCompare;
+    return String(a.displayName).localeCompare(String(b.displayName));
+  };
+}
+
+// Qualification dot per team: green = top 2 in group, orange = qualifying 3rd,
+// none if not qualifying, gray when the group has no games yet (outright order).
+function qualificationDots(teams) {
+  const groupsWithPoints = new Set(teams.filter(hasPoints).map((team) => team.group));
+  const sorted = [...teams].sort(standingsComparator(groupsWithPoints));
+  const thirdQualifiers = thirdPlaceQualifierKeys(sorted);
+  const dots = new Map();
+  let currentGroup = null;
+  let position = 0;
+  for (const row of sorted) {
+    if (row.group !== currentGroup) {
+      currentGroup = row.group;
+      position = 1;
+    } else {
+      position += 1;
+    }
+    const hasGames = groupsWithPoints.has(row.group);
+    let color = "";
+    if (position <= 2) color = hasGames ? "green" : "gray";
+    else if (position === 3 && thirdQualifiers.has(teamKey(row))) color = hasGames ? "orange" : "gray";
+    dots.set(teamKey(row), color);
+  }
+  return dots;
+}
+
 function renderTeams(data) {
   const query = state.search.trim().toLowerCase();
   const filteredRows = [...data.teams].filter(
@@ -805,28 +844,18 @@ function renderTeams(data) {
       (!query || team.displayName.toLowerCase().includes(query) || team.team.toLowerCase().includes(query))
   );
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
-  const rows = filteredRows.sort((a, b) => {
-      const groupCompare = String(a.group).localeCompare(String(b.group));
-      if (groupCompare) return groupCompare;
-
-      if (!groupsWithPoints.has(a.group)) {
-        const consensusCompare = standingValue(b.consensusPct) - standingValue(a.consensusPct);
-        if (consensusCompare) return consensusCompare;
-      }
-
-      const standingsCompare = compareStandingRows(a, b);
-      if (standingsCompare) return standingsCompare;
-
-      return String(a.displayName).localeCompare(String(b.displayName));
-    });
-  const thirdQualifiers = thirdPlaceQualifierKeys(rows);
+  const rows = filteredRows.sort(standingsComparator(groupsWithPoints));
+  const dots = qualificationDots(data.teams);
 
   $("#teamRows").innerHTML = rows
-    .map(
-      (row) => `
-        <tr class="${[teamRowClass(row.group), thirdQualifiers.has(teamKey(row)) ? "thirdQualified" : ""].filter(Boolean).join(" ")}">
+    .map((row) => {
+      const dotColor = dots.get(teamKey(row));
+      const dot = dotColor ? `<span class="qualDot qual-${dotColor}" aria-hidden="true"></span>` : "";
+      return `
+        <tr class="${teamRowClass(row.group)}">
           <td>
             <span class="teamCell">
+              ${dot}
               ${row.logo ? `<img class="logo" src="${escapeHtml(row.logo)}" alt="" />` : ""}
               ${escapeHtml(row.displayName)}
             </span>
@@ -840,8 +869,8 @@ function renderTeams(data) {
           <td class="num">${row.polymarketRank ?? "-"}</td>
           <td class="num">${row.kalshiRank ?? "-"}</td>
         </tr>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
