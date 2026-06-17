@@ -806,6 +806,9 @@ function standingsComparator(groupsWithPoints) {
     }
     const standingsCompare = compareStandingRows(a, b);
     if (standingsCompare) return standingsCompare;
+    // Teams dead-even on points/GD/goals: break by market consensus, not alphabetically.
+    const consensusCompare = standingValue(b.consensusPct) - standingValue(a.consensusPct);
+    if (consensusCompare) return consensusCompare;
     return String(a.displayName).localeCompare(String(b.displayName));
   };
 }
