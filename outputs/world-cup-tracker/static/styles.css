@@ -778,9 +778,23 @@ tbody tr.groupBlue td {
   background: #eff6ff;
 }
 
-tbody tr.thirdQualified td {
-  color: #166534;
-  font-weight: 800;
+.qualDot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.qual-green {
+  background: #16a34a;
+}
+
+.qual-orange {
+  background: #f97316;
+}
+
+.qual-gray {
+  background: #9ca3af;
 }
 
 .teamCell {
