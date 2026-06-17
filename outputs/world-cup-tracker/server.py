@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import subprocess
@@ -16,6 +17,14 @@ from typing import Any
 
 import requests
 from flask import Flask, Response, jsonify, render_template, request
+
+try:  # optional at import time (installed on the server); keeps local tooling working
+    from pywebpush import WebPushException, webpush
+except ImportError:  # pragma: no cover
+    webpush = None
+
+    class WebPushException(Exception):
+        pass
 
 
 ROOT = Path(__file__).resolve().parent
@@ -628,6 +637,96 @@ def supabase_upsert_captures(rows: list[dict[str, Any]]) -> None:
         timeout=15,
     )
     response.raise_for_status()
+
+
+# --- Web Push: subscriptions, match-state diffing, and sending ---
+
+
+def supabase_load_subscriptions() -> list[dict[str, Any]]:
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/push_subscriptions",
+        params={"select": "endpoint,p256dh,auth"},
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def supabase_delete_subscription(endpoint: str) -> None:
+    try:
+        requests.delete(
+            f"{SUPABASE_URL}/rest/v1/push_subscriptions",
+            params={"endpoint": f"eq.{endpoint}"},
+            headers=_supabase_headers(),
+            timeout=15,
+        )
+    except requests.RequestException:
+        pass
+
+
+def supabase_load_match_state() -> dict[str, dict[str, Any]]:
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/match_state",
+        params={"select": "match_key,home_score,away_score,state,completed"},
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    response.raise_for_status()
+    return {row["match_key"]: row for row in response.json()}
+
+
+def supabase_upsert_match_state(rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        return
+    requests.post(
+        f"{SUPABASE_URL}/rest/v1/match_state",
+        headers=_supabase_headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+        json=rows,
+        timeout=15,
+    ).raise_for_status()
+
+
+def goal_event_notification(old: dict[str, Any] | None, cur: dict[str, Any]) -> dict[str, Any] | None:
+    """A push payload for a meaningful change, or None. Mirrors the in-page alerts."""
+    teams = f'{cur["home_team"]} vs {cur["away_team"]}'
+    score = f'{cur["home_team"]} {cur["home_score"]}-{cur["away_score"]} {cur["away_team"]}'
+    if cur["state"] == "in" and (old is None or old.get("state") != "in") and not cur["completed"]:
+        return {"title": "Kick-off", "body": teams, "tag": cur["match_key"]}
+    if cur["completed"] and (old is None or not old.get("completed")):
+        return {"title": "Full time", "body": score, "tag": cur["match_key"]}
+    if cur["state"] == "in" and old and old.get("state") == "in":
+        if cur["home_score"] != old.get("home_score") or cur["away_score"] != old.get("away_score"):
+            return {"title": "Goal!", "body": score, "tag": cur["match_key"]}
+    return None
+
+
+def send_web_push(subscription: dict[str, Any], payload: dict[str, Any]) -> None:
+    webpush(
+        subscription_info={
+            "endpoint": subscription["endpoint"],
+            "keys": {"p256dh": subscription["p256dh"], "auth": subscription["auth"]},
+        },
+        data=json.dumps({**payload, "url": "/"}),
+        vapid_private_key=base64.b64decode(VAPID_PRIVATE_KEY).decode(),
+        vapid_claims={"sub": VAPID_SUBJECT},
+        ttl=600,
+    )
+
+
+def push_to_all(subscriptions: list[dict[str, Any]], payload: dict[str, Any]) -> int:
+    sent = 0
+    for subscription in subscriptions:
+        try:
+            send_web_push(subscription, payload)
+            sent += 1
+        except WebPushException as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            if status in (404, 410):  # subscription gone -> prune it
+                supabase_delete_subscription(subscription["endpoint"])
+        except Exception:  # pragma: no cover - never let one bad sub break the loop
+            pass
+    return sent
 
 
 def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], str | None]:
@@ -1538,6 +1637,62 @@ def desktop_alert():
 
     sent = send_macos_notification(title, message)
     return jsonify({"sent": sent, "macosNative": sys.platform == "darwin"}), (200 if sent else 503)
+
+
+@APP.route("/check-goals", methods=["GET", "POST"])
+def check_goals():
+    # Triggered by a scheduler (Supabase pg_cron). Diffs ESPN scores against the
+    # stored match state and sends a Web Push for kick-offs, goals and full time.
+    if not CHECK_GOALS_TOKEN or request.args.get("token") != CHECK_GOALS_TOKEN:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+    if not (supabase_enabled() and VAPID_PRIVATE_KEY and webpush is not None):
+        return jsonify({"ok": False, "error": "not configured"}), 503
+
+    try:
+        events = fetch_scoreboard()
+        prior = supabase_load_match_state()
+    except (requests.RequestException, ValueError):
+        return jsonify({"ok": False, "error": "fetch"}), 502
+
+    notifications: list[dict[str, Any]] = []
+    changed: list[dict[str, Any]] = []
+    for event in events:
+        key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+        if not key:
+            continue
+        status = event.get("status", {})
+        cur = {
+            "match_key": key,
+            "home_team": event.get("home", {}).get("team"),
+            "away_team": event.get("away", {}).get("team"),
+            "home_score": int(event.get("home", {}).get("score") or 0),
+            "away_score": int(event.get("away", {}).get("score") or 0),
+            "state": status.get("state"),
+            "completed": bool(status.get("completed")),
+            "winner": event.get("winner"),
+        }
+        old = prior.get(key)
+        notification = goal_event_notification(old, cur)
+        if notification and old is not None:  # only on a transition from a known state (no first-run spam)
+            notifications.append(notification)
+        if old is None or any(cur[k] != old.get(k) for k in ("home_score", "away_score", "state", "completed")):
+            changed.append(cur)
+
+    sent = 0
+    if notifications:
+        try:
+            subscriptions = supabase_load_subscriptions()
+        except (requests.RequestException, ValueError):
+            subscriptions = []
+        for notification in notifications:
+            sent += push_to_all(subscriptions, notification)
+
+    try:
+        supabase_upsert_match_state(changed)
+    except (requests.RequestException, ValueError):
+        pass
+
+    return jsonify({"ok": True, "events": len(notifications), "pushes": sent, "tracked": len(changed)})
 
 
 @APP.get("/api/bracket-status")
