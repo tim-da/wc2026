@@ -687,6 +687,27 @@ def supabase_upsert_match_state(rows: list[dict[str, Any]]) -> None:
     ).raise_for_status()
 
 
+def supabase_get_app_state(key: str) -> str | None:
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/app_state",
+        params={"select": "value", "key": f"eq.{key}"},
+        headers=_supabase_headers(),
+        timeout=15,
+    )
+    response.raise_for_status()
+    rows = response.json()
+    return rows[0]["value"] if rows else None
+
+
+def supabase_set_app_state(key: str, value: str) -> None:
+    requests.post(
+        f"{SUPABASE_URL}/rest/v1/app_state",
+        headers=_supabase_headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+        json=[{"key": key, "value": value}],
+        timeout=15,
+    ).raise_for_status()
+
+
 def goal_event_notification(old: dict[str, Any] | None, cur: dict[str, Any]) -> dict[str, Any] | None:
     """A push payload for a meaningful change, or None. Mirrors the in-page alerts."""
     teams = f'{cur["home_team"]} vs {cur["away_team"]}'
@@ -1622,6 +1643,17 @@ def push_subscribe():
     return jsonify({"ok": True})
 
 
+@APP.post("/api/push/unsubscribe")
+def push_unsubscribe():
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    if not endpoint:
+        return jsonify({"ok": False, "error": "missing endpoint"}), 400
+    if supabase_enabled():
+        supabase_delete_subscription(endpoint)
+    return jsonify({"ok": True})
+
+
 @APP.get("/api/snapshot")
 def snapshot():
     now = time.time()
@@ -1695,6 +1727,19 @@ def check_goals():
             notifications.append(notification)
         if old is None or any(cur[k] != old.get(k) for k in ("home_score", "away_score", "state", "completed")):
             changed.append(cur)
+
+    # New-favorite: diff the consensus title-odds leader against the stored one.
+    try:
+        odds, _ = current_consensus_odds()
+        leader = top_leader(odds)
+        favorite = leader["team"] if leader else None
+        if favorite:
+            previous_favorite = supabase_get_app_state("favorite")
+            if previous_favorite and previous_favorite != favorite:
+                notifications.append({"title": "New favorite", "body": f"We have a new favorite - {favorite}", "tag": "favorite"})
+            supabase_set_app_state("favorite", favorite)
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        pass
 
     sent = 0
     push_errors: list[str] = []
