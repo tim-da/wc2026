@@ -351,6 +351,36 @@ async function toggleDesktopAlerts() {
   const notification = { type: "finalScore", title: "Desktop alerts on", text: "Score updates will appear even when you are in another app." };
   showToast(notification);
   sendDesktopNotification(notification, true);
+  subscribePush();
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from(raw, (char) => char.charCodeAt(0));
+}
+
+async function subscribePush() {
+  const vapidKey = document.body.dataset.vapidKey;
+  if (!vapidKey || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  if (!window.isSecureContext || Notification.permission !== "granted") return;
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    const subscription =
+      (await registration.pushManager.getSubscription()) ||
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      }));
+    await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription: subscription.toJSON() }),
+    });
+  } catch (error) {
+    console.error("push subscribe failed", error);
+  }
 }
 
 function matchKey(match) {
@@ -1061,7 +1091,9 @@ window.addEventListener("focus", () => {
   });
 });
 
-loadDesktopAlertCapability();
+loadDesktopAlertCapability().then(() => {
+  if (desktopAlertsEnabled()) subscribePush();
+});
 loadSnapshot().catch((error) => {
   console.error(error);
   setText("#refreshStamp", "Load failed");
