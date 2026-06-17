@@ -15,12 +15,14 @@
             <p class="eyebrow"><span aria-hidden="true">⚽</span> FIFA World Cup 2026</p>
             <h1>Market Tracker</h1>
           </div>
-          <button id="messageButton" class="textButton messageButton" title="Send us a message" type="button">
-            <span aria-hidden="true">🦉</span> Message us
-          </button>
+          <div class="messageWrap">
+            <span class="copyright">© AMI Business Studio</span>
+            <button id="messageButton" class="textButton messageButton" title="Send us a message" type="button">
+              <span aria-hidden="true">🦉</span> Message us
+            </button>
+          </div>
         </div>
         <div class="actions">
-          <span id="refreshStamp" class="stamp">Loading...</span>
           <button id="bracketButton" class="textButton" title="Open current finals bracket" type="button">
             <span aria-hidden="true">⚽</span> FINALS
           </button>
@@ -32,6 +34,8 @@
           </button>
         </div>
       </header>
+
+      <p id="refreshStamp" class="stamp stampLine">Loading...</p>
 
       <section class="metrics" aria-label="Summary">
         <article class="metric">
