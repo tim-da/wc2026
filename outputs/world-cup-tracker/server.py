@@ -44,6 +44,12 @@ SUPABASE_TABLE = "match_captures"
 # client-side submissions, so the key is injected into the page from this env var.
 WEB3FORMS_KEY = os.environ.get("WEB3FORMS_KEY", "")
 
+# Web Push (VAPID). Public key is safe to ship to the browser; private key is a secret.
+VAPID_PUBLIC_KEY = "BBZXwxtWEIPyQ3tc_UIdks262j9ehKlL7qeTmVBOrgRq5JDhLPC61AI33OpaWeohOeCJ--joHVOD_q7rkdwVEXY"
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")  # base64-encoded PKCS8 PEM
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:d.timoshin@ami-business.com")
+CHECK_GOALS_TOKEN = os.environ.get("CHECK_GOALS_TOKEN", "")
+
 COUNTRY_CODE_BY_NAME = {
     "ca": "CA",
     "can": "CA",
@@ -1463,7 +1469,40 @@ def build_bracket_svg(mark_generated: bool = False) -> str:
 def index():
     # Web3Forms free tier requires client-side submission, so inject the key into
     # the page (from the env var, kept out of the repo) for the browser to use.
-    return render_template("index.html", web3forms_key=WEB3FORMS_KEY)
+    return render_template("index.html", web3forms_key=WEB3FORMS_KEY, vapid_public_key=VAPID_PUBLIC_KEY)
+
+
+@APP.get("/sw.js")
+def service_worker():
+    # Served from the root so its scope covers the whole site.
+    return Response(
+        (ROOT / "static" / "sw.js").read_text(),
+        mimetype="application/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
+
+
+@APP.post("/api/push/subscribe")
+def push_subscribe():
+    data = request.get_json(silent=True) or {}
+    sub = data.get("subscription") or {}
+    endpoint = (sub.get("endpoint") or "").strip()
+    keys = sub.get("keys") or {}
+    p256dh, auth = keys.get("p256dh"), keys.get("auth")
+    if not endpoint or not p256dh or not auth:
+        return jsonify({"ok": False, "error": "invalid subscription"}), 400
+    if not supabase_enabled():
+        return jsonify({"ok": False, "error": "storage not configured"}), 503
+    try:
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/push_subscriptions",
+            headers=_supabase_headers({"Prefer": "resolution=merge-duplicates,return=minimal"}),
+            json=[{"endpoint": endpoint, "p256dh": p256dh, "auth": auth}],
+            timeout=15,
+        ).raise_for_status()
+    except (requests.RequestException, ValueError):
+        return jsonify({"ok": False, "error": "store failed"}), 502
+    return jsonify({"ok": True})
 
 
 @APP.get("/api/snapshot")
