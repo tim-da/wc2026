@@ -87,6 +87,24 @@ h2 {
   font-size: 13px;
 }
 
+.stampLine {
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.messageWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.copyright {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .iconButton {
   width: 38px;
   height: 38px;
