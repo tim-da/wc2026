@@ -797,6 +797,10 @@ tbody tr.groupBlue td {
   background: #9ca3af;
 }
 
+.qual-none {
+  background: transparent;
+}
+
 .teamCell {
   display: flex;
   align-items: center;
