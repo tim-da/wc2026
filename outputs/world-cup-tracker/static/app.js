@@ -850,7 +850,7 @@ function renderTeams(data) {
   $("#teamRows").innerHTML = rows
     .map((row) => {
       const dotColor = dots.get(teamKey(row));
-      const dot = dotColor ? `<span class="qualDot qual-${dotColor}" aria-hidden="true"></span>` : "";
+      const dot = `<span class="qualDot qual-${dotColor || "none"}" aria-hidden="true"></span>`;
       return `
         <tr class="${teamRowClass(row.group)}">
           <td>
