@@ -191,6 +191,25 @@ def test_compare_events_locked_baseline_now_live():
     assert pred["polymarketCurrentPick"] == "France"  # now -> live favourite
 
 
+def test_goal_event_notification():
+    def cur(**kw):
+        base = {"match_key": "A::B", "home_team": "A", "away_team": "B", "home_score": 0,
+                "away_score": 0, "state": "in", "completed": False, "winner": None}
+        base.update(kw)
+        return base
+
+    # kick-off: pre -> in
+    assert server.goal_event_notification({"state": "pre", "completed": False}, cur())["title"] == "Kick-off"
+    # goal: score change while live
+    goal = server.goal_event_notification({"state": "in", "home_score": 0, "away_score": 0, "completed": False}, cur(home_score=1))
+    assert goal["title"] == "Goal!" and "A 1-0 B" in goal["body"]
+    # full time: -> completed
+    ft = server.goal_event_notification({"state": "in", "completed": False}, cur(state="post", completed=True, home_score=2, away_score=1))
+    assert ft["title"] == "Full time"
+    # no change while live -> nothing
+    assert server.goal_event_notification({"state": "in", "home_score": 1, "away_score": 0, "completed": False}, cur(home_score=1)) is None
+
+
 def test_pick_for_event_outright_only_exception():
     # Matches in LOCKED_OUTRIGHT_ONLY ignore any captured market and grade on outright.
     key = next(iter(server.LOCKED_OUTRIGHT_ONLY))
