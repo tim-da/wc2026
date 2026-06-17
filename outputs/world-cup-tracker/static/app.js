@@ -846,11 +846,19 @@ function renderTeams(data) {
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
   const rows = filteredRows.sort(standingsComparator(groupsWithPoints));
   const dots = qualificationDots(data.teams);
+  const liveTeams = new Set();
+  (data.matches || []).forEach((match) => {
+    if (match.status?.state === "in") {
+      if (match.home?.team) liveTeams.add(match.home.team);
+      if (match.away?.team) liveTeams.add(match.away.team);
+    }
+  });
 
   $("#teamRows").innerHTML = rows
     .map((row) => {
       const dotColor = dots.get(teamKey(row));
       const dot = `<span class="qualDot qual-${dotColor || "none"}" aria-hidden="true"></span>`;
+      const live = liveTeams.has(row.team) ? `<span class="liveBadge">LIVE</span>` : "";
       return `
         <tr class="${teamRowClass(row.group)}">
           <td>
@@ -858,6 +866,7 @@ function renderTeams(data) {
               ${dot}
               ${row.logo ? `<img class="logo" src="${escapeHtml(row.logo)}" alt="" />` : ""}
               ${escapeHtml(row.displayName)}
+              ${live}
             </span>
           </td>
           <td>${escapeHtml(row.group || "")}</td>

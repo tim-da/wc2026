@@ -801,6 +801,29 @@ tbody tr.groupBlue td {
   background: transparent;
 }
 
+.liveBadge {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  animation: livePulse 1.1s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 .teamCell {
   display: flex;
   align-items: center;
