@@ -7,6 +7,7 @@ const state = {
   search: "",
   team: "",
   group: "",
+  pushActive: false,
   loading: false,
 };
 
@@ -276,6 +277,9 @@ async function sendNativeDesktopNotification(notification, force = false) {
 
 function sendBrowserDesktopNotification(notification, force = false) {
   if (!force && !desktopAlertsEnabled()) return;
+  // When Web Push is active the background poller delivers the OS notification, so
+  // skip the foreground one to avoid double-buzzing (the in-page toast still shows).
+  if (!force && state.pushActive) return;
   if (!("Notification" in window) || !window.isSecureContext || Notification.permission !== "granted") return;
 
   try {
@@ -320,6 +324,7 @@ async function toggleDesktopAlerts() {
 
   if (desktopAlertsEnabled()) {
     saveDesktopAlerts(false);
+    unsubscribePush();
     showToast({ type: "finalScore", title: "Desktop alerts off", text: "Score updates will stay inside this page." });
     return;
   }
@@ -378,8 +383,28 @@ async function subscribePush() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subscription: subscription.toJSON() }),
     });
+    state.pushActive = true;
   } catch (error) {
     console.error("push subscribe failed", error);
+  }
+}
+
+async function unsubscribePush() {
+  state.pushActive = false;
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    const subscription = registration && (await registration.pushManager.getSubscription());
+    if (!subscription) return;
+    const endpoint = subscription.endpoint;
+    await subscription.unsubscribe();
+    await fetch("/api/push/unsubscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint }),
+    });
+  } catch (error) {
+    console.error("push unsubscribe failed", error);
   }
 }
 
