@@ -556,6 +556,22 @@ small {
   font-weight: 800;
 }
 
+.hotMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+
 .currentLine {
   margin-top: 5px;
   min-height: 16px;
