@@ -77,19 +77,20 @@ function resultLabel(result) {
 
 function sourceLabel(source) {
   return {
-    match: "match market",
+    match: "", // dropped: the USD figure already signals it's a match market
     outright: "outright",
     unknown: "unknown",
-  }[source] || source;
+  }[source] ?? source;
 }
 
 function predictionText(label, pick, pickPct, source, volume) {
   const parts = [`${label}: ${escapeHtml(pick || "n/a")}`];
   if (pickPct != null) parts.push(fmtPct(pickPct));
-  if (source) parts.push(escapeHtml(sourceLabel(source)));
+  const src = source ? sourceLabel(source) : "";
+  if (src) parts.push(escapeHtml(src));
   const usd = fmtUsd(volume);
   if (usd) parts.push(usd);
-  return parts.join(" · ");
+  return parts.join(" | ");
 }
 
 function currentMarketLine(label, pick, pickPct, source, lockedPick, volume) {
