@@ -889,6 +889,11 @@ small {
   background: #e2e6ec;
 }
 
+.calDay.today {
+  background: #dcf5e4;
+  color: var(--ink);
+}
+
 .calDay.selected {
   background: var(--blue);
   color: #ffffff;

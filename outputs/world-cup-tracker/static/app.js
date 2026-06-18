@@ -1079,12 +1079,15 @@ function renderCal(dates) {
 
   const firstDay = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const todayKey = localDateKey(new Date());
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(`<div class="calDay empty"></div>`);
   for (let d = 1; d <= daysInMonth; d++) {
     const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const has = dates.has(key);
-    const classes = ["calDay", has ? "hasGames" : "", state.date === key ? "selected" : ""].filter(Boolean).join(" ");
+    const classes = ["calDay", has ? "hasGames" : "", key === todayKey ? "today" : "", state.date === key ? "selected" : ""]
+      .filter(Boolean)
+      .join(" ");
     cells.push(`<div class="${classes}" data-date="${has ? key : ""}">${d}</div>`);
   }
   $("#calGrid").innerHTML = cells.join("");
