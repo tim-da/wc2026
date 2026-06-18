@@ -91,7 +91,14 @@ function predictionText(label, pick, pickPct, source, volume, total) {
   const usd = fmtUsd(volume);
   if (usd) {
     const totalUsd = fmtUsd(total);
-    parts.push(totalUsd ? `${usd} of ${totalUsd}` : usd);
+    if (totalUsd) {
+      // Highlight the total when the money share on this outcome is below its price.
+      const underBacked = pickPct != null && total > 0 && volume / total < pickPct / 100;
+      const totalPart = underBacked ? `<span class="totalHot">${totalUsd}</span>` : totalUsd;
+      parts.push(`${usd} of ${totalPart}`);
+    } else {
+      parts.push(usd);
+    }
   }
   return parts.join(" | ");
 }

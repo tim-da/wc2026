@@ -551,6 +551,11 @@ small {
   white-space: nowrap;
 }
 
+.totalHot {
+  color: var(--blue);
+  font-weight: 800;
+}
+
 .currentLine {
   margin-top: 5px;
   min-height: 16px;
