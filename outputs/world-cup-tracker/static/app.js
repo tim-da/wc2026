@@ -7,6 +7,8 @@ const state = {
   search: "",
   team: "",
   group: "",
+  date: "",
+  calYM: null,
   pushActive: false,
   loading: false,
 };
@@ -680,6 +682,7 @@ function isUpset(match) {
 function matchVisible(match) {
   if (state.team && match.home?.team !== state.team && match.away?.team !== state.team) return false;
   if (state.group && match.group !== state.group) return false;
+  if (state.date && localDateKey(match.date) !== state.date) return false;
   if (state.filter === "today") return isToday(match.date);
   if (state.filter === "live") return match.status.state === "in";
   if (state.filter === "completed") return match.status.completed;
@@ -1046,6 +1049,102 @@ function applyGroupFocus(value) {
   renderOdds(data);
 }
 
+function localDateKey(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function fmtDateKeyLabel(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(y, m - 1, d));
+}
+
+function gameDateSet(data) {
+  const set = new Set();
+  (data?.matches || []).forEach((m) => {
+    const k = localDateKey(m.date);
+    if (k) set.add(k);
+  });
+  return set;
+}
+
+function renderCal(dates) {
+  if (!state.calYM) return;
+  const { y, m } = state.calYM;
+  setText("#calTitle", new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(y, m, 1)));
+  const dow = $(".dateCalDow");
+  if (dow) dow.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((d) => `<span>${d}</span>`).join("");
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(`<div class="calDay empty"></div>`);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const has = dates.has(key);
+    const classes = ["calDay", has ? "hasGames" : "", state.date === key ? "selected" : ""].filter(Boolean).join(" ");
+    cells.push(`<div class="${classes}" data-date="${has ? key : ""}">${d}</div>`);
+  }
+  $("#calGrid").innerHTML = cells.join("");
+
+  const months = [...new Set([...dates].map((k) => k.slice(0, 7)))].sort();
+  const curYM = `${y}-${String(m + 1).padStart(2, "0")}`;
+  $("#calPrev").disabled = !months.length || curYM <= months[0];
+  $("#calNext").disabled = !months.length || curYM >= months[months.length - 1];
+}
+
+function renderDateControl(data) {
+  const dates = gameDateSet(data);
+  setText("#dateButton", state.date ? fmtDateKeyLabel(state.date) : "All dates");
+  $("#dateButton").classList.toggle("dateActive", Boolean(state.date));
+
+  if (!state.calYM) {
+    const months = [...new Set([...dates].map((k) => k.slice(0, 7)))].sort();
+    let ym = state.date ? state.date.slice(0, 7) : localDateKey(new Date()).slice(0, 7);
+    if (!state.date && months.length) {
+      if (ym < months[0]) ym = months[0];
+      else if (ym > months[months.length - 1]) ym = months[months.length - 1];
+    }
+    const [yy, mm] = ym.split("-").map(Number);
+    state.calYM = { y: yy, m: mm - 1 };
+  }
+  if (!$("#dateCal").hidden) renderCal(dates);
+}
+
+function shiftMonth(delta) {
+  const dates = gameDateSet(state.snapshot);
+  const months = [...new Set([...dates].map((k) => k.slice(0, 7)))].sort();
+  let { y, m } = state.calYM;
+  m += delta;
+  if (m < 0) {
+    m = 11;
+    y -= 1;
+  } else if (m > 11) {
+    m = 0;
+    y += 1;
+  }
+  const curYM = `${y}-${String(m + 1).padStart(2, "0")}`;
+  if (months.length && (curYM < months[0] || curYM > months[months.length - 1])) return;
+  state.calYM = { y, m };
+  renderCal(dates);
+}
+
+function openCal() {
+  const cal = $("#dateCal");
+  if (!cal) return;
+  cal.hidden = false;
+  $("#dateButton").setAttribute("aria-expanded", "true");
+  renderCal(gameDateSet(state.snapshot));
+}
+
+function closeCal() {
+  const cal = $("#dateCal");
+  if (cal) cal.hidden = true;
+  $("#dateButton").setAttribute("aria-expanded", "false");
+}
+
 function render() {
   const data = state.snapshot;
   if (!data) return;
@@ -1053,6 +1152,7 @@ function render() {
   renderProjections(data);
   renderTeamFocusOptions(data);
   renderGroupFocusOptions(data);
+  renderDateControl(data);
   renderMatches(data);
   renderTeams(data);
   renderOdds(data);
@@ -1111,6 +1211,35 @@ $("#groupFocusClear").addEventListener("click", () => {
   groupFocusInput.value = "";
   applyGroupFocus("");
   groupFocusInput.focus();
+});
+
+$("#dateButton").addEventListener("click", (event) => {
+  event.stopPropagation();
+  if ($("#dateCal").hidden) openCal();
+  else closeCal();
+});
+$("#calPrev").addEventListener("click", () => shiftMonth(-1));
+$("#calNext").addEventListener("click", () => shiftMonth(1));
+$("#calGrid").addEventListener("click", (event) => {
+  const cell = event.target.closest(".calDay");
+  const key = cell && cell.dataset.date;
+  if (!key) return;
+  state.date = key === state.date ? "" : key;
+  closeCal();
+  renderDateControl(state.snapshot);
+  renderMatches(state.snapshot);
+});
+$("#dateClear").addEventListener("click", () => {
+  state.date = "";
+  closeCal();
+  renderDateControl(state.snapshot);
+  renderMatches(state.snapshot);
+});
+document.addEventListener("click", (event) => {
+  if (!$("#dateCal").hidden && !event.target.closest(".dateFocus")) closeCal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("#dateCal").hidden) closeCal();
 });
 
 const messageModal = $("#messageModal");
