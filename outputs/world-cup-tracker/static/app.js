@@ -83,29 +83,32 @@ function sourceLabel(source) {
   }[source] ?? source;
 }
 
-function predictionText(label, pick, pickPct, source, volume) {
+function predictionText(label, pick, pickPct, source, volume, total) {
   const parts = [`${label}: ${escapeHtml(pick || "n/a")}`];
   if (pickPct != null) parts.push(fmtPct(pickPct));
   const src = source ? sourceLabel(source) : "";
   if (src) parts.push(escapeHtml(src));
   const usd = fmtUsd(volume);
-  if (usd) parts.push(usd);
+  if (usd) {
+    const totalUsd = fmtUsd(total);
+    parts.push(totalUsd ? `${usd} of ${totalUsd}` : usd);
+  }
   return parts.join(" | ");
 }
 
-function currentMarketLine(label, pick, pickPct, source, lockedPick, volume) {
+function currentMarketLine(label, pick, pickPct, source, lockedPick, volume, total) {
   // Always render the row (a placeholder before kick-off) so every card reserves
   // the same height and the dividers line up across adjacent cards in the grid.
   if (!pick) return `<div class="currentLine currentEmpty">${label}: awaiting kick-off</div>`;
   const changedClass = lockedPick && pick !== lockedPick ? " currentChanged" : "";
-  return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source, volume)}</div>`;
+  return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source, volume, total)}</div>`;
 }
 
-function predictionGroup(lockedLabel, lockedPick, lockedPct, lockedSource, result, nowLine, lockedVolume) {
+function predictionGroup(lockedLabel, lockedPick, lockedPct, lockedSource, result, nowLine, lockedVolume, lockedTotal) {
   return `
         <div class="predGroup">
           <div class="predBody">
-            <div class="leanPick">${predictionText(lockedLabel, lockedPick, lockedPct, lockedSource, lockedVolume)}</div>
+            <div class="leanPick">${predictionText(lockedLabel, lockedPick, lockedPct, lockedSource, lockedVolume, lockedTotal)}</div>
             ${nowLine}
           </div>
           <span class="tag ${result}">${resultLabel(result)}</span>
@@ -720,9 +723,11 @@ function renderMatches(data) {
               match.prediction.polymarketCurrentPickPct,
               match.prediction.polymarketCurrentSource,
               match.prediction.polymarketPick,
-              match.prediction.polymarketCurrentVolume
+              match.prediction.polymarketCurrentVolume,
+              match.prediction.polymarketCurrentTotal
             ),
-            match.prediction.polymarketPickVolume
+            match.prediction.polymarketPickVolume,
+            match.prediction.polymarketPickTotal
           )}
           ${predictionGroup(
             "Kalshi locked",
@@ -736,9 +741,11 @@ function renderMatches(data) {
               match.prediction.kalshiCurrentPickPct,
               match.prediction.kalshiCurrentSource,
               match.prediction.kalshiPick,
-              match.prediction.kalshiCurrentVolume
+              match.prediction.kalshiCurrentVolume,
+              match.prediction.kalshiCurrentTotal
             ),
-            match.prediction.kalshiPickVolume
+            match.prediction.kalshiPickVolume,
+            match.prediction.kalshiPickTotal
           )}
         </article>
       `;

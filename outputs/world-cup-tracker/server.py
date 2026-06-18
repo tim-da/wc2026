@@ -346,6 +346,11 @@ def pick_from_outcomes(outcomes: dict[str, dict[str, Any]]) -> tuple[str | None,
     return max(priced, key=lambda item: item[1])
 
 
+def sum_outcome_volume(outcomes: dict[str, dict[str, Any]]) -> int | None:
+    total = sum(o["volumeUsd"] for o in outcomes.values() if o.get("volumeUsd"))
+    return round(total) if total else None
+
+
 def fetch_json(url: str, params: dict[str, Any] | None = None) -> Any:
     response = requests.get(url, params=params, timeout=25, headers={"User-Agent": "WorldCupTracker/1.0"})
     response.raise_for_status()
@@ -501,6 +506,7 @@ def fetch_polymarket_match_markets() -> dict[str, dict[str, Any]]:
                 "pick": pick,
                 "pickPct": pct(pick_price),
                 "pickVolume": (outcomes.get(pick) or {}).get("volumeUsd"),
+                "totalVolume": sum_outcome_volume(outcomes),
             }
 
     return markets
@@ -546,6 +552,7 @@ def fetch_kalshi_match_markets() -> dict[str, dict[str, Any]]:
         match_market["pick"] = pick
         match_market["pickPct"] = pct(pick_price)
         match_market["pickVolume"] = (match_market["outcomes"].get(pick) or {}).get("volumeUsd")
+        match_market["totalVolume"] = sum_outcome_volume(match_market["outcomes"])
 
     return grouped
 
@@ -853,7 +860,7 @@ def outright_pick(team_a: str | None, team_b: str | None, outright_odds: dict[st
 def capture_pick(match_markets: dict[str, Any], source_name: str, match_key: str | None, phase: str) -> dict[str, Any] | None:
     capture = ((match_markets.get(match_key or "") or {}).get(source_name) or {}).get(phase)
     if capture and capture.get("pick"):
-        return {"pick": capture["pick"], "pickPct": capture.get("pickPct"), "source": "match", "volume": capture.get("pickVolume")}
+        return {"pick": capture["pick"], "pickPct": capture.get("pickPct"), "source": "match", "volume": capture.get("pickVolume"), "total": capture.get("totalVolume")}
     return None
 
 
@@ -1106,20 +1113,24 @@ def compare_events(
                     "polymarketPickPct": pm_prediction["pickPct"],
                     "polymarketSource": pm_prediction["source"],
                     "polymarketPickVolume": pm_prediction.get("volume"),
+                    "polymarketPickTotal": pm_prediction.get("total"),
                     "polymarketResult": pm_result,
                     "polymarketCurrentPick": pm_current["pick"],
                     "polymarketCurrentPickPct": pm_current["pickPct"],
                     "polymarketCurrentSource": pm_current["source"],
                     "polymarketCurrentVolume": pm_current.get("volume"),
+                    "polymarketCurrentTotal": pm_current.get("total"),
                     "kalshiPick": ks_pick,
                     "kalshiPickPct": ks_prediction["pickPct"],
                     "kalshiSource": ks_prediction["source"],
                     "kalshiPickVolume": ks_prediction.get("volume"),
+                    "kalshiPickTotal": ks_prediction.get("total"),
                     "kalshiResult": ks_result,
                     "kalshiCurrentPick": ks_current["pick"],
                     "kalshiCurrentPickPct": ks_current["pickPct"],
                     "kalshiCurrentSource": ks_current["source"],
                     "kalshiCurrentVolume": ks_current.get("volume"),
+                    "kalshiCurrentTotal": ks_current.get("total"),
                 },
             }
         )
