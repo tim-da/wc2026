@@ -119,6 +119,19 @@
               <datalist id="groupFocusOptions"></datalist>
               <button id="groupFocusClear" class="teamFocusClear" type="button" title="Clear group focus" aria-label="Clear group focus" hidden>×</button>
             </div>
+            <div class="dateFocus">
+              <button id="dateButton" class="search teamFocusInput dateButton" type="button" aria-haspopup="dialog" aria-expanded="false">All dates</button>
+              <div id="dateCal" class="dateCal" role="dialog" aria-label="Filter by date" hidden>
+                <div class="dateCalHead">
+                  <button id="calPrev" class="calNav" type="button" aria-label="Previous month">‹</button>
+                  <span id="calTitle"></span>
+                  <button id="calNext" class="calNav" type="button" aria-label="Next month">›</button>
+                </div>
+                <div class="dateCalDow"></div>
+                <div id="calGrid" class="dateCalGrid"></div>
+                <button id="dateClear" class="dateClearAll" type="button">All dates</button>
+              </div>
+            </div>
           </div>
           <div class="segmented" role="tablist" aria-label="Match filter">
             <button class="segment active" data-filter="all" type="button">All</button>
