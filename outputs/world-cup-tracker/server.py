@@ -321,12 +321,21 @@ def parse_yes_price(market: dict[str, Any]) -> dict[str, Any]:
         mid = outcome_price
     else:
         mid = last
+    # USD traded on this outcome. Polymarket gives dollar volume directly; Kalshi gives
+    # contracts (volume_fp), so approximate USD staked as contracts * price.
+    pm_volume = as_float(market.get("volumeNum"))
+    if pm_volume is not None:
+        volume_usd = pm_volume
+    else:
+        contracts = as_float(market.get("volume_fp"))
+        volume_usd = contracts * mid if (contracts is not None and mid is not None) else None
     return {
         "mid": mid,
         "midPct": pct(mid),
         "bidPct": pct(bid),
         "askPct": pct(ask),
         "lastPct": pct(last),
+        "volumeUsd": round(volume_usd) if volume_usd is not None else None,
     }
 
 
@@ -491,6 +500,7 @@ def fetch_polymarket_match_markets() -> dict[str, dict[str, Any]]:
                 "outcomes": outcomes,
                 "pick": pick,
                 "pickPct": pct(pick_price),
+                "pickVolume": (outcomes.get(pick) or {}).get("volumeUsd"),
             }
 
     return markets
@@ -535,6 +545,7 @@ def fetch_kalshi_match_markets() -> dict[str, dict[str, Any]]:
         pick, pick_price = pick_from_outcomes(match_market["outcomes"])
         match_market["pick"] = pick
         match_market["pickPct"] = pct(pick_price)
+        match_market["pickVolume"] = (match_market["outcomes"].get(pick) or {}).get("volumeUsd")
 
     return grouped
 
@@ -842,7 +853,7 @@ def outright_pick(team_a: str | None, team_b: str | None, outright_odds: dict[st
 def capture_pick(match_markets: dict[str, Any], source_name: str, match_key: str | None, phase: str) -> dict[str, Any] | None:
     capture = ((match_markets.get(match_key or "") or {}).get(source_name) or {}).get(phase)
     if capture and capture.get("pick"):
-        return {"pick": capture["pick"], "pickPct": capture.get("pickPct"), "source": "match"}
+        return {"pick": capture["pick"], "pickPct": capture.get("pickPct"), "source": "match", "volume": capture.get("pickVolume")}
     return None
 
 
@@ -1094,17 +1105,21 @@ def compare_events(
                     "polymarketPick": pm_pick,
                     "polymarketPickPct": pm_prediction["pickPct"],
                     "polymarketSource": pm_prediction["source"],
+                    "polymarketPickVolume": pm_prediction.get("volume"),
                     "polymarketResult": pm_result,
                     "polymarketCurrentPick": pm_current["pick"],
                     "polymarketCurrentPickPct": pm_current["pickPct"],
                     "polymarketCurrentSource": pm_current["source"],
+                    "polymarketCurrentVolume": pm_current.get("volume"),
                     "kalshiPick": ks_pick,
                     "kalshiPickPct": ks_prediction["pickPct"],
                     "kalshiSource": ks_prediction["source"],
+                    "kalshiPickVolume": ks_prediction.get("volume"),
                     "kalshiResult": ks_result,
                     "kalshiCurrentPick": ks_current["pick"],
                     "kalshiCurrentPickPct": ks_current["pickPct"],
                     "kalshiCurrentSource": ks_current["source"],
+                    "kalshiCurrentVolume": ks_current.get("volume"),
                 },
             }
         )

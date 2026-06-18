@@ -21,6 +21,14 @@ function fmtPct(value) {
   return value == null ? "n/a" : `${Number(value).toFixed(1)}%`;
 }
 
+function fmtUsd(value) {
+  const n = Number(value);
+  if (value == null || !Number.isFinite(n) || n <= 0) return "";
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M`;
+  if (n >= 1e3) return `$${Math.round(n / 1e3)}k`;
+  return `$${Math.round(n)}`;
+}
+
 function fmtScore(value) {
   return value == null ? "-" : String(Number(value));
 }
@@ -75,26 +83,28 @@ function sourceLabel(source) {
   }[source] || source;
 }
 
-function predictionText(label, pick, pickPct, source) {
+function predictionText(label, pick, pickPct, source, volume) {
   const parts = [`${label}: ${escapeHtml(pick || "n/a")}`];
   if (pickPct != null) parts.push(fmtPct(pickPct));
   if (source) parts.push(escapeHtml(sourceLabel(source)));
+  const usd = fmtUsd(volume);
+  if (usd) parts.push(usd);
   return parts.join(" · ");
 }
 
-function currentMarketLine(label, pick, pickPct, source, lockedPick) {
+function currentMarketLine(label, pick, pickPct, source, lockedPick, volume) {
   // Always render the row (a placeholder before kick-off) so every card reserves
   // the same height and the dividers line up across adjacent cards in the grid.
   if (!pick) return `<div class="currentLine currentEmpty">${label}: awaiting kick-off</div>`;
   const changedClass = lockedPick && pick !== lockedPick ? " currentChanged" : "";
-  return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source)}</div>`;
+  return `<div class="currentLine${changedClass}">${predictionText(label, pick, pickPct, source, volume)}</div>`;
 }
 
-function predictionGroup(lockedLabel, lockedPick, lockedPct, lockedSource, result, nowLine) {
+function predictionGroup(lockedLabel, lockedPick, lockedPct, lockedSource, result, nowLine, lockedVolume) {
   return `
         <div class="predGroup">
           <div class="predBody">
-            <div class="leanPick">${predictionText(lockedLabel, lockedPick, lockedPct, lockedSource)}</div>
+            <div class="leanPick">${predictionText(lockedLabel, lockedPick, lockedPct, lockedSource, lockedVolume)}</div>
             ${nowLine}
           </div>
           <span class="tag ${result}">${resultLabel(result)}</span>
@@ -708,8 +718,10 @@ function renderMatches(data) {
               match.prediction.polymarketCurrentPick,
               match.prediction.polymarketCurrentPickPct,
               match.prediction.polymarketCurrentSource,
-              match.prediction.polymarketPick
-            )
+              match.prediction.polymarketPick,
+              match.prediction.polymarketCurrentVolume
+            ),
+            match.prediction.polymarketPickVolume
           )}
           ${predictionGroup(
             "Kalshi locked",
@@ -722,8 +734,10 @@ function renderMatches(data) {
               match.prediction.kalshiCurrentPick,
               match.prediction.kalshiCurrentPickPct,
               match.prediction.kalshiCurrentSource,
-              match.prediction.kalshiPick
-            )
+              match.prediction.kalshiPick,
+              match.prediction.kalshiCurrentVolume
+            ),
+            match.prediction.kalshiPickVolume
           )}
         </article>
       `;
