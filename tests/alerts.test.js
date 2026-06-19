@@ -37,6 +37,7 @@ function loadApp() {
 
   const toasts = [];
   const desktop = [];
+  const body = makeEl();
 
   const sandbox = {
     console: { log: noop, error: noop, warn: noop },
@@ -53,10 +54,19 @@ function loadApp() {
       createElement: () => makeEl(),
       addEventListener: noop,
       removeEventListener: noop,
-      body: makeEl(),
+      body,
     },
+    navigator: {},
+    PushManager: function PushManager() {},
   };
-  sandbox.window = { addEventListener: noop, isSecureContext: true, Notification, focus: noop, open: noop };
+  sandbox.window = {
+    addEventListener: noop,
+    isSecureContext: true,
+    Notification,
+    PushManager: sandbox.PushManager,
+    focus: noop,
+    open: noop,
+  };
 
   vm.createContext(sandbox);
   vm.runInContext(SRC, sandbox, { filename: "app.js" });
@@ -179,4 +189,25 @@ test("showMatchNotifications: no alerts on the very first load (no previous matc
   reset();
   app.showMatchNotifications([], [{ id: "1", status: { state: "in" }, home: {}, away: {} }]);
   assert.equal(toasts.length, 0);
+});
+
+test("failed push registration does not suppress foreground notifications", async () => {
+  app.document.body.dataset.vapidKey = "AQ";
+  app.Notification.permission = "granted";
+  const subscription = {
+    toJSON: () => ({ endpoint: "https://fcm.googleapis.com/wp/test", keys: { p256dh: "x", auth: "y" } }),
+  };
+  app.navigator.serviceWorker = {
+    register: async () => ({
+      pushManager: {
+        getSubscription: async () => subscription,
+      },
+    }),
+  };
+  app.fetch = async () => ({ ok: false, status: 503 });
+  vm.runInContext("state.pushActive = false", app);
+
+  await app.subscribePush();
+
+  assert.equal(vm.runInContext("state.pushActive", app), false);
 });

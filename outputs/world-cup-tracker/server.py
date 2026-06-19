@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+from collections import defaultdict, deque
 import json
 import os
 import re
@@ -15,6 +16,7 @@ from hashlib import sha256
 from html import escape
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 from flask import Flask, Response, jsonify, render_template, request
@@ -50,6 +52,18 @@ _BRACKET_STATUS_CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
 _CACHE_LOCK = threading.Lock()
 _BRACKET_STATUS_LOCK = threading.Lock()
 _MATCH_BASELINE_LOCK = threading.RLock()
+_CACHE_REFRESHING = False
+_PUSH_RATE_LOCK = threading.Lock()
+_PUSH_RATE_ATTEMPTS: dict[str, deque[float]] = defaultdict(deque)
+
+PUSH_RATE_WINDOW_SECONDS = 10 * 60
+PUSH_RATE_LIMIT = 20
+PUSH_ENDPOINT_HOSTS = {
+    "fcm.googleapis.com",
+    "push.services.mozilla.com",
+    "updates.push.services.mozilla.com",
+    "web.push.apple.com",
+}
 
 # Durable storage for the pre-game / in-play market captures (survives restarts).
 # When unset, the app falls back to the local JSON file (dev) / in-memory.
@@ -405,7 +419,45 @@ def locked_markets_for_event(match_markets: dict[str, Any], event: dict[str, Any
         return match_markets[event_key]
 
     pair = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
-    return match_markets.get(pair or "", {})
+    legacy_entry = match_markets.get(pair or "", {})
+    event_time = parse_datetime(event.get("date"))
+    if not legacy_entry or event_time is None:
+        return {}
+
+    for source_entry in legacy_entry.values():
+        phases = phase_container(source_entry or {})
+        for capture in phases.values():
+            scheduled = parse_datetime((capture or {}).get("scheduledAt"))
+            if scheduled and abs((scheduled - event_time).total_seconds()) <= 24 * 60 * 60:
+                return legacy_entry
+    return {}
+
+
+def valid_push_endpoint(endpoint: str) -> bool:
+    if not endpoint or len(endpoint) > 2048:
+        return False
+    parsed = urlparse(endpoint)
+    host = (parsed.hostname or "").casefold()
+    if parsed.scheme != "https" or not host or parsed.username or parsed.password:
+        return False
+    return host in PUSH_ENDPOINT_HOSTS or host.endswith(".notify.windows.com")
+
+
+def push_rate_limited(client_key: str, now: float | None = None) -> bool:
+    current = time.monotonic() if now is None else now
+    with _PUSH_RATE_LOCK:
+        attempts = _PUSH_RATE_ATTEMPTS[client_key]
+        while attempts and current - attempts[0] >= PUSH_RATE_WINDOW_SECONDS:
+            attempts.popleft()
+        if len(attempts) >= PUSH_RATE_LIMIT:
+            return True
+        attempts.append(current)
+        return False
+
+
+def push_client_key() -> str:
+    forwarded = (request.headers.get("X-Forwarded-For") or "").split(",", 1)[0].strip()
+    return forwarded or request.remote_addr or "unknown"
 
 
 def parse_yes_price(market: dict[str, Any]) -> dict[str, Any]:
@@ -731,7 +783,7 @@ def _apply_phase_captures(
     updates: list[dict[str, Any]] = []
     captured_at = parse_datetime(now)
     for event in events:
-        key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+        key = event_market_key(event)
         if not key:
             continue
         phase = match_phase(event.get("status", {}))
@@ -867,14 +919,30 @@ def goal_event_notification(old: dict[str, Any] | None, cur: dict[str, Any]) -> 
     """A push payload for a meaningful change, or None. Mirrors the in-page alerts."""
     teams = f'{cur["home_team"]} vs {cur["away_team"]}'
     score = f'{cur["home_team"]} {cur["home_score"]}-{cur["away_score"]} {cur["away_team"]}'
+    minute = cur.get("minute")
+    timed_score = f"{minute}: {score}" if minute else score
     if cur["state"] == "in" and (old is None or old.get("state") != "in") and not cur["completed"]:
         return {"title": "Kick-off", "body": teams, "tag": cur["match_key"]}
     if cur["completed"] and (old is None or not old.get("completed")):
-        return {"title": "Full time", "body": score, "tag": cur["match_key"]}
+        return {"title": "Full time", "body": timed_score, "tag": cur["match_key"]}
     if cur["state"] == "in" and old and old.get("state") == "in":
         if cur["home_score"] != old.get("home_score") or cur["away_score"] != old.get("away_score"):
-            return {"title": "Goal!", "body": score, "tag": cur["match_key"]}
+            return {"title": "Goal!", "body": timed_score, "tag": cur["match_key"]}
     return None
+
+
+def status_minute(status: dict[str, Any]) -> str | None:
+    for value in (status.get("displayClock"), status.get("shortDetail"), status.get("detail")):
+        text = str(value or "").strip()
+        if not text or re.search(r"scheduled|^ft$|^final", text, re.IGNORECASE):
+            continue
+        match = re.fullmatch(r"(\d{1,3})(?::\d{2})?", text)
+        if match:
+            return f"{match.group(1)}'"
+        if any(character.isdigit() for character in text):
+            return text
+    clock = as_float(status.get("clock"))
+    return f"{int(clock // 60)}'" if clock and clock > 0 else None
 
 
 _VAPID_PEM_PATH: str | None = None
@@ -994,8 +1062,8 @@ def outright_pick(team_a: str | None, team_b: str | None, outright_odds: dict[st
     return {"pick": pick, "pickPct": outright_odds.get(pick, {}).get("midPct"), "source": "outright"}
 
 
-def capture_pick(match_markets: dict[str, Any], source_name: str, match_key: str | None, phase: str) -> dict[str, Any] | None:
-    capture = ((match_markets.get(match_key or "") or {}).get(source_name) or {}).get(phase)
+def capture_pick(fixture_markets: dict[str, Any], source_name: str, phase: str) -> dict[str, Any] | None:
+    capture = (fixture_markets.get(source_name) or {}).get(phase)
     if capture and capture.get("pick"):
         return {"pick": capture["pick"], "pickPct": capture.get("pickPct"), "source": "match", "volume": capture.get("pickVolume"), "total": capture.get("totalVolume")}
     return None
@@ -1009,34 +1077,28 @@ LOCKED_OUTRIGHT_ONLY = {"Saudi Arabia::Uruguay"}
 
 def pick_for_event(
     source_name: str,
-    match_key: str | None,
+    pair_key: str | None,
     team_a: str | None,
     team_b: str | None,
-    match_markets: dict[str, Any],
+    fixture_markets: dict[str, Any],
     outright_odds: dict[str, Any],
 ) -> dict[str, Any]:
-    if match_key in LOCKED_OUTRIGHT_ONLY:
+    if pair_key in LOCKED_OUTRIGHT_ONLY:
         return outright_pick(team_a, team_b, outright_odds)
-    # "Locked" = the last pre-game market read. If we never captured one (e.g. the
-    # market only appeared after kick-off, or the baseline reset), prefer the in-play
-    # market over outright — outright is only a last resort when no match market exists.
-    return (
-        capture_pick(match_markets, source_name, match_key, "preGame")
-        or capture_pick(match_markets, source_name, match_key, "inPlay")
-        or outright_pick(team_a, team_b, outright_odds)
-    )
+    # "Locked" is strictly the latest capture before kickoff. In-play information
+    # must never be graded as a pre-match prediction.
+    return capture_pick(fixture_markets, source_name, "preGame") or outright_pick(team_a, team_b, outright_odds)
 
 
 def current_match_pick(
     source_name: str,
-    match_key: str | None,
     team_a: str | None,
     team_b: str | None,
-    match_markets: dict[str, Any],
+    fixture_markets: dict[str, Any],
     outright_odds: dict[str, Any],
 ) -> dict[str, Any]:
     # "Now" = the last in-play market read (frozen once the match ends), falling back to outright.
-    return capture_pick(match_markets, source_name, match_key, "inPlay") or outright_pick(team_a, team_b, outright_odds)
+    return capture_pick(fixture_markets, source_name, "inPlay") or outright_pick(team_a, team_b, outright_odds)
 
 
 def build_projection(odds: dict[str, Any], events: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -1217,15 +1279,16 @@ def compare_events(
     for event in events:
         home_team = event.get("home", {}).get("team")
         away_team = event.get("away", {}).get("team")
-        match_key_value = market_key(home_team, away_team)
-        pm_prediction = pick_for_event("polymarket", match_key_value, home_team, away_team, match_markets, locked_polymarket)
-        ks_prediction = pick_for_event("kalshi", match_key_value, home_team, away_team, match_markets, locked_kalshi)
+        pair_key = market_key(home_team, away_team)
+        fixture_markets = locked_markets_for_event(match_markets, event)
+        pm_prediction = pick_for_event("polymarket", pair_key, home_team, away_team, fixture_markets, locked_polymarket)
+        ks_prediction = pick_for_event("kalshi", pair_key, home_team, away_team, fixture_markets, locked_kalshi)
         status = event.get("status", {})
         started = bool(status.get("completed") or status.get("state") == "in")
         if started:
             # "Now" only exists once the match has kicked off; it stays (frozen) after it ends.
-            pm_current = current_match_pick("polymarket", match_key_value, home_team, away_team, match_markets, polymarket)
-            ks_current = current_match_pick("kalshi", match_key_value, home_team, away_team, match_markets, kalshi)
+            pm_current = current_match_pick("polymarket", home_team, away_team, fixture_markets, polymarket)
+            ks_current = current_match_pick("kalshi", home_team, away_team, fixture_markets, kalshi)
         else:
             pm_current = {"pick": None, "pickPct": None, "source": None}
             ks_current = {"pick": None, "pickPct": None, "source": None}
@@ -1470,7 +1533,7 @@ def actual_winners_by_pair(events: list[dict[str, Any]]) -> dict[str, str]:
             continue
         key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
         if key:
-            winners[key] = winner
+            winners[f"{stage_slug}::{key}"] = winner
     return winners
 
 
@@ -1502,8 +1565,18 @@ def event_teams_with_fallback(
     return fallback
 
 
-def bracket_pick(team_a: str, team_b: str, odds: dict[str, Any], actual_winners: dict[str, str]) -> tuple[str, str]:
-    actual = actual_winners.get(market_key(team_a, team_b) or "")
+def bracket_pick(
+    team_a: str,
+    team_b: str,
+    odds: dict[str, Any],
+    actual_winners: dict[str, str],
+    stage_slug: str | None = None,
+    allow_legacy_fact: bool = True,
+) -> tuple[str, str]:
+    pair = market_key(team_a, team_b) or ""
+    actual = actual_winners.get(f"{stage_slug}::{pair}") if stage_slug else None
+    if actual is None and allow_legacy_fact:
+        actual = actual_winners.get(pair)
     if actual in {team_a, team_b}:
         return actual, "actual"
 
@@ -1538,6 +1611,8 @@ def build_fact_projection(
                     team_b,
                     odds,
                     actual_winners if event is None else {},
+                    stage_slug,
+                    allow_legacy_fact=not bool(events),
                 )
             loser = team_b if winner == team_a else team_a
             matches.append(
@@ -1688,13 +1763,13 @@ def write_latest_bracket_generation(payload: dict[str, Any]) -> None:
         "compositionHash": payload["compositionHash"],
         "sources": payload["sources"],
     }
-    try:
-        BRACKET_GENERATION_STATE_JSON.write_text(
-            json.dumps(state, ensure_ascii=True, indent=2, sort_keys=True),
-            encoding="utf-8",
-        )
-    except OSError:
-        pass
+    BRACKET_GENERATION_STATE_JSON.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = BRACKET_GENERATION_STATE_JSON.with_name(f".{BRACKET_GENERATION_STATE_JSON.name}.tmp")
+    temporary_path.write_text(
+        json.dumps(state, ensure_ascii=True, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    temporary_path.replace(BRACKET_GENERATION_STATE_JSON)
 
 
 def fmt_bracket_pct(value: float | None) -> str:
@@ -1895,12 +1970,20 @@ def service_worker():
 
 @APP.post("/api/push/subscribe")
 def push_subscribe():
+    if push_rate_limited(push_client_key()):
+        return jsonify({"ok": False, "error": "rate limited"}), 429
     data = request.get_json(silent=True) or {}
     sub = data.get("subscription") or {}
     endpoint = (sub.get("endpoint") or "").strip()
     keys = sub.get("keys") or {}
     p256dh, auth = keys.get("p256dh"), keys.get("auth")
-    if not endpoint or not p256dh or not auth:
+    if (
+        not valid_push_endpoint(endpoint)
+        or not isinstance(p256dh, str)
+        or not isinstance(auth, str)
+        or not 20 <= len(p256dh) <= 256
+        or not 8 <= len(auth) <= 128
+    ):
         return jsonify({"ok": False, "error": "invalid subscription"}), 400
     if not supabase_enabled():
         return jsonify({"ok": False, "error": "storage not configured"}), 503
@@ -1929,20 +2012,29 @@ def push_unsubscribe():
 
 @APP.get("/api/snapshot")
 def snapshot():
+    global _CACHE_REFRESHING
+
     with _CACHE_LOCK:
         now = time.time()
         if _CACHE["payload"] is not None and now - _CACHE["at"] < CACHE_TTL_SECONDS:
             return jsonify({**_CACHE["payload"], "cached": True})
+        if _CACHE_REFRESHING and _CACHE["payload"] is not None:
+            return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "refreshing": True})
+        _CACHE_REFRESHING = True
 
-        try:
-            payload = build_snapshot()
-        except Exception as exc:  # last-resort guard: serve the last good snapshot instead of a 500
+    try:
+        payload = build_snapshot()
+    except Exception as exc:  # last-resort guard: serve the last good snapshot instead of a 500
+        with _CACHE_LOCK:
+            _CACHE_REFRESHING = False
             if _CACHE["payload"] is not None:
                 return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "error": str(exc)})
-            return jsonify({"error": str(exc)}), 503
+        return jsonify({"error": str(exc)}), 503
 
+    with _CACHE_LOCK:
         _CACHE["payload"] = payload
-        _CACHE["at"] = now
+        _CACHE["at"] = time.time()
+        _CACHE_REFRESHING = False
         return jsonify({**payload, "cached": False})
 
 
@@ -1981,7 +2073,7 @@ def check_goals():
     notifications: list[dict[str, Any]] = []
     changed: list[dict[str, Any]] = []
     for event in events:
-        key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+        key = event_market_key(event)
         if not key:
             continue
         status = event.get("status", {})
@@ -1996,7 +2088,7 @@ def check_goals():
             "winner": event.get("winner"),
         }
         old = prior.get(key)
-        notification = goal_event_notification(old, cur)
+        notification = goal_event_notification(old, {**cur, "minute": status_minute(status)})
         if notification and old is not None:  # only on a transition from a known state (no first-run spam)
             notifications.append(notification)
         if old is None or any(cur[k] != old.get(k) for k in ("home_score", "away_score", "state", "completed")):

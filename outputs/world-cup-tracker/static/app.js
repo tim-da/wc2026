@@ -403,11 +403,12 @@ async function subscribePush() {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       }));
-    await fetch("/api/push/subscribe", {
+    const response = await fetch("/api/push/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subscription: subscription.toJSON() }),
     });
+    if (!response.ok) throw new Error(`Push registration failed: ${response.status}`);
     state.pushActive = true;
   } catch (error) {
     console.error("push subscribe failed", error);

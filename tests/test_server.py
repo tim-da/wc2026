@@ -157,19 +157,19 @@ def test_phase_container_migrates_legacy_flat():
     assert server.phase_container({}) == {}
 
 
-def test_pick_for_event_prefers_pregame_then_inplay_then_outright():
+def test_pick_for_event_prefers_pregame_then_outright():
     key = server.market_key("Spain", "France")
     odds = {"Spain": {"mid": 0.3, "midPct": 30.0}, "France": {"mid": 0.1, "midPct": 10.0}}
 
     # Pre-game capture wins.
-    pregame = {key: {"polymarket": {"preGame": {"pick": "France", "pickPct": 55.0}, "inPlay": {"pick": "Spain", "pickPct": 80.0}}}}
+    pregame = {"polymarket": {"preGame": {"pick": "France", "pickPct": 55.0}, "inPlay": {"pick": "Spain", "pickPct": 80.0}}}
     locked = server.pick_for_event("polymarket", key, "Spain", "France", pregame, odds)
     assert (locked["pick"], locked["source"]) == ("France", "match")
 
-    # No pre-game but an in-play market exists -> use it, NOT outright.
-    inplay_only = {key: {"polymarket": {"inPlay": {"pick": "Spain", "pickPct": 80.0}}}}
+    # In-play information must never be presented as the locked prediction.
+    inplay_only = {"polymarket": {"inPlay": {"pick": "France", "pickPct": 80.0}}}
     locked2 = server.pick_for_event("polymarket", key, "Spain", "France", inplay_only, odds)
-    assert (locked2["pick"], locked2["source"]) == ("Spain", "match")
+    assert (locked2["pick"], locked2["source"]) == ("Spain", "outright")
 
     # No market at all -> outright last resort.
     fallback = server.pick_for_event("polymarket", key, "Spain", "France", {}, odds)
@@ -201,8 +201,11 @@ def test_goal_event_notification():
     # kick-off: pre -> in
     assert server.goal_event_notification({"state": "pre", "completed": False}, cur())["title"] == "Kick-off"
     # goal: score change while live
-    goal = server.goal_event_notification({"state": "in", "home_score": 0, "away_score": 0, "completed": False}, cur(home_score=1))
-    assert goal["title"] == "Goal!" and "A 1-0 B" in goal["body"]
+    goal = server.goal_event_notification(
+        {"state": "in", "home_score": 0, "away_score": 0, "completed": False},
+        cur(home_score=1, minute="67'"),
+    )
+    assert goal["title"] == "Goal!" and goal["body"] == "67': A 1-0 B"
     # full time: -> completed
     ft = server.goal_event_notification({"state": "in", "completed": False}, cur(state="post", completed=True, home_score=2, away_score=1))
     assert ft["title"] == "Full time"
@@ -214,22 +217,21 @@ def test_pick_for_event_outright_only_exception():
     # Matches in LOCKED_OUTRIGHT_ONLY ignore any captured market and grade on outright.
     key = next(iter(server.LOCKED_OUTRIGHT_ONLY))
     team_a, team_b = key.split("::")
-    markets = {key: {"polymarket": {"preGame": {"pick": team_a, "pickPct": 99.0}, "inPlay": {"pick": team_a, "pickPct": 99.0}}}}
+    markets = {"polymarket": {"preGame": {"pick": team_a, "pickPct": 99.0}, "inPlay": {"pick": team_a, "pickPct": 99.0}}}
     odds = {team_a: {"mid": 0.01, "midPct": 1.0}, team_b: {"mid": 0.9, "midPct": 90.0}}
     locked = server.pick_for_event("polymarket", key, team_a, team_b, markets, odds)
     assert (locked["pick"], locked["source"]) == (team_b, "outright")  # outright favourite, not the captured pick
 
 
 def test_current_match_pick_prefers_inplay_then_outright():
-    key = server.market_key("Spain", "France")
-    markets = {key: {"kalshi": {"inPlay": {"pick": "Spain", "pickPct": 70.0}}}}
-    now = server.current_match_pick("kalshi", key, "Spain", "France", markets, {})
+    markets = {"kalshi": {"inPlay": {"pick": "Spain", "pickPct": 70.0}}}
+    now = server.current_match_pick("kalshi", "Spain", "France", markets, {})
     assert (now["pick"], now["source"]) == ("Spain", "match")
 
     # A pre-game-only capture must not leak into "now".
-    pregame_only = {key: {"kalshi": {"preGame": {"pick": "Spain", "pickPct": 70.0}}}}
+    pregame_only = {"kalshi": {"preGame": {"pick": "Spain", "pickPct": 70.0}}}
     odds = {"Spain": {"mid": 0.1}, "France": {"mid": 0.3, "midPct": 33.0}}
-    fallback = server.current_match_pick("kalshi", key, "Spain", "France", pregame_only, odds)
+    fallback = server.current_match_pick("kalshi", "Spain", "France", pregame_only, odds)
     assert (fallback["pick"], fallback["source"]) == ("France", "outright")
 
 
@@ -355,7 +357,7 @@ def test_actual_winners_excludes_group_stage_results():
     winners = server.actual_winners_by_pair([group_event, knockout_event])
 
     assert server.market_key("Germany", "Australia") not in winners
-    assert winners[server.market_key("France", "Sweden")] == "France"
+    assert winners[f"round-of-32::{server.market_key('France', 'Sweden')}"] == "France"
 
 
 def test_projection_replaces_guess_with_known_knockout_fixture_and_fact():
@@ -441,6 +443,17 @@ def test_knockout_result_is_not_reused_for_later_rematch():
     assert projection["final"]["source"] == "market"
 
 
+def test_stage_scoped_fact_does_not_leak_without_later_fixture():
+    pair = server.market_key("Spain", "France")
+    facts = {f"round-of-32::{pair}": "Spain"}
+    odds = {"Spain": {"mid": 0.1}, "France": {"mid": 0.9}}
+
+    assert server.bracket_pick("Spain", "France", odds, facts, "final", allow_legacy_fact=False) == (
+        "France",
+        "market",
+    )
+
+
 def test_match_baseline_updates_until_kickoff_then_freezes(monkeypatch, tmp_path):
     baseline_path = tmp_path / "match-baseline.json"
     monkeypatch.setattr(server, "MATCH_BASELINE_JSON", baseline_path)
@@ -469,13 +482,14 @@ def test_match_baseline_updates_until_kickoff_then_freezes(monkeypatch, tmp_path
 
     server.merge_match_baseline([event], sources("Spain", 55.0))
     server.merge_match_baseline([event], sources("France", 57.0))
-    locked = server.load_match_baseline()["markets"][pair]["polymarket"]["preGame"]
+    event_key = server.event_market_key(event)
+    locked = server.load_match_baseline()["markets"][event_key]["polymarket"]["preGame"]
     assert locked["pick"] == "France"
     assert locked["pickPct"] == 57.0
 
     event["status"]["state"] = "in"
     server.merge_match_baseline([event], sources("Spain", 80.0))
-    captures = server.load_match_baseline()["markets"][pair]["polymarket"]
+    captures = server.load_match_baseline()["markets"][event_key]["polymarket"]
     frozen = captures["preGame"]
     assert frozen["pick"] == "France"
     assert frozen["pickPct"] == 57.0
@@ -505,7 +519,133 @@ def test_match_baseline_does_not_capture_after_scheduled_kickoff(monkeypatch, tm
 
     markets, _ = server.merge_match_baseline([event], sources)
 
-    assert pair not in markets
+    assert server.event_market_key(event) not in markets
+
+
+def test_match_captures_keep_rematches_separate():
+    pair = server.market_key("Spain", "France")
+    events = [
+        {
+            "id": "group-match",
+            "date": "2026-06-20T19:00:00Z",
+            "status": {"completed": False, "state": "pre"},
+            "home": {"team": "Spain"},
+            "away": {"team": "France"},
+        },
+        {
+            "id": "final-match",
+            "date": "2026-07-19T19:00:00Z",
+            "status": {"completed": False, "state": "pre"},
+            "home": {"team": "Spain"},
+            "away": {"team": "France"},
+        },
+    ]
+    sources = {
+        "polymarket": {
+            "group": {
+                "pairKey": pair,
+                "scheduledAt": events[0]["date"],
+                "pick": "Spain",
+                "pickPct": 60.0,
+            },
+            "final": {
+                "pairKey": pair,
+                "scheduledAt": events[1]["date"],
+                "pick": "France",
+                "pickPct": 70.0,
+            },
+        }
+    }
+    markets = {}
+
+    server._apply_phase_captures(markets, [events[0]], sources, "2026-06-20T18:00:00Z")
+    server._apply_phase_captures(markets, [events[1]], sources, "2026-07-19T18:00:00Z")
+
+    assert markets["event:group-match"]["polymarket"]["preGame"]["pick"] == "Spain"
+    assert markets["event:final-match"]["polymarket"]["preGame"]["pick"] == "France"
+
+
+def test_legacy_pair_capture_only_matches_same_fixture_time():
+    pair = server.market_key("Spain", "France")
+    legacy = {
+        pair: {
+            "polymarket": {
+                "preGame": {
+                    "pick": "Spain",
+                    "scheduledAt": "2026-06-20T19:00:00Z",
+                }
+            }
+        }
+    }
+    group_event = {
+        "date": "2026-06-20T19:00:00Z",
+        "home": {"team": "Spain"},
+        "away": {"team": "France"},
+    }
+    final_event = {
+        "date": "2026-07-19T19:00:00Z",
+        "home": {"team": "Spain"},
+        "away": {"team": "France"},
+    }
+
+    assert server.locked_markets_for_event(legacy, group_event)
+    assert server.locked_markets_for_event(legacy, final_event) == {}
+
+
+@pytest.mark.parametrize(
+    "endpoint,expected",
+    [
+        ("https://fcm.googleapis.com/wp/abc", True),
+        ("https://updates.push.services.mozilla.com/wpush/v2/abc", True),
+        ("https://web.push.apple.com/Qabc", True),
+        ("https://wns2-am3p.notify.windows.com/w/?token=x", True),
+        ("http://fcm.googleapis.com/wp/abc", False),
+        ("https://127.0.0.1/push", False),
+        ("https://example.com/push", False),
+        ("https://user:pass@fcm.googleapis.com/push", False),
+    ],
+)
+def test_valid_push_endpoint(endpoint, expected):
+    assert server.valid_push_endpoint(endpoint) is expected
+
+
+def test_push_rate_limit(monkeypatch):
+    monkeypatch.setattr(server, "PUSH_RATE_LIMIT", 2)
+    monkeypatch.setattr(server, "_PUSH_RATE_ATTEMPTS", server.defaultdict(server.deque))
+
+    assert server.push_rate_limited("client", now=1.0) is False
+    assert server.push_rate_limited("client", now=2.0) is False
+    assert server.push_rate_limited("client", now=3.0) is True
+
+
+def test_push_subscribe_rejects_untrusted_endpoint_before_storage(monkeypatch):
+    monkeypatch.setattr(server, "push_rate_limited", lambda client_key: False)
+    monkeypatch.setattr(server, "supabase_enabled", lambda: True)
+    response = server.APP.test_client().post(
+        "/api/push/subscribe",
+        json={
+            "subscription": {
+                "endpoint": "https://example.com/internal-target",
+                "keys": {"p256dh": "x" * 32, "auth": "y" * 16},
+            }
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "invalid subscription"
+
+
+@pytest.mark.parametrize(
+    "status,expected",
+    [
+        ({"displayClock": "67:12"}, "67'"),
+        ({"shortDetail": "90+4'"}, "90+4'"),
+        ({"detail": "Final", "clock": 7200}, "120'"),
+        ({}, None),
+    ],
+)
+def test_status_minute(status, expected):
+    assert server.status_minute(status) == expected
 
 
 def test_build_snapshot_uses_live_odds_and_baseline_for_performance(monkeypatch, tmp_path):
@@ -591,3 +731,34 @@ def test_snapshot_route_serves_last_good_payload_when_refresh_fails(monkeypatch)
     assert payload["stale"] is True
     assert payload["matches"] == cached_payload["matches"]
     assert payload["teams"] == cached_payload["teams"]
+
+
+def test_snapshot_serves_stale_while_another_refresh_is_running(monkeypatch):
+    cached_payload = {"generatedAt": "2026-06-19T12:00:00+00:00", "matches": [], "teams": []}
+    monkeypatch.setitem(server._CACHE, "payload", cached_payload)
+    monkeypatch.setitem(server._CACHE, "at", 0.0)
+    monkeypatch.setattr(server, "_CACHE_REFRESHING", True)
+    monkeypatch.setattr(server, "build_snapshot", lambda: pytest.fail("must not start a second refresh"))
+
+    response = server.APP.test_client().get("/api/snapshot")
+    payload = response.get_json()
+
+    assert response.status_code == 200
+    assert payload["stale"] is True
+    assert payload["refreshing"] is True
+
+
+def test_write_latest_bracket_generation_creates_parent_and_replaces_atomically(monkeypatch, tmp_path):
+    path = tmp_path / "nested" / "bracket-state.json"
+    monkeypatch.setattr(server, "BRACKET_GENERATION_STATE_JSON", path)
+    payload = {
+        "generatedAt": server.datetime(2026, 6, 20, tzinfo=server.timezone.utc),
+        "composition": {"champion": "Spain"},
+        "compositionHash": "abc",
+        "sources": ["test"],
+    }
+
+    server.write_latest_bracket_generation(payload)
+
+    assert server.json.loads(path.read_text())["compositionHash"] == "abc"
+    assert not path.with_name(f".{path.name}.tmp").exists()
