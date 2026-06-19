@@ -1187,6 +1187,11 @@ $$(".segment").forEach((button) => {
     $$(".segment").forEach((item) => item.classList.remove("active"));
     button.classList.add("active");
     state.filter = button.dataset.filter;
+    // "Today" and the date picker are both day-selectors — clear the date when Today wins.
+    if (state.filter === "today" && state.date) {
+      state.date = "";
+      renderDateControl(state.snapshot);
+    }
     renderMatches(state.snapshot);
   });
 });
@@ -1228,6 +1233,11 @@ $("#calGrid").addEventListener("click", (event) => {
   const key = cell && cell.dataset.date;
   if (!key) return;
   state.date = key === state.date ? "" : key;
+  // Picking a date overrides the "Today" segment so the two don't conflict.
+  if (state.date && state.filter === "today") {
+    state.filter = "all";
+    $$(".segment").forEach((item) => item.classList.toggle("active", item.dataset.filter === "all"));
+  }
   closeCal();
   renderDateControl(state.snapshot);
   renderMatches(state.snapshot);
