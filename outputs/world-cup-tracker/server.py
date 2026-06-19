@@ -3,9 +3,10 @@ from __future__ import annotations
 import base64
 import json
 import os
-import subprocess
 import re
+import subprocess
 import sys
+import threading
 import time
 import csv
 from concurrent.futures import ThreadPoolExecutor
@@ -30,8 +31,12 @@ except ImportError:  # pragma: no cover
 ROOT = Path(__file__).resolve().parent
 APP = Flask(__name__, static_folder=str(ROOT / "static"), template_folder=str(ROOT / "templates"))
 BASELINE_CSV = ROOT.parent / "world_cup_2026_market_odds_polymarket_kalshi.csv"
-MATCH_BASELINE_JSON = ROOT.parent / "world_cup_2026_match_market_baseline.json"
-BRACKET_GENERATION_STATE_JSON = ROOT / ".bracket-generation-state.json"
+MATCH_BASELINE_JSON = Path(
+    os.environ.get("WC_MATCH_BASELINE_PATH", ROOT.parent / "world_cup_2026_match_market_baseline.json")
+)
+BRACKET_GENERATION_STATE_JSON = Path(
+    os.environ.get("WC_BRACKET_STATE_PATH", ROOT / ".bracket-generation-state.json")
+)
 
 POLYMARKET_EVENT_URL = "https://gamma-api.polymarket.com/events?slug=world-cup-winner"
 POLYMARKET_EVENTS_URL = "https://gamma-api.polymarket.com/events"
@@ -42,6 +47,9 @@ ESPN_STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.w
 CACHE_TTL_SECONDS = 60
 _CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
 _BRACKET_STATUS_CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
+_CACHE_LOCK = threading.Lock()
+_BRACKET_STATUS_LOCK = threading.Lock()
+_MATCH_BASELINE_LOCK = threading.RLock()
 
 # Durable storage for the pre-game / in-play market captures (survives restarts).
 # When unset, the app falls back to the local JSON file (dev) / in-memory.
@@ -120,6 +128,32 @@ RIGHT_R32 = [
     ("Switzerland", "Egypt"),
     ("Colombia", "Ivory Coast"),
 ]
+
+KNOCKOUT_STAGE_SLUGS = {
+    "round-of-32",
+    "round-of-16",
+    "quarterfinals",
+    "semifinals",
+    "3rd-place-match",
+    "final",
+}
+
+# ESPN numbers knockout matches chronologically. These orders arrange those
+# official slots into the left/right trees used by the supplied bracket image.
+KNOCKOUT_EVENT_NUMBERS = {
+    "left": {
+        "round-of-32": [1, 3, 2, 5, 11, 12, 9, 10],
+        "round-of-16": [1, 2, 5, 6],
+        "quarterfinals": [1, 2],
+        "semifinals": [1],
+    },
+    "right": {
+        "round-of-32": [4, 6, 7, 8, 14, 16, 13, 15],
+        "round-of-16": [3, 4, 7, 8],
+        "quarterfinals": [3, 4],
+        "semifinals": [2],
+    },
+}
 
 ALIASES = {
     "bosnia and herzegovina": "Bosnia-Herzegovina",
@@ -297,6 +331,81 @@ def market_key(team_a: str | None, team_b: str | None) -> str | None:
     if not team_a or not team_b:
         return None
     return "::".join(sorted([normalized_team(team_a), normalized_team(team_b)]))
+
+
+def parse_datetime(value: str | None) -> datetime | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+
+
+def event_market_key(event: dict[str, Any]) -> str | None:
+    event_id = event.get("id")
+    if event_id:
+        return f"event:{event_id}"
+
+    pair = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+    if not pair:
+        return None
+    scheduled = parse_datetime(event.get("date"))
+    return f"{pair}::{scheduled.isoformat()}" if scheduled else pair
+
+
+def is_fixture_placeholder(team: str | None) -> bool:
+    value = (team or "").strip().casefold()
+    if not value:
+        return True
+    return (
+        " winner" in value
+        or " loser" in value
+        or " place" in value
+        or value.startswith("group ")
+        or value in {"tbd", "to be determined"}
+    )
+
+
+def live_market_for_event(source_markets: dict[str, dict[str, Any]], event: dict[str, Any]) -> dict[str, Any] | None:
+    pair = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+    if not pair:
+        return None
+
+    direct = source_markets.get(pair)
+    if direct:
+        return direct
+
+    candidates = [market for market in source_markets.values() if market.get("pairKey") == pair]
+    if not candidates:
+        return None
+
+    event_time = parse_datetime(event.get("date"))
+    if event_time is None:
+        return candidates[0] if len(candidates) == 1 else None
+
+    dated_candidates = []
+    for market in candidates:
+        scheduled = parse_datetime(market.get("scheduledAt"))
+        if scheduled is not None:
+            dated_candidates.append((abs((scheduled - event_time).total_seconds()), market))
+
+    if not dated_candidates:
+        return candidates[0] if len(candidates) == 1 else None
+
+    distance, closest = min(dated_candidates, key=lambda item: item[0])
+    return closest if distance <= 24 * 60 * 60 else None
+
+
+def locked_markets_for_event(match_markets: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
+    event_key = event_market_key(event)
+    if event_key and event_key in match_markets:
+        return match_markets[event_key]
+
+    pair = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
+    return match_markets.get(pair or "", {})
 
 
 def parse_yes_price(market: dict[str, Any]) -> dict[str, Any]:
@@ -477,9 +586,11 @@ def fetch_polymarket_match_markets() -> dict[str, dict[str, Any]]:
             continue
 
         outcomes: dict[str, dict[str, Any]] = {}
+        scheduled_at = event.get("endDate")
         for market in event.get("markets", []):
             if market.get("sportsMarketType") and market.get("sportsMarketType") != "moneyline":
                 continue
+            scheduled_at = scheduled_at or market.get("gameStartTime") or market.get("endDate")
 
             group = market.get("groupItemTitle") or ""
             if group.casefold().startswith("draw"):
@@ -498,10 +609,13 @@ def fetch_polymarket_match_markets() -> dict[str, dict[str, Any]]:
 
         if outcomes:
             pick, pick_price = pick_from_outcomes(outcomes)
-            markets[key] = {
+            source_key = f"{key}::{scheduled_at}" if scheduled_at else key
+            markets[source_key] = {
                 "source": "polymarket",
                 "eventTitle": title,
                 "teams": [team_a, team_b],
+                "pairKey": key,
+                "scheduledAt": scheduled_at,
                 "outcomes": outcomes,
                 "pick": pick,
                 "pickPct": pct(pick_price),
@@ -533,37 +647,56 @@ def fetch_kalshi_match_markets() -> dict[str, dict[str, Any]]:
         if outcome not in {team_a, team_b, "Draw"}:
             continue
 
-        if key not in grouped:
-            grouped[key] = {
+        event_ticker = market.get("event_ticker") or key
+        if event_ticker not in grouped:
+            grouped[event_ticker] = {
                 "source": "kalshi",
                 "eventTitle": title,
                 "eventTicker": market.get("event_ticker"),
                 "teams": [team_a, team_b],
+                "pairKey": key,
+                "scheduledAt": market.get("expected_expiration_time") or market.get("close_time"),
                 "outcomes": {},
             }
 
-        grouped[key]["outcomes"][outcome] = {
+        grouped[event_ticker]["outcomes"][outcome] = {
             **parse_yes_price(market),
             "ticker": market.get("ticker"),
         }
 
+    markets: dict[str, dict[str, Any]] = {}
     for match_market in grouped.values():
         pick, pick_price = pick_from_outcomes(match_market["outcomes"])
         match_market["pick"] = pick
         match_market["pickPct"] = pct(pick_price)
         match_market["pickVolume"] = (match_market["outcomes"].get(pick) or {}).get("volumeUsd")
         match_market["totalVolume"] = sum_outcome_volume(match_market["outcomes"])
+        pair = match_market["pairKey"]
+        scheduled_at = match_market.get("scheduledAt")
+        source_key = f"{pair}::{scheduled_at}" if scheduled_at else pair
+        markets[source_key] = match_market
 
-    return grouped
+    return markets
 
 
 def load_match_baseline() -> dict[str, Any]:
-    if not MATCH_BASELINE_JSON.exists():
-        return {"createdAt": None, "updatedAt": None, "markets": {}}
-    try:
-        return json.loads(MATCH_BASELINE_JSON.read_text())
-    except json.JSONDecodeError:
-        return {"createdAt": None, "updatedAt": None, "markets": {}}
+    with _MATCH_BASELINE_LOCK:
+        if not MATCH_BASELINE_JSON.exists():
+            return {"createdAt": None, "updatedAt": None, "markets": {}}
+        try:
+            return json.loads(MATCH_BASELINE_JSON.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"createdAt": None, "updatedAt": None, "markets": {}}
+
+
+def write_match_baseline(baseline: dict[str, Any]) -> None:
+    MATCH_BASELINE_JSON.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = MATCH_BASELINE_JSON.with_name(f".{MATCH_BASELINE_JSON.name}.tmp")
+    temporary_path.write_text(
+        json.dumps(baseline, ensure_ascii=True, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    temporary_path.replace(MATCH_BASELINE_JSON)
 
 
 def match_phase(status: dict[str, Any]) -> str | None:
@@ -596,6 +729,7 @@ def _apply_phase_captures(
     odds, and freezes a capture once the match leaves that phase (completed -> None).
     """
     updates: list[dict[str, Any]] = []
+    captured_at = parse_datetime(now)
     for event in events:
         key = market_key(event.get("home", {}).get("team"), event.get("away", {}).get("team"))
         if not key:
@@ -603,9 +737,12 @@ def _apply_phase_captures(
         phase = match_phase(event.get("status", {}))
         if phase is None:
             continue
+        scheduled_at = parse_datetime(event.get("date"))
+        if phase == "preGame" and captured_at and scheduled_at and captured_at >= scheduled_at:
+            continue
         match_entry = markets.setdefault(key, {})
         for source_name, source_markets in live_sources.items():
-            market = source_markets.get(key)
+            market = live_market_for_event(source_markets, event)
             if not market:
                 continue
             data = {**market, "capturedAt": now}
@@ -808,7 +945,7 @@ def merge_match_baseline(events: list[dict[str, Any]], live_sources: dict[str, d
         baseline["createdAt"] = now
     if _apply_phase_captures(markets, events, live_sources, now):
         baseline["updatedAt"] = now
-        MATCH_BASELINE_JSON.write_text(json.dumps(baseline, indent=2, sort_keys=True))
+        write_match_baseline(baseline)
 
     return markets, str(MATCH_BASELINE_JSON) if MATCH_BASELINE_JSON.exists() else None
 
@@ -902,9 +1039,9 @@ def current_match_pick(
     return capture_pick(match_markets, source_name, match_key, "inPlay") or outright_pick(team_a, team_b, outright_odds)
 
 
-def build_projection(odds: dict[str, Any]) -> dict[str, Any]:
-    # Pure market projection: a fact projection with no completed results to override picks.
-    projection = build_fact_projection(odds, {})
+def build_projection(odds: dict[str, Any], events: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    events = events or []
+    projection = build_fact_projection(odds, actual_winners_by_pair(events), events)
     return {
         "champion": projection["champion"],
         "finalists": projection["final"]["teams"],
@@ -941,6 +1078,7 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
     events = []
 
     for event in data.get("events", []):
+        season = event.get("season") or {}
         competition = (event.get("competitions") or [{}])[0]
         status = competition.get("status", {})
         status_type = status.get("type", {})
@@ -965,12 +1103,15 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
         home = sides.get("home") or (sides.get("away") if len(sides) == 1 else {})
         away = sides.get("away") or {}
         winner = None
-        if status_type.get("completed") and home.get("score") is not None and away.get("score") is not None:
-            if home["score"] > away["score"]:
+        if status_type.get("completed"):
+            flagged_winners = [side.get("team") for side in (home, away) if side.get("winner") and side.get("team")]
+            if len(flagged_winners) == 1:
+                winner = flagged_winners[0]
+            elif home.get("score") is not None and away.get("score") is not None and home["score"] > away["score"]:
                 winner = home["team"]
-            elif away["score"] > home["score"]:
+            elif home.get("score") is not None and away.get("score") is not None and away["score"] > home["score"]:
                 winner = away["team"]
-            else:
+            elif home.get("score") is not None and away.get("score") is not None:
                 winner = "Draw"
 
         events.append(
@@ -979,6 +1120,8 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
                 "name": event.get("name"),
                 "shortName": event.get("shortName"),
                 "date": event.get("date") or competition.get("date"),
+                "stageSlug": season.get("slug"),
+                "stageType": season.get("type"),
                 "venue": venue.get("fullName"),
                 "location": venue_location(venue),
                 "stage": stage_slug,
@@ -1169,12 +1312,21 @@ def top_leader(odds: dict[str, Any]) -> dict[str, Any] | None:
     return max(odds.values(), key=lambda item: item.get("mid") or 0)
 
 
-def _resolve(future: Any, fallback: Any, errors: dict[str, str], label: str) -> Any:
+def _resolve_market(
+    future: Any,
+    fallback: dict[str, Any],
+    errors: dict[str, str],
+    label: str,
+) -> tuple[dict[str, Any], bool]:
     try:
-        return future.result()
+        markets = future.result()
     except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
         errors[label] = str(exc)
-        return fallback
+        return fallback, False
+    if not markets:
+        errors[label] = "empty market response"
+        return fallback, False
+    return markets, True
 
 
 def build_snapshot() -> dict[str, Any]:
@@ -1189,25 +1341,38 @@ def build_snapshot() -> dict[str, Any]:
         polymarket_future = pool.submit(fetch_polymarket)
         kalshi_future = pool.submit(fetch_kalshi)
 
-        scoreboard = _resolve(scoreboard_future, [], fetch_errors, "espnScoreboard")
-        standings = _resolve(standings_future, [], fetch_errors, "espnStandings")
+        # ESPN is the source of truth for matches and standings. Let failures
+        # reach the route so it can serve the last complete cached snapshot.
+        scoreboard = scoreboard_future.result()
+        standings = standings_future.result()
         # fetch_live_match_sources already isolates per-source failures and never raises.
         live_match_sources, match_market_errors = live_sources_future.result()
-        # Live outright odds drive the dashboard display; fall back to the baseline snapshot.
-        polymarket = _resolve(polymarket_future, baseline_polymarket, fetch_errors, "polymarket")
-        kalshi = _resolve(kalshi_future, baseline_kalshi, fetch_errors, "kalshi")
-
-    live_odds = not fetch_errors.get("polymarket") and not fetch_errors.get("kalshi") and bool(polymarket) and bool(kalshi)
-    # Grade "locked" picks against the pre-kickoff baseline outright odds (fall back to live).
-    locked_polymarket = baseline_polymarket or polymarket
-    locked_kalshi = baseline_kalshi or kalshi
+        polymarket, polymarket_live = _resolve_market(
+            polymarket_future, baseline_polymarket, fetch_errors, "polymarket"
+        )
+        kalshi, kalshi_live = _resolve_market(kalshi_future, baseline_kalshi, fetch_errors, "kalshi")
 
     match_markets, match_baseline_path = merge_match_baseline(scoreboard, live_match_sources)
-    comparisons = compare_events(scoreboard, polymarket, kalshi, match_markets, locked_polymarket, locked_kalshi)
+    locked_polymarket = baseline_polymarket or polymarket
+    locked_kalshi = baseline_kalshi or kalshi
+    comparisons = compare_events(
+        scoreboard,
+        polymarket,
+        kalshi,
+        match_markets,
+        locked_polymarket,
+        locked_kalshi,
+    )
     team_rows = build_team_rows(standings, polymarket, kalshi)
 
     pm_top = top_leader(polymarket)
     ks_top = top_leader(kalshi)
+    if polymarket_live and kalshi_live:
+        prediction_mode = "liveMarkets"
+    elif polymarket_live or kalshi_live:
+        prediction_mode = "mixedMarkets"
+    else:
+        prediction_mode = "baselineCsv"
 
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
@@ -1221,14 +1386,18 @@ def build_snapshot() -> dict[str, Any]:
             "kalshiMatchMarkets": f"{KALSHI_MARKETS_URL}?series_ticker=KXWCGAME",
             "matchMarketBaseline": match_baseline_path,
         },
-        "predictionMode": "liveMarkets" if live_odds else "baselineCsv",
+        "predictionMode": prediction_mode,
+        "currentOddsSources": {
+            "polymarket": "live" if polymarket_live else "baseline",
+            "kalshi": "live" if kalshi_live else "baseline",
+        },
         "matchMarketErrors": match_market_errors,
         "fetchErrors": fetch_errors,
         "matchMarketsCaptured": sum(len(source) for source in live_match_sources.values()),
         "leaders": {"polymarket": pm_top, "kalshi": ks_top},
         "projections": {
-            "polymarket": build_projection(polymarket),
-            "kalshi": build_projection(kalshi),
+            "polymarket": build_projection(polymarket, scoreboard),
+            "kalshi": build_projection(kalshi, scoreboard),
         },
         "odds": {
             "polymarket": polymarket,
@@ -1271,15 +1440,19 @@ def current_consensus_odds() -> tuple[dict[str, dict[str, Any]], list[str]]:
 
     try:
         polymarket = fetch_polymarket()
+        if not polymarket:
+            raise ValueError("empty market response")
         sources.append("Polymarket live")
-    except requests.RequestException:
+    except (requests.RequestException, ValueError, KeyError, TypeError):
         polymarket = baseline_polymarket
         sources.append("Polymarket baseline")
 
     try:
         kalshi = fetch_kalshi()
+        if not kalshi:
+            raise ValueError("empty market response")
         sources.append("Kalshi live")
-    except requests.RequestException:
+    except (requests.RequestException, ValueError, KeyError, TypeError):
         kalshi = baseline_kalshi
         sources.append("Kalshi baseline")
 
@@ -1289,6 +1462,9 @@ def current_consensus_odds() -> tuple[dict[str, dict[str, Any]], list[str]]:
 def actual_winners_by_pair(events: list[dict[str, Any]]) -> dict[str, str]:
     winners: dict[str, str] = {}
     for event in events:
+        stage_slug = event.get("stageSlug")
+        if stage_slug not in KNOCKOUT_STAGE_SLUGS:
+            continue
         winner = event.get("winner")
         if not event.get("status", {}).get("completed") or not winner or winner == "Draw":
             continue
@@ -1296,6 +1472,34 @@ def actual_winners_by_pair(events: list[dict[str, Any]]) -> dict[str, str]:
         if key:
             winners[key] = winner
     return winners
+
+
+def knockout_events_by_stage(events: list[dict[str, Any]]) -> dict[str, dict[int, dict[str, Any]]]:
+    stages: dict[str, dict[int, dict[str, Any]]] = {}
+    for stage_slug in KNOCKOUT_STAGE_SLUGS:
+        stage_events = sorted(
+            [event for event in events if event.get("stageSlug") == stage_slug],
+            key=lambda event: event.get("date") or "",
+        )
+        stages[stage_slug] = {index: event for index, event in enumerate(stage_events, start=1)}
+    return stages
+
+
+def event_teams_with_fallback(
+    event: dict[str, Any] | None,
+    fallback: tuple[str, str],
+) -> tuple[str, str]:
+    if not event:
+        return fallback
+    home = event.get("home", {}).get("team")
+    away = event.get("away", {}).get("team")
+    known = [team for team in (home, away) if team and not is_fixture_placeholder(team)]
+    if len(known) == 2:
+        return known[0], known[1]
+    if len(known) == 1:
+        guessed_opponent = next((team for team in fallback if team != known[0]), fallback[1])
+        return known[0], guessed_opponent
+    return fallback
 
 
 def bracket_pick(team_a: str, team_b: str, odds: dict[str, Any], actual_winners: dict[str, str]) -> tuple[str, str]:
@@ -1308,51 +1512,94 @@ def bracket_pick(team_a: str, team_b: str, odds: dict[str, Any], actual_winners:
     return (team_a, "market") if value_a >= value_b else (team_b, "market")
 
 
-def build_fact_projection(odds: dict[str, Any], actual_winners: dict[str, str]) -> dict[str, Any]:
-    def build_round(pairings: list[tuple[str, str]]) -> tuple[list[dict[str, Any]], list[str]]:
+def build_fact_projection(
+    odds: dict[str, Any],
+    actual_winners: dict[str, str],
+    events: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    stage_events = knockout_events_by_stage(events or [])
+
+    def build_round(
+        pairings: list[tuple[str, str]],
+        stage_slug: str,
+        event_numbers: list[int],
+    ) -> tuple[list[dict[str, Any]], list[str]]:
         matches = []
         winners = []
-        for team_a, team_b in pairings:
-            winner, source = bracket_pick(team_a, team_b, odds, actual_winners)
+        for (fallback_a, fallback_b), event_number in zip(pairings, event_numbers):
+            event = stage_events.get(stage_slug, {}).get(event_number)
+            team_a, team_b = event_teams_with_fallback(event, (fallback_a, fallback_b))
+            event_winner = event.get("winner") if event and event.get("status", {}).get("completed") else None
+            if event_winner in {team_a, team_b}:
+                winner, source = event_winner, "actual"
+            else:
+                winner, source = bracket_pick(
+                    team_a,
+                    team_b,
+                    odds,
+                    actual_winners if event is None else {},
+                )
             loser = team_b if winner == team_a else team_a
-            matches.append({"teams": [team_a, team_b], "winner": winner, "loser": loser, "source": source})
+            matches.append(
+                {
+                    "teams": [team_a, team_b],
+                    "winner": winner,
+                    "loser": loser,
+                    "source": source,
+                    "eventId": event.get("id") if event else None,
+                    "stageSlug": stage_slug,
+                }
+            )
             winners.append(winner)
         return matches, winners
 
     def next_pairings(winners: list[str]) -> list[tuple[str, str]]:
         return [(winners[i], winners[i + 1]) for i in range(0, len(winners), 2)]
 
+    round_slugs = ["round-of-32", "round-of-16", "quarterfinals", "semifinals"]
     left_rounds, right_rounds = [], []
-    left_matches, left_winners = build_round(LEFT_R32)
-    right_matches, right_winners = build_round(RIGHT_R32)
-    left_rounds.append(left_matches)
-    right_rounds.append(right_matches)
+    left_pairings = LEFT_R32
+    right_pairings = RIGHT_R32
 
-    for _ in range(3):
-        left_matches, left_winners = build_round(next_pairings(left_winners))
-        right_matches, right_winners = build_round(next_pairings(right_winners))
+    for round_index, stage_slug in enumerate(round_slugs):
+        left_matches, left_winners = build_round(
+            left_pairings,
+            stage_slug,
+            KNOCKOUT_EVENT_NUMBERS["left"][stage_slug],
+        )
+        right_matches, right_winners = build_round(
+            right_pairings,
+            stage_slug,
+            KNOCKOUT_EVENT_NUMBERS["right"][stage_slug],
+        )
         left_rounds.append(left_matches)
         right_rounds.append(right_matches)
+        if round_index < len(round_slugs) - 1:
+            left_pairings = next_pairings(left_winners)
+            right_pairings = next_pairings(right_winners)
 
     left_final = left_rounds[-1][0]
     right_final = right_rounds[-1][0]
-    champion, final_source = bracket_pick(left_final["winner"], right_final["winner"], odds, actual_winners)
-    runner_up = right_final["winner"] if champion == left_final["winner"] else left_final["winner"]
-    third_place, third_source = bracket_pick(left_final["loser"], right_final["loser"], odds, actual_winners)
-    fourth_place = right_final["loser"] if third_place == left_final["loser"] else left_final["loser"]
+    final_match, _ = build_round(
+        [(left_final["winner"], right_final["winner"])],
+        "final",
+        [1],
+    )
+    third_place_match, _ = build_round(
+        [(left_final["loser"], right_final["loser"])],
+        "3rd-place-match",
+        [1],
+    )
+    final = final_match[0]
+    third_match = third_place_match[0]
 
     return {
-        "champion": champion,
-        "runnerUp": runner_up,
-        "thirdPlace": third_place,
-        "fourthPlace": fourth_place,
-        "final": {"teams": [left_final["winner"], right_final["winner"]], "winner": champion, "loser": runner_up, "source": final_source},
-        "thirdPlaceMatch": {
-            "teams": [left_final["loser"], right_final["loser"]],
-            "winner": third_place,
-            "loser": fourth_place,
-            "source": third_source,
-        },
+        "champion": final["winner"],
+        "runnerUp": final["loser"],
+        "thirdPlace": third_match["winner"],
+        "fourthPlace": third_match["loser"],
+        "final": final,
+        "thirdPlaceMatch": third_match,
         "rounds": {"left": left_rounds, "right": right_rounds},
     }
 
@@ -1597,7 +1844,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
     except requests.RequestException:
         events = []
         fact_sources = sources + ["ESPN facts unavailable"]
-    projection = build_fact_projection(odds, actual_winners_by_pair(events))
+    projection = build_fact_projection(odds, actual_winners_by_pair(events), events)
     initial_odds = baseline_consensus_odds()
     initial_projection = build_fact_projection(initial_odds, {}) if initial_odds else None
     generated_at = datetime.now(timezone.utc)
@@ -1682,20 +1929,21 @@ def push_unsubscribe():
 
 @APP.get("/api/snapshot")
 def snapshot():
-    now = time.time()
-    if _CACHE["payload"] is not None and now - _CACHE["at"] < CACHE_TTL_SECONDS:
-        return jsonify({**_CACHE["payload"], "cached": True})
+    with _CACHE_LOCK:
+        now = time.time()
+        if _CACHE["payload"] is not None and now - _CACHE["at"] < CACHE_TTL_SECONDS:
+            return jsonify({**_CACHE["payload"], "cached": True})
 
-    try:
-        payload = build_snapshot()
-    except Exception as exc:  # last-resort guard: serve the last good snapshot instead of a 500
-        if _CACHE["payload"] is not None:
-            return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "error": str(exc)})
-        return jsonify({"error": str(exc)}), 503
+        try:
+            payload = build_snapshot()
+        except Exception as exc:  # last-resort guard: serve the last good snapshot instead of a 500
+            if _CACHE["payload"] is not None:
+                return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "error": str(exc)})
+            return jsonify({"error": str(exc)}), 503
 
-    _CACHE["payload"] = payload
-    _CACHE["at"] = now
-    return jsonify({**payload, "cached": False})
+        _CACHE["payload"] = payload
+        _CACHE["at"] = now
+        return jsonify({**payload, "cached": False})
 
 
 @APP.get("/api/desktop-alerts/capability")
@@ -1792,11 +2040,12 @@ def check_goals():
 
 @APP.get("/api/bracket-status")
 def bracket_status():
-    now = time.time()
-    if _BRACKET_STATUS_CACHE["payload"] is None or now - _BRACKET_STATUS_CACHE["at"] >= CACHE_TTL_SECONDS:
-        _BRACKET_STATUS_CACHE["payload"] = build_bracket_payload(mark_generated=False, render_svg=False)
-        _BRACKET_STATUS_CACHE["at"] = now
-    payload = _BRACKET_STATUS_CACHE["payload"]
+    with _BRACKET_STATUS_LOCK:
+        now = time.time()
+        if _BRACKET_STATUS_CACHE["payload"] is None or now - _BRACKET_STATUS_CACHE["at"] >= CACHE_TTL_SECONDS:
+            _BRACKET_STATUS_CACHE["payload"] = build_bracket_payload(mark_generated=False, render_svg=False)
+            _BRACKET_STATUS_CACHE["at"] = now
+        payload = _BRACKET_STATUS_CACHE["payload"]
     latest = read_latest_bracket_generation()
     latest_hash = latest.get("compositionHash") if latest else None
     return jsonify(

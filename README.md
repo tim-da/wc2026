@@ -17,6 +17,15 @@ http://127.0.0.1:5055
 
 The app uses ESPN for live scores and standings, and the saved CSV in `outputs/world_cup_2026_market_odds_polymarket_kalshi.csv` as the baseline prediction snapshot.
 
+Current Polymarket and Kalshi outright odds drive the dashboard, team table, consensus bars, and knockout projection. Prediction performance uses the latest match-market odds captured before kickoff; when no match market is available, it falls back to the saved June 13 outright snapshot.
+
+The pre-match lock file and latest generated-bracket state can be placed on persistent storage with:
+
+```bash
+export WC_MATCH_BASELINE_PATH=/persistent/path/match-market-baseline.json
+export WC_BRACKET_STATE_PATH=/persistent/path/bracket-generation-state.json
+```
+
 ## Tests
 
 ```bash
@@ -24,10 +33,9 @@ python3 -m pip install pytest
 python3 -m pytest
 ```
 
-## Caveat: the knockout bracket is a fixed assumption
+## Knockout projection
 
-The Round-of-32 pairings used for the finals bracket (`LEFT_R32` / `RIGHT_R32` in
-`server.py`) are **hardcoded** from a reference image, not derived from live group
-standings. Completed matches override the *winner* of a pairing that actually
-occurred, but the pairings themselves do not change. If the real knockout bracket
-differs from these assumed matchups, the projection will not match reality.
+Before official knockout fixtures are known, the Round-of-32 participants come
+from the supplied reference image and winners are selected by current outright
+odds. ESPN's official knockout fixtures replace those guesses as they become
+known, and completed knockout results override the market picks.

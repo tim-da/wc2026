@@ -658,7 +658,11 @@ function renderMetrics(data) {
   markBestPerformance(summary);
 
   const stamp = new Date(data.generatedAt);
-  const mode = data.predictionMode === "baselineCsv" ? "outright baseline" : "live outright odds";
+  const mode = {
+    baselineCsv: "outright baseline",
+    mixedMarkets: "live + baseline outright odds",
+    liveMarkets: "live outright odds",
+  }[data.predictionMode] || "outright odds";
   const matchMode = data.sources?.matchMarketBaseline ? " + match markets" : "";
   setText("#refreshStamp", `${stamp.toLocaleString()} · ${mode}${matchMode}${data.cached ? " · cached" : ""}`);
 }
