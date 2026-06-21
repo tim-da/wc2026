@@ -205,7 +205,7 @@ def test_goal_event_notification():
         {"state": "in", "home_score": 0, "away_score": 0, "completed": False},
         cur(home_score=1, minute="67'"),
     )
-    assert goal["title"] == "Goal!" and goal["body"] == "67': A 1-0 B"
+    assert goal["title"] == "Score change!" and goal["body"] == "67': A 1-0 B"
     # full time: -> completed
     ft = server.goal_event_notification({"state": "in", "completed": False}, cur(state="post", completed=True, home_score=2, away_score=1))
     assert ft["title"] == "Full time"
