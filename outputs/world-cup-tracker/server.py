@@ -1557,11 +1557,12 @@ def event_teams_with_fallback(
     home = event.get("home", {}).get("team")
     away = event.get("away", {}).get("team")
     known = [team for team in (home, away) if team and not is_fixture_placeholder(team)]
+    # Only override the seeded pairing once BOTH real teams are known. A fixture
+    # with a single resolved team (e.g. host "USA" vs a "Third Place …" slot that
+    # is still TBD) would otherwise be paired with a seeded opponent — dropping
+    # that opponent into two bracket slots at once and creating duplicate teams.
     if len(known) == 2:
         return known[0], known[1]
-    if len(known) == 1:
-        guessed_opponent = next((team for team in fallback if team != known[0]), fallback[1])
-        return known[0], guessed_opponent
     return fallback
 
 
