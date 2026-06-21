@@ -1025,14 +1025,17 @@ function eliminatedTeams(data) {
 
 function renderTeamsOverall(data) {
   const query = state.search.trim().toLowerCase();
-  const rows = teamGames(data)
-    .filter(
-      (rec) =>
-        (!state.team || rec.team === state.team) &&
-        (!state.group || groupLetterOf(rec.group) === state.group) &&
-        (!query || rec.displayName.toLowerCase().includes(query) || rec.team.toLowerCase().includes(query))
-    )
-    .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.displayName.localeCompare(b.displayName));
+  // Rank every team globally first, so the # stays fixed even when filtered.
+  const ranked = teamGames(data).sort(
+    (a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.displayName.localeCompare(b.displayName)
+  );
+  const globalRank = new Map(ranked.map((rec, i) => [rec.team, i + 1]));
+  const rows = ranked.filter(
+    (rec) =>
+      (!state.team || rec.team === state.team) &&
+      (!state.group || groupLetterOf(rec.group) === state.group) &&
+      (!query || rec.displayName.toLowerCase().includes(query) || rec.team.toLowerCase().includes(query))
+  );
   const liveTeams = new Set();
   (data.matches || []).forEach((match) => {
     if (match.status?.state === "in") {
@@ -1044,7 +1047,7 @@ function renderTeamsOverall(data) {
   const consensus = new Map((data.teams || []).map((t) => [t.team, t.consensusPct]));
 
   const body = rows
-    .map((rec, index) => {
+    .map((rec) => {
       const live = liveTeams.has(rec.team) ? `<span class="liveBadge">LIVE</span>` : "";
       const history = rec.history
         .map((h) => {
@@ -1058,7 +1061,7 @@ function renderTeamsOverall(data) {
       const gd = rec.gd > 0 ? `+${rec.gd}` : `${rec.gd}`;
       return `
         <tr class="${eliminated.has(rec.team) ? "outRow" : ""}">
-          <td class="num rankCol">${index + 1}</td>
+          <td class="num rankCol">${globalRank.get(rec.team)}</td>
           <td>
             <span class="teamCell">
               ${rec.logo ? `<img class="logo" src="${escapeHtml(rec.logo)}" alt="" />` : ""}
