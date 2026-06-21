@@ -886,12 +886,32 @@ function renderTeams(data) {
   renderTeamsGroup(data);
 }
 
+// When the Matches panel is scoped to Today or a specific date, return the set
+// of teams playing that day so the Teams section can scope to them too. Knockout
+// teams keep their original group (data.teams always carries it). Returns null
+// when no day filter is active (no scoping).
+function matchdayTeams(data) {
+  let dateKey = null;
+  if (state.date) dateKey = state.date;
+  else if (state.filter === "today") dateKey = localDateKey(new Date());
+  if (!dateKey) return null;
+  const teams = new Set();
+  (data.matches || []).forEach((match) => {
+    if (localDateKey(match.date) !== dateKey) return;
+    if (match.home?.team) teams.add(match.home.team);
+    if (match.away?.team) teams.add(match.away.team);
+  });
+  return teams;
+}
+
 function renderTeamsGroup(data) {
   const query = state.search.trim().toLowerCase();
+  const dayTeams = matchdayTeams(data);
   const filteredRows = [...data.teams].filter(
     (team) =>
       (!state.team || team.team === state.team) &&
       (!state.group || groupLetterOf(team.group) === state.group) &&
+      (!dayTeams || dayTeams.has(team.team)) &&
       (!query || team.displayName.toLowerCase().includes(query) || team.team.toLowerCase().includes(query))
   );
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
@@ -1030,10 +1050,12 @@ function renderTeamsOverall(data) {
     (a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.displayName.localeCompare(b.displayName)
   );
   const globalRank = new Map(ranked.map((rec, i) => [rec.team, i + 1]));
+  const dayTeams = matchdayTeams(data);
   const rows = ranked.filter(
     (rec) =>
       (!state.team || rec.team === state.team) &&
       (!state.group || groupLetterOf(rec.group) === state.group) &&
+      (!dayTeams || dayTeams.has(rec.team)) &&
       (!query || rec.displayName.toLowerCase().includes(query) || rec.team.toLowerCase().includes(query))
   );
   const liveTeams = new Set();
@@ -1378,6 +1400,7 @@ $$(".segment[data-filter]").forEach((button) => {
       renderDateControl(state.snapshot);
     }
     renderMatches(state.snapshot);
+    renderTeams(state.snapshot); // Teams scope follows the Today/date filter
   });
 });
 
@@ -1426,12 +1449,14 @@ $("#calGrid").addEventListener("click", (event) => {
   closeCal();
   renderDateControl(state.snapshot);
   renderMatches(state.snapshot);
+  renderTeams(state.snapshot);
 });
 $("#dateClear").addEventListener("click", () => {
   state.date = "";
   closeCal();
   renderDateControl(state.snapshot);
   renderMatches(state.snapshot);
+  renderTeams(state.snapshot);
 });
 document.addEventListener("click", (event) => {
   if (!$("#dateCal").hidden && !event.target.closest(".dateFocus")) closeCal();
