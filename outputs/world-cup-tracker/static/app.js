@@ -1027,7 +1027,7 @@ function renderTeamsOverall(data) {
         .join("");
       const gd = rec.gd > 0 ? `+${rec.gd}` : `${rec.gd}`;
       return `
-        <tr class="${teamRowClass(rec.group)}">
+        <tr>
           <td class="num rankCol">${index + 1}</td>
           <td>
             <span class="teamCell">
