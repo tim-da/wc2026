@@ -1364,9 +1364,9 @@ $("#alertsButton").addEventListener("click", () => {
   });
 });
 
-$$(".segment").forEach((button) => {
+$$(".segment[data-filter]").forEach((button) => {
   button.addEventListener("click", () => {
-    $$(".segment").forEach((item) => item.classList.remove("active"));
+    $$(".segment[data-filter]").forEach((item) => item.classList.remove("active"));
     button.classList.add("active");
     state.filter = button.dataset.filter;
     // "Today" and the date picker are both day-selectors — clear the date when Today wins.
@@ -1418,7 +1418,7 @@ $("#calGrid").addEventListener("click", (event) => {
   // Picking a date overrides the "Today" segment so the two don't conflict.
   if (state.date && state.filter === "today") {
     state.filter = "all";
-    $$(".segment").forEach((item) => item.classList.toggle("active", item.dataset.filter === "all"));
+    $$(".segment[data-filter]").forEach((item) => item.classList.toggle("active", item.dataset.filter === "all"));
   }
   closeCal();
   renderDateControl(state.snapshot);
