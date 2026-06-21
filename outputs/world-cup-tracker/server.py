@@ -927,7 +927,7 @@ def goal_event_notification(old: dict[str, Any] | None, cur: dict[str, Any]) -> 
         return {"title": "Full time", "body": timed_score, "tag": cur["match_key"]}
     if cur["state"] == "in" and old and old.get("state") == "in":
         if cur["home_score"] != old.get("home_score") or cur["away_score"] != old.get("away_score"):
-            return {"title": "Goal!", "body": timed_score, "tag": cur["match_key"]}
+            return {"title": "Score change!", "body": timed_score, "tag": cur["match_key"]}
     return None
 
 
