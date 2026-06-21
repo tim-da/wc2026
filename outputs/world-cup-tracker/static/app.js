@@ -929,6 +929,13 @@ function renderTeamsGroup(data) {
   );
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
   const rows = filteredRows.sort(standingsComparator(groupsWithPoints));
+  // When the table is filtered to a subset of groups, stripe consecutive group
+  // blocks light-grey / white by their order instead of the default A/C/E tint.
+  const filtersActive = Boolean(state.team || state.group || dayGroups || query);
+  const groupOrder = new Map();
+  rows.forEach((row) => {
+    if (!groupOrder.has(row.group)) groupOrder.set(row.group, groupOrder.size);
+  });
   const dots = qualificationDots(data.teams);
   const liveTeams = new Set();
   (data.matches || []).forEach((match) => {
@@ -943,8 +950,11 @@ function renderTeamsGroup(data) {
       const dotColor = dots.get(teamKey(row));
       const dot = `<span class="qualDot qual-${dotColor || "none"}" aria-hidden="true"></span>`;
       const live = liveTeams.has(row.team) ? `<span class="liveBadge">LIVE</span>` : "";
+      const rowClass = filtersActive
+        ? (groupOrder.get(row.group) % 2 === 0 ? "groupStripe" : "")
+        : teamRowClass(row.group);
       return `
-        <tr class="${teamRowClass(row.group)}">
+        <tr class="${rowClass}">
           <td>
             <span class="teamCell">
               ${dot}

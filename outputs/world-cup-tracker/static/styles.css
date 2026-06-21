@@ -1089,6 +1089,10 @@ tbody tr.groupBlue td {
   background: #eff6ff;
 }
 
+tbody tr.groupStripe td {
+  background: #f1f3f6;
+}
+
 tbody tr.outRow td {
   background: #eef0f3;
   color: var(--muted);
