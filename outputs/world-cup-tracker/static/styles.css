@@ -1050,6 +1050,11 @@ tbody tr.groupBlue td {
   background: #eff6ff;
 }
 
+tbody tr.outRow td {
+  background: #eef0f3;
+  color: var(--muted);
+}
+
 .qualDot {
   flex: 0 0 auto;
   width: 9px;
