@@ -1041,6 +1041,7 @@ function renderTeamsOverall(data) {
     }
   });
   const eliminated = eliminatedTeams(data);
+  const consensus = new Map((data.teams || []).map((t) => [t.team, t.consensusPct]));
 
   const body = rows
     .map((rec, index) => {
@@ -1072,6 +1073,7 @@ function renderTeamsOverall(data) {
           <td class="num">${rec.l}</td>
           <td class="num">${rec.gf}</td>
           <td class="num">${gd}</td>
+          <td class="num">${fmtPct(consensus.get(rec.team))}</td>
           <td><div class="histStrip">${history || "<span class='histNone'>—</span>"}</div></td>
         </tr>
       `;
@@ -1090,6 +1092,7 @@ function renderTeamsOverall(data) {
           <th>L</th>
           <th>GF</th>
           <th>GD</th>
+          <th>Consensus odds</th>
           <th>History</th>
         </tr>
       </thead>
