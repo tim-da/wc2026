@@ -1037,13 +1037,12 @@ th {
   letter-spacing: 0.05em;
 }
 
+/* Numeric columns center under their headings in both standings tables. */
 td.num,
 th.num {
-  text-align: right;
+  text-align: center;
 }
 
-/* Overall view: center the numeric columns so cells sit under their headings. */
-.overallTable .num,
 .overallTable .rankCol {
   text-align: center;
 }

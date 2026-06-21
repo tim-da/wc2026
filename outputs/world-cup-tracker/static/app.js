@@ -938,13 +938,13 @@ function renderTeamsGroup(data) {
         <tr>
           <th>Team</th>
           <th>Group</th>
-          <th>Pts</th>
-          <th>GD</th>
-          <th>PM %</th>
-          <th>Kalshi %</th>
-          <th>Avg %</th>
-          <th>PM Rank</th>
-          <th>K Rank</th>
+          <th class="num">Pts</th>
+          <th class="num">GD</th>
+          <th class="num">PM %</th>
+          <th class="num">Kalshi %</th>
+          <th class="num">Avg %</th>
+          <th class="num">PM Rank</th>
+          <th class="num">K Rank</th>
         </tr>
       </thead>
       <tbody>${body}</tbody>
