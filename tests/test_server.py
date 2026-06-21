@@ -388,21 +388,40 @@ def test_projection_replaces_guess_with_known_knockout_fixture_and_fact():
     assert first_match["eventId"] == "r32-1"
 
 
-def test_projection_keeps_known_team_when_other_knockout_slot_is_pending():
-    event = {
-        "id": "r32-1",
-        "date": "2026-06-28T19:00:00Z",
-        "stageSlug": "round-of-32",
-        "status": {"completed": False},
-        "home": {"team": "Canada"},
-        "away": {"team": "Group A 2nd Place"},
-    }
+def test_partial_knockout_fixture_falls_back_to_seed_pairing():
+    # A fixture with only one resolved team keeps the seeded pairing rather than
+    # pairing the known team with a seed opponent (which would duplicate it).
+    assert server.event_teams_with_fallback(
+        {"home": {"team": "Germany"}, "away": {"team": "Group A 2nd Place"}},
+        ("France", "Sweden"),
+    ) == ("France", "Sweden")
 
-    projection = server.build_fact_projection({}, {}, [event])
-    first_match = projection["rounds"]["left"][0][0]
 
-    assert "Canada" in first_match["teams"]
-    assert len(set(first_match["teams"])) == 2
+def test_fully_resolved_knockout_fixture_overrides_seed_pairing():
+    assert server.event_teams_with_fallback(
+        {"home": {"team": "Germany"}, "away": {"team": "France"}},
+        ("Spain", "Sweden"),
+    ) == ("Germany", "France")
+
+
+def test_partial_knockout_fixtures_do_not_duplicate_teams_in_bracket():
+    # Reproduces the live bug: real R32 fixtures where only the host is known
+    # (USA, Germany) must not appear in two slots at once.
+    events = [
+        {
+            "id": f"r32-{i}",
+            "date": f"2026-06-{28 + i // 4:02d}T{12 + i % 4 * 3:02d}:00:00Z",
+            "stageSlug": "round-of-32",
+            "status": {"completed": False},
+            "home": {"team": home},
+            "away": {"team": "Third Place Group A/B/C/D/F"},
+        }
+        for i, home in enumerate(["Germany", "USA", "Mexico"])
+    ]
+    projection = server.build_fact_projection({}, {}, events)
+    r32 = projection["rounds"]["left"][0] + projection["rounds"]["right"][0]
+    teams = [team for match in r32 for team in match["teams"]]
+    assert len(teams) == len(set(teams)), f"duplicate teams in R32: {teams}"
 
 
 def test_knockout_result_is_not_reused_for_later_rematch():
