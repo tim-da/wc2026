@@ -1092,7 +1092,7 @@ function renderTeamsOverall(data) {
           <th>L</th>
           <th>GF</th>
           <th>GD</th>
-          <th>Consensus odds</th>
+          <th>Odds</th>
           <th>History</th>
         </tr>
       </thead>
