@@ -1086,13 +1086,13 @@ function renderTeamsOverall(data) {
           <th class="rankCol">#</th>
           <th>Team</th>
           <th>Group</th>
-          <th>Pts</th>
-          <th>W</th>
-          <th>D</th>
-          <th>L</th>
-          <th>GF</th>
-          <th>GD</th>
-          <th>Odds</th>
+          <th class="num">Pts</th>
+          <th class="num">W</th>
+          <th class="num">D</th>
+          <th class="num">L</th>
+          <th class="num">GF</th>
+          <th class="num">GD</th>
+          <th class="num">Odds</th>
           <th>History</th>
         </tr>
       </thead>
