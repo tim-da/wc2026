@@ -995,6 +995,34 @@ function teamGames(data) {
   return list;
 }
 
+// A team is definitively out only when it can no longer finish in the top 3 of
+// its group — 4th place never qualifies, not even as a best-third. (ESPN's
+// "Eliminated" note just marks the current last place, which is not the same.)
+function eliminatedTeams(data) {
+  const teams = data.teams || [];
+  const remaining = {};
+  teams.forEach((t) => { remaining[t.team] = 0; });
+  (data.matches || []).forEach((match) => {
+    if (!match.group) return; // group-stage games only
+    if (match.status && match.status.completed) return;
+    [match.home, match.away].forEach((side) => {
+      if (side && side.team && remaining[side.team] != null) remaining[side.team] += 1;
+    });
+  });
+  const byGroup = {};
+  teams.forEach((t) => { (byGroup[t.group] = byGroup[t.group] || []).push(t); });
+  const out = new Set();
+  Object.values(byGroup).forEach((group) => {
+    group.forEach((team) => {
+      const maxPoints = (team.points || 0) + 3 * (remaining[team.team] || 0);
+      // Rivals already guaranteed to finish above this team (more points than it can ever reach).
+      const lockedAbove = group.filter((o) => o.team !== team.team && (o.points || 0) > maxPoints).length;
+      if (lockedAbove >= 3) out.add(team.team);
+    });
+  });
+  return out;
+}
+
 function renderTeamsOverall(data) {
   const query = state.search.trim().toLowerCase();
   const rows = teamGames(data)
@@ -1012,10 +1040,7 @@ function renderTeamsOverall(data) {
       if (match.away?.team) liveTeams.add(match.away.team);
     }
   });
-  // Teams ESPN marks "Eliminated" are definitively out of the tournament.
-  const eliminated = new Set(
-    (data.teams || []).filter((t) => /eliminat/i.test(t.note || "")).map((t) => t.team)
-  );
+  const eliminated = eliminatedTeams(data);
 
   const body = rows
     .map((rec, index) => {
