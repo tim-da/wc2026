@@ -904,14 +904,27 @@ function matchdayTeams(data) {
   return teams;
 }
 
+// The groups (whole groups) that have a team playing on the active day. Used by
+// the By-group view to show full groups, not just the playing teams.
+function matchdayGroups(data) {
+  const teams = matchdayTeams(data);
+  if (!teams) return null;
+  const groups = new Set();
+  (data.teams || []).forEach((team) => {
+    if (teams.has(team.team)) groups.add(team.group);
+  });
+  return groups;
+}
+
 function renderTeamsGroup(data) {
   const query = state.search.trim().toLowerCase();
-  const dayTeams = matchdayTeams(data);
+  // By-group view shows whole groups that have a team playing that day.
+  const dayGroups = matchdayGroups(data);
   const filteredRows = [...data.teams].filter(
     (team) =>
       (!state.team || team.team === state.team) &&
       (!state.group || groupLetterOf(team.group) === state.group) &&
-      (!dayTeams || dayTeams.has(team.team)) &&
+      (!dayGroups || dayGroups.has(team.group)) &&
       (!query || team.displayName.toLowerCase().includes(query) || team.team.toLowerCase().includes(query))
   );
   const groupsWithPoints = new Set(filteredRows.filter(hasPoints).map((team) => team.group));
