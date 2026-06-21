@@ -1012,6 +1012,10 @@ function renderTeamsOverall(data) {
       if (match.away?.team) liveTeams.add(match.away.team);
     }
   });
+  // Teams ESPN marks "Eliminated" are definitively out of the tournament.
+  const eliminated = new Set(
+    (data.teams || []).filter((t) => /eliminat/i.test(t.note || "")).map((t) => t.team)
+  );
 
   const body = rows
     .map((rec, index) => {
@@ -1027,7 +1031,7 @@ function renderTeamsOverall(data) {
         .join("");
       const gd = rec.gd > 0 ? `+${rec.gd}` : `${rec.gd}`;
       return `
-        <tr>
+        <tr class="${eliminated.has(rec.team) ? "outRow" : ""}">
           <td class="num rankCol">${index + 1}</td>
           <td>
             <span class="teamCell">
