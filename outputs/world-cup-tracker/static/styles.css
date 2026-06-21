@@ -131,7 +131,8 @@ h2 {
 
 .stampStack {
   flex: 1;
-  align-self: stretch;
+  align-self: flex-end;
+  min-height: 38px;
   display: flex;
   flex-direction: column;
   align-items: center;
