@@ -7,6 +7,7 @@ const state = {
   search: "",
   team: "",
   group: "",
+  teamsView: "group",
   date: "",
   calYM: null,
   pushActive: false,
@@ -703,8 +704,10 @@ function renderMatches(data) {
     return;
   }
 
-  node.innerHTML = matches
-    .map((match) => {
+  node.innerHTML = matches.map(matchCardHtml).join("");
+}
+
+function matchCardHtml(match) {
       const isPending = !match.status.completed && match.status.state !== "in";
       const isLive = match.status.state === "in";
       const statusClass = isLive ? "live" : isPending ? "pending" : "";
@@ -766,8 +769,6 @@ function renderMatches(data) {
           )}
         </article>
       `;
-    })
-    .join("");
 }
 
 const BLUE_GROUPS = new Set(["A", "C", "E", "G", "I", "K"]);
@@ -878,6 +879,14 @@ function qualificationDots(teams) {
 }
 
 function renderTeams(data) {
+  if (state.teamsView === "overall") {
+    renderTeamsOverall(data);
+    return;
+  }
+  renderTeamsGroup(data);
+}
+
+function renderTeamsGroup(data) {
   const query = state.search.trim().toLowerCase();
   const filteredRows = [...data.teams].filter(
     (team) =>
@@ -896,7 +905,7 @@ function renderTeams(data) {
     }
   });
 
-  $("#teamRows").innerHTML = rows
+  const body = rows
     .map((row) => {
       const dotColor = dots.get(teamKey(row));
       const dot = `<span class="qualDot qual-${dotColor || "none"}" aria-hidden="true"></span>`;
@@ -923,7 +932,143 @@ function renderTeams(data) {
       `;
     })
     .join("");
+  $("#teamsTable").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Group</th>
+          <th>Pts</th>
+          <th>GD</th>
+          <th>PM %</th>
+          <th>Kalshi %</th>
+          <th>Avg %</th>
+          <th>PM Rank</th>
+          <th>K Rank</th>
+        </tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>`;
 }
+
+// Per-team record across ALL completed matches (group + knockout): win=3, draw=1.
+function teamGames(data) {
+  const byTeam = new Map();
+  const ensure = (team, displayName, logo, group) => {
+    let rec = byTeam.get(team);
+    if (!rec) {
+      rec = { team, displayName: displayName || team, logo: logo || "", group: group || "", w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, history: [] };
+      byTeam.set(team, rec);
+    }
+    return rec;
+  };
+  (data.teams || []).forEach((t) => ensure(t.team, t.displayName, t.logo, t.group));
+  const matches = [...(data.matches || [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  matches.forEach((match) => {
+    const completed = !!(match.status && match.status.completed);
+    [[match.home, match.away], [match.away, match.home]].forEach(([side, opp]) => {
+      if (!side || !side.team) return;
+      // Only real, qualified teams are seeded; skip knockout placeholders ("Group A Winner", etc.).
+      const rec = byTeam.get(side.team);
+      if (!rec) return;
+      let result = "scheduled";
+      if (completed) {
+        if (side.winner) result = "win";
+        else if (opp.winner) result = "loss";
+        else result = "draw";
+        if (result === "win") { rec.w += 1; rec.pts += 3; }
+        else if (result === "draw") { rec.d += 1; rec.pts += 1; }
+        else rec.l += 1;
+        if (side.score != null) rec.gf += Number(side.score);
+        if (opp.score != null) rec.ga += Number(opp.score);
+      }
+      rec.history.push({
+        result,
+        oppName: opp.displayName || opp.team || "",
+        oppLogo: opp.logo || "",
+        matchId: matchKey(match),
+      });
+    });
+  });
+  const list = [...byTeam.values()];
+  list.forEach((rec) => { rec.gd = rec.gf - rec.ga; });
+  return list;
+}
+
+function renderTeamsOverall(data) {
+  const query = state.search.trim().toLowerCase();
+  const rows = teamGames(data)
+    .filter(
+      (rec) =>
+        (!state.team || rec.team === state.team) &&
+        (!state.group || groupLetterOf(rec.group) === state.group) &&
+        (!query || rec.displayName.toLowerCase().includes(query) || rec.team.toLowerCase().includes(query))
+    )
+    .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.displayName.localeCompare(b.displayName));
+  const liveTeams = new Set();
+  (data.matches || []).forEach((match) => {
+    if (match.status?.state === "in") {
+      if (match.home?.team) liveTeams.add(match.home.team);
+      if (match.away?.team) liveTeams.add(match.away.team);
+    }
+  });
+
+  const body = rows
+    .map((rec, index) => {
+      const live = liveTeams.has(rec.team) ? `<span class="liveBadge">LIVE</span>` : "";
+      const history = rec.history
+        .map((h) => {
+          const flag = h.oppLogo
+            ? `<img class="histFlag" src="${escapeHtml(h.oppLogo)}" alt="" />`
+            : `<span class="histFlag histFlagEmpty"></span>`;
+          const label = h.result === "scheduled" ? `vs ${h.oppName}` : `${RESULT_WORD[h.result]} vs ${h.oppName}`;
+          return `<button class="histDot hist-${h.result}" type="button" data-match="${escapeHtml(h.matchId)}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${flag}<span class="histPip"></span></button>`;
+        })
+        .join("");
+      const gd = rec.gd > 0 ? `+${rec.gd}` : `${rec.gd}`;
+      return `
+        <tr class="${teamRowClass(rec.group)}">
+          <td class="num rankCol">${index + 1}</td>
+          <td>
+            <span class="teamCell">
+              ${rec.logo ? `<img class="logo" src="${escapeHtml(rec.logo)}" alt="" />` : ""}
+              ${escapeHtml(rec.displayName)}
+              ${live}
+            </span>
+          </td>
+          <td>${escapeHtml(rec.group || "")}</td>
+          <td class="num">${rec.pts}</td>
+          <td class="num">${rec.w}</td>
+          <td class="num">${rec.d}</td>
+          <td class="num">${rec.l}</td>
+          <td class="num">${rec.gf}</td>
+          <td class="num">${gd}</td>
+          <td><div class="histStrip">${history || "<span class='histNone'>—</span>"}</div></td>
+        </tr>
+      `;
+    })
+    .join("");
+  $("#teamsTable").innerHTML = `
+    <table class="overallTable">
+      <thead>
+        <tr>
+          <th class="rankCol">#</th>
+          <th>Team</th>
+          <th>Group</th>
+          <th>Pts</th>
+          <th>W</th>
+          <th>D</th>
+          <th>L</th>
+          <th>GF</th>
+          <th>GD</th>
+          <th>History</th>
+        </tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>`;
+}
+
+const RESULT_WORD = { win: "Won", draw: "Drew", loss: "Lost", scheduled: "Scheduled" };
 
 function renderOdds(data) {
   const globalMax = data.odds.consensus[0]?.pct || 1;
@@ -1280,6 +1425,49 @@ messageModal.addEventListener("click", (event) => {
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && messageModal && !messageModal.hidden) closeMessageModal();
+});
+
+// Match-detail modal — reuses the match card; opened from history dots.
+const matchModal = $("#matchModal");
+
+function openMatchModal(matchId) {
+  const data = state.snapshot;
+  if (!matchModal || !data) return;
+  const match = (data.matches || []).find((m) => matchKey(m) === matchId);
+  if (!match) return;
+  $("#matchModalBody").innerHTML = matchCardHtml(match);
+  matchModal.hidden = false;
+}
+
+function closeMatchModal() {
+  if (matchModal) matchModal.hidden = true;
+}
+
+if (matchModal) {
+  $("#matchClose").addEventListener("click", closeMatchModal);
+  matchModal.addEventListener("click", (event) => {
+    if (event.target === matchModal) closeMatchModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !matchModal.hidden) closeMatchModal();
+  });
+}
+
+// History dots in the overall teams table open that match's card.
+$("#teamsTable").addEventListener("click", (event) => {
+  const dot = event.target.closest(".histDot");
+  if (!dot) return;
+  openMatchModal(dot.dataset.match);
+});
+
+// Teams view switcher (By group / Overall).
+$$("[data-teamsview]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (state.teamsView === button.dataset.teamsview) return;
+    $$("[data-teamsview]").forEach((item) => item.classList.toggle("active", item === button));
+    state.teamsView = button.dataset.teamsview;
+    if (state.snapshot) renderTeams(state.snapshot);
+  });
 });
 
 $("#messageForm").addEventListener("submit", async (event) => {

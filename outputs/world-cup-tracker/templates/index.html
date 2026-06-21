@@ -146,27 +146,16 @@
 
       <section class="panel">
         <div class="panelHead controls">
-          <h2>Teams</h2>
+          <div class="teamsHead">
+            <h2>Teams</h2>
+            <div class="segmented teamsViewToggle" role="tablist" aria-label="Teams view">
+              <button class="segment active" data-teamsview="group" type="button">By group</button>
+              <button class="segment" data-teamsview="overall" type="button">Overall</button>
+            </div>
+          </div>
           <input id="teamSearch" class="search" type="search" placeholder="Search team" />
         </div>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th>Group</th>
-                <th>Pts</th>
-                <th>GD</th>
-                <th>PM %</th>
-                <th>Kalshi %</th>
-                <th>Avg %</th>
-                <th>PM Rank</th>
-                <th>K Rank</th>
-              </tr>
-            </thead>
-            <tbody id="teamRows"></tbody>
-          </table>
-        </div>
+        <div id="teamsTable" class="tableWrap"></div>
       </section>
 
       <section class="panel">
@@ -194,6 +183,16 @@
             <button id="messageSend" class="primaryButton" type="submit">Send</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div id="matchModal" class="modalOverlay" hidden>
+      <div class="modalCard matchModalCard" role="dialog" aria-modal="true" aria-label="Match detail">
+        <div class="modalHead">
+          <h2>Match</h2>
+          <button id="matchClose" class="modalClose" type="button" aria-label="Close">×</button>
+        </div>
+        <div id="matchModalBody" class="matchModalBody"></div>
       </div>
     </div>
 

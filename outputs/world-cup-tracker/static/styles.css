@@ -452,6 +452,101 @@ small {
   box-shadow: 0 1px 4px rgba(24, 32, 42, 0.08);
 }
 
+.teamsHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teamsHead h2 {
+  margin: 0;
+}
+
+.teamsViewToggle .segment {
+  min-width: auto;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.rankCol {
+  width: 30px;
+  color: var(--muted);
+}
+
+.histStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.histDot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.histFlag {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.histFlagEmpty {
+  display: inline-block;
+  border-radius: 2px;
+  background: var(--surface-2);
+}
+
+.histPip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(24, 32, 42, 0.12);
+}
+
+.hist-win .histPip {
+  background: var(--green);
+}
+
+.hist-loss .histPip {
+  background: var(--red);
+}
+
+.hist-draw .histPip {
+  background: #1f2937;
+}
+
+.hist-scheduled .histPip {
+  background: #c4cbd5;
+}
+
+.histDot:hover .histPip {
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+.histNone {
+  color: var(--muted);
+}
+
+.matchModalCard {
+  width: min(460px, 100%);
+}
+
+.matchModalBody {
+  margin-top: 14px;
+}
+
+.matchModalBody .match {
+  margin: 0;
+}
+
 .matchList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
