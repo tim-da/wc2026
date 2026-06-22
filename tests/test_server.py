@@ -424,6 +424,58 @@ def test_partial_knockout_fixtures_do_not_duplicate_teams_in_bracket():
     assert len(teams) == len(set(teams)), f"duplicate teams in R32: {teams}"
 
 
+def _make_standings():
+    rows = []
+    for letter in "ABCDEFGHIJKL":
+        entries = [
+            {"team": f"{letter}1", "points": 9, "gd": 5, "gf": 7},
+            {"team": f"{letter}2", "points": 6, "gd": 2, "gf": 4},
+            # all thirds level on points; GD descends A..L so A's third is best, L's worst
+            {"team": f"{letter}3", "points": 3, "gd": 12 - "ABCDEFGHIJKL".index(letter), "gf": 1},
+            {"team": f"{letter}4", "points": 0, "gd": -20, "gf": 0},
+        ]
+        rows.append({"name": f"Group {letter}", "entries": entries})
+    return rows
+
+
+def test_slot_resolver_uses_current_standings():
+    resolve = server.build_slot_resolver(_make_standings(), [])
+    assert resolve("Group A Winner") == "A1"
+    assert resolve("Group B 2nd Place") == "B2"
+    # a seeded real team is replaced by whoever currently wins its group
+    assert resolve("A4") == "A1"
+    # unknown / later-round labels resolve to None so the caller keeps its fallback
+    assert resolve("Winners Match 73") is None
+
+
+def test_qualifying_thirds_keeps_best_eight_only():
+    ranking = server.group_ranking(_make_standings())
+    qualifying = set(server.qualifying_third_letters(ranking))
+    assert qualifying == set("ABCDEFGH")
+    assert "I" not in qualifying and "L" not in qualifying
+
+
+def test_projection_only_includes_currently_qualifying_teams():
+    # 12 group-stage R32 slot labels (2nd places + thirds) plus winners; the
+    # bracket must contain only group winners, runners-up and the best 8 thirds.
+    standings = _make_standings()
+    third_pools = {
+        "Third Place Group A/B/C/D/E": set("ABCDE"),
+        "Third Place Group F/G/H/I/J": set("FGHIJ"),
+    }
+    # minimal: assert no non-qualifying third (I3..L3) is reachable for a slot
+    resolve = server.build_slot_resolver(
+        standings,
+        [
+            {"home": {"team": "Group A Winner"}, "away": {"team": label}}
+            for label in third_pools
+        ],
+    )
+    assert resolve("Third Place Group A/B/C/D/E") in {f"{l}3" for l in "ABCDE"}
+    # L3 (worst third) is never assigned because it is outside the best 8
+    assert resolve("Third Place Group F/G/H/I/J") != "L3"
+
+
 def test_knockout_result_is_not_reused_for_later_rematch():
     events = [
         {

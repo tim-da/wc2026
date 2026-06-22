@@ -1101,9 +1101,13 @@ def current_match_pick(
     return capture_pick(fixture_markets, source_name, "inPlay") or outright_pick(team_a, team_b, outright_odds)
 
 
-def build_projection(odds: dict[str, Any], events: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def build_projection(
+    odds: dict[str, Any],
+    events: list[dict[str, Any]] | None = None,
+    standings: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     events = events or []
-    projection = build_fact_projection(odds, actual_winners_by_pair(events), events)
+    projection = build_fact_projection(odds, actual_winners_by_pair(events), events, standings)
     return {
         "champion": projection["champion"],
         "finalists": projection["final"]["teams"],
@@ -1459,8 +1463,8 @@ def build_snapshot() -> dict[str, Any]:
         "matchMarketsCaptured": sum(len(source) for source in live_match_sources.values()),
         "leaders": {"polymarket": pm_top, "kalshi": ks_top},
         "projections": {
-            "polymarket": build_projection(polymarket, scoreboard),
-            "kalshi": build_projection(kalshi, scoreboard),
+            "polymarket": build_projection(polymarket, scoreboard, standings),
+            "kalshi": build_projection(kalshi, scoreboard, standings),
         },
         "odds": {
             "polymarket": polymarket,
@@ -1548,22 +1552,152 @@ def knockout_events_by_stage(events: list[dict[str, Any]]) -> dict[str, dict[int
     return stages
 
 
+WINNER_SLOT_RE = re.compile(r"^Group\s+([A-L])\s+Winner$", re.IGNORECASE)
+SECOND_SLOT_RE = re.compile(r"^Group\s+([A-L])\s+2nd Place$", re.IGNORECASE)
+THIRD_SLOT_RE = re.compile(r"^Third Place Group\s+([A-L/]+)$", re.IGNORECASE)
+
+
+def _group_letter(name: str | None) -> str:
+    text = (name or "").upper()
+    match = re.search(r"GROUP\s+([A-L])\b", text) or re.search(r"\b([A-L])\b", text)
+    return match.group(1) if match else ""
+
+
+def group_ranking(standings: list[dict[str, Any]] | None) -> dict[str, list[dict[str, Any]]]:
+    """Rank each group by current results (points, GD, GF, then name)."""
+    ranking: dict[str, list[dict[str, Any]]] = {}
+    for group in standings or []:
+        letter = _group_letter(group.get("name"))
+        if not letter:
+            continue
+        ranking[letter] = sorted(
+            group.get("entries", []),
+            key=lambda entry: (
+                -(entry.get("points") or 0),
+                -(entry.get("gd") or 0),
+                -(entry.get("gf") or 0),
+                entry.get("team") or "",
+            ),
+        )
+    return ranking
+
+
+def qualifying_third_letters(ranking: dict[str, list[dict[str, Any]]]) -> list[str]:
+    """The group letters whose third-placed team is among the best 8 (those that advance)."""
+    thirds = [
+        (letter, entries[2]) for letter, entries in ranking.items() if len(entries) >= 3
+    ]
+    thirds.sort(
+        key=lambda item: (
+            -(item[1].get("points") or 0),
+            -(item[1].get("gd") or 0),
+            -(item[1].get("gf") or 0),
+        )
+    )
+    return [letter for letter, _ in thirds[:8]]
+
+
+def _assign_thirds(qualifying: list[str], slots: list[tuple[str, set[str]]]) -> dict[str, str]:
+    """Bipartite-match qualifying third-place groups to their allowed bracket slots."""
+    slot_to_letter: dict[int, str] = {}
+
+    def augment(letter: str, seen: set[int]) -> bool:
+        for index, (_, allowed) in enumerate(slots):
+            if letter in allowed and index not in seen:
+                seen.add(index)
+                if index not in slot_to_letter or augment(slot_to_letter[index], seen):
+                    slot_to_letter[index] = letter
+                    return True
+        return False
+
+    for letter in qualifying:
+        augment(letter, set())
+    return {slots[index][0]: letter for index, letter in slot_to_letter.items()}
+
+
+def build_slot_resolver(
+    standings: list[dict[str, Any]] | None,
+    events: list[dict[str, Any]] | None,
+):
+    """Resolve a knockout slot label (or a seeded team) to the team currently
+    projected to fill it from the live group standings. Returns None when no
+    standings are available (callers then keep the static seed bracket)."""
+    if not standings:
+        return None
+    ranking = group_ranking(standings)
+    if not ranking:
+        return None
+    team_letter = {
+        entry.get("team"): letter
+        for letter, entries in ranking.items()
+        for entry in entries
+        if entry.get("team")
+    }
+
+    third_slots: list[tuple[str, set[str]]] = []
+    seen_labels: set[str] = set()
+    for event in events or []:
+        for side in ("home", "away"):
+            label = (event.get(side) or {}).get("team")
+            match = THIRD_SLOT_RE.match(label or "")
+            if match and label not in seen_labels:
+                seen_labels.add(label)
+                third_slots.append((label, set(match.group(1).upper().split("/"))))
+
+    third_team = {}
+    for label, letter in _assign_thirds(qualifying_third_letters(ranking), third_slots).items():
+        entries = ranking.get(letter, [])
+        if len(entries) >= 3:
+            third_team[label] = entries[2].get("team")
+
+    def position(letter: str, index: int) -> str | None:
+        entries = ranking.get(letter, [])
+        return entries[index].get("team") if len(entries) > index else None
+
+    def resolve(team_string: str | None) -> str | None:
+        if not team_string:
+            return None
+        match = WINNER_SLOT_RE.match(team_string)
+        if match:
+            return position(match.group(1), 0)
+        match = SECOND_SLOT_RE.match(team_string)
+        if match:
+            return position(match.group(1), 1)
+        if THIRD_SLOT_RE.match(team_string):
+            return third_team.get(team_string)
+        # A seeded real team (e.g. ESPN pencils a team into a group-winner slot):
+        # replace it with whoever is actually winning that group right now. For
+        # anything else (later-round "Winners Match N" labels, unknown teams)
+        # return None so the caller keeps its projected fallback.
+        letter = team_letter.get(team_string)
+        if letter:
+            return position(letter, 0)
+        return None
+
+    return resolve
+
+
 def event_teams_with_fallback(
     event: dict[str, Any] | None,
     fallback: tuple[str, str],
+    resolver=None,
 ) -> tuple[str, str]:
     if not event:
         return fallback
     home = event.get("home", {}).get("team")
     away = event.get("away", {}).get("team")
-    known = [team for team in (home, away) if team and not is_fixture_placeholder(team)]
-    # Only override the seeded pairing once BOTH real teams are known. A fixture
-    # with a single resolved team (e.g. host "USA" vs a "Third Place …" slot that
-    # is still TBD) would otherwise be paired with a seeded opponent — dropping
-    # that opponent into two bracket slots at once and creating duplicate teams.
-    if len(known) == 2:
-        return known[0], known[1]
-    return fallback
+    home_real = bool(home and not is_fixture_placeholder(home))
+    away_real = bool(away and not is_fixture_placeholder(away))
+    # Both slots resolved to real teams -> the actual matchup is known, use it.
+    if home_real and away_real:
+        return home, away
+    if resolver is None:
+        # No standings: keep the static seed bracket, but only when both teams
+        # were known (handled above) to avoid duplicating a seed opponent.
+        return fallback
+    # Project each slot from the live standings; fall back to the seed if a slot
+    # cannot be resolved.
+    return (resolver(home) or fallback[0]), (resolver(away) or fallback[1])
 
 
 def bracket_pick(
@@ -1590,8 +1724,10 @@ def build_fact_projection(
     odds: dict[str, Any],
     actual_winners: dict[str, str],
     events: list[dict[str, Any]] | None = None,
+    standings: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     stage_events = knockout_events_by_stage(events or [])
+    resolver = build_slot_resolver(standings, events)
 
     def build_round(
         pairings: list[tuple[str, str]],
@@ -1602,7 +1738,7 @@ def build_fact_projection(
         winners = []
         for (fallback_a, fallback_b), event_number in zip(pairings, event_numbers):
             event = stage_events.get(stage_slug, {}).get(event_number)
-            team_a, team_b = event_teams_with_fallback(event, (fallback_a, fallback_b))
+            team_a, team_b = event_teams_with_fallback(event, (fallback_a, fallback_b), resolver)
             event_winner = event.get("winner") if event and event.get("status", {}).get("completed") else None
             if event_winner in {team_a, team_b}:
                 winner, source = event_winner, "actual"
@@ -1920,7 +2056,11 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
     except requests.RequestException:
         events = []
         fact_sources = sources + ["ESPN facts unavailable"]
-    projection = build_fact_projection(odds, actual_winners_by_pair(events), events)
+    try:
+        standings = fetch_standings()
+    except requests.RequestException:
+        standings = None
+    projection = build_fact_projection(odds, actual_winners_by_pair(events), events, standings)
     initial_odds = baseline_consensus_odds()
     initial_projection = build_fact_projection(initial_odds, {}) if initial_odds else None
     generated_at = datetime.now(timezone.utc)
