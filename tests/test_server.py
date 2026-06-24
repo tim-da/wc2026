@@ -65,6 +65,17 @@ def test_pct_rounds_and_passes_none():
     assert server.pct(None) is None
 
 
+def test_book_mid_ignores_empty_or_one_sided_book():
+    # Empty book (bid 0 / ask 1.00) has a spurious 0.50 midpoint -> use fallback.
+    assert server.book_mid(0.0, 1.0, 0.001) == 0.001
+    # One-sided book (no bids) -> fallback, not (0 + 0.05) / 2.
+    assert server.book_mid(0.0, 0.05, 0.002) == 0.002
+    # Missing quotes -> fallback.
+    assert server.book_mid(None, None, 0.3) == 0.3
+    # Genuine two-sided book -> midpoint.
+    assert server.book_mid(0.20, 0.21, 0.19) == 0.205
+
+
 def test_country_flag():
     assert server.country_flag("US") == "\U0001F1FA\U0001F1F8"
     assert server.country_flag("USA") is None
