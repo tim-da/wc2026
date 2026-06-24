@@ -460,6 +460,16 @@ def push_client_key() -> str:
     return forwarded or request.remote_addr or "unknown"
 
 
+def book_mid(bid: float | None, ask: float | None, fallback: float | None) -> float | None:
+    """Midpoint of a genuine two-sided book. An empty/illiquid book reports
+    bid 0 / ask 1.00, whose midpoint (0.50) is meaningless — so require a real
+    bid (> 0) and a real ask (< 1) and otherwise use the fallback price
+    (last trade / outcome price)."""
+    if bid is not None and ask is not None and bid > 0 and ask < 1:
+        return (bid + ask) / 2
+    return fallback
+
+
 def parse_yes_price(market: dict[str, Any]) -> dict[str, Any]:
     try:
         prices = json.loads(market.get("outcomePrices") or "[]")
@@ -476,12 +486,7 @@ def parse_yes_price(market: dict[str, Any]) -> dict[str, Any]:
     last = as_float(market.get("lastTradePrice"))
     if last is None:
         last = as_float(market.get("last_price_dollars"))
-    if bid is not None and ask is not None:
-        mid = (bid + ask) / 2
-    elif outcome_price is not None:
-        mid = outcome_price
-    else:
-        mid = last
+    mid = book_mid(bid, ask, outcome_price if outcome_price is not None else last)
     # USD traded on this outcome. Polymarket gives dollar volume directly; Kalshi gives
     # contracts (volume_fp), so approximate USD staked as contracts * price.
     pm_volume = as_float(market.get("volumeNum"))
@@ -539,7 +544,7 @@ def fetch_polymarket() -> dict[str, dict[str, Any]]:
         outcome_price = as_float(prices[0]) if prices else None
         bid = as_float(market.get("bestBid"))
         ask = as_float(market.get("bestAsk"))
-        mid = (bid + ask) / 2 if bid is not None and ask is not None else outcome_price
+        mid = book_mid(bid, ask, outcome_price)
         markets[team] = {
             "team": team,
             "mid": mid,
@@ -572,7 +577,7 @@ def fetch_kalshi() -> dict[str, dict[str, Any]]:
         bid = as_float(market.get("yes_bid_dollars"))
         ask = as_float(market.get("yes_ask_dollars"))
         last = as_float(market.get("last_price_dollars"))
-        mid = (bid + ask) / 2 if bid is not None and ask is not None else last
+        mid = book_mid(bid, ask, last)
         markets[team] = {
             "team": team,
             "mid": mid,
