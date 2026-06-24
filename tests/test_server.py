@@ -73,7 +73,7 @@ def test_book_mid_ignores_empty_or_one_sided_book():
     # Missing quotes -> fallback.
     assert server.book_mid(None, None, 0.3) == 0.3
     # Genuine two-sided book -> midpoint.
-    assert server.book_mid(0.20, 0.21, 0.19) == 0.205
+    assert server.book_mid(0.20, 0.21, 0.19) == pytest.approx(0.205)
 
 
 def test_country_flag():
