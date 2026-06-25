@@ -453,10 +453,26 @@ def test_slot_resolver_uses_current_standings():
     resolve = server.build_slot_resolver(_make_standings(), [])
     assert resolve("Group A Winner") == "A1"
     assert resolve("Group B 2nd Place") == "B2"
-    # a seeded real team is replaced by whoever currently wins its group
-    assert resolve("A4") == "A1"
+    # a real team ESPN has already seeded into a slot is trusted as-is, NOT
+    # forced to the group winner — otherwise a seeded runner-up would collapse
+    # onto the winner and appear twice (the live "two Germanys" bug).
+    assert resolve("A2") == "A2"
+    assert resolve("A4") == "A4"
     # unknown / later-round labels resolve to None so the caller keeps its fallback
     assert resolve("Winners Match 73") is None
+
+
+def test_seeded_runner_up_does_not_duplicate_group_winner():
+    # Group E: winner "E1" seeded in one slot, runner-up "E2" seeded in another.
+    # Both must survive as themselves rather than both resolving to the winner.
+    standings = _make_standings()
+    events = [
+        {"home": {"team": "E1"}, "away": {"team": "Group A 2nd Place"}},
+        {"home": {"team": "E2"}, "away": {"team": "Group B 2nd Place"}},
+    ]
+    resolve = server.build_slot_resolver(standings, events)
+    assert resolve("E1") == "E1"
+    assert resolve("E2") == "E2"
 
 
 def test_qualifying_thirds_keeps_best_eight_only():

@@ -1675,13 +1675,14 @@ def build_slot_resolver(
             return position(match.group(1), 1)
         if THIRD_SLOT_RE.match(team_string):
             return third_team.get(team_string)
-        # A seeded real team (e.g. ESPN pencils a team into a group-winner slot):
-        # replace it with whoever is actually winning that group right now. For
-        # anything else (later-round "Winners Match N" labels, unknown teams)
-        # return None so the caller keeps its projected fallback.
-        letter = team_letter.get(team_string)
-        if letter:
-            return position(letter, 0)
+        # A real, known group team that ESPN has already seeded into a slot:
+        # trust it as-is. ESPN fills both winner and runner-up slots as groups
+        # firm up, so forcing it to the group winner would duplicate that winner
+        # (e.g. Group E's runner-up Ivory Coast collapsing onto winner Germany).
+        # Anything else (later-round "Winners Match N" labels, unknown teams)
+        # returns None so the caller keeps its projected fallback.
+        if team_string in team_letter:
+            return team_string
         return None
 
     return resolve
