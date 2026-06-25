@@ -482,25 +482,26 @@ def test_qualifying_thirds_keeps_best_eight_only():
     assert "I" not in qualifying and "L" not in qualifying
 
 
-def test_confirmed_teams_clinched_top_two():
+def test_confirmed_teams_locks_settled_positions_only():
     standings = [
-        {"name": "Group A", "entries": [  # group finished: top 2 locked
-            {"team": "A1", "points": 9, "gp": 3},
-            {"team": "A2", "points": 4, "gp": 3},
-            {"team": "A3", "points": 3, "gp": 3},
-            {"team": "A4", "points": 1, "gp": 3},
+        {"name": "Group A", "entries": [  # finished: every position fixed (incl. a GD-split tie)
+            {"team": "A1", "points": 9, "gp": 3, "gd": 5, "gf": 7},
+            {"team": "A2", "points": 4, "gp": 3, "gd": 2, "gf": 4},
+            {"team": "A3", "points": 4, "gp": 3, "gd": -1, "gf": 2},
+            {"team": "A4", "points": 0, "gp": 3, "gd": -6, "gf": 0},
         ]},
-        {"name": "Group B", "entries": [  # one game left, 2nd still contested
-            {"team": "B1", "points": 9, "gp": 2},  # clinched 1st with room to spare
-            {"team": "B2", "points": 3, "gp": 2},
+        {"name": "Group B", "entries": [  # one game left
+            {"team": "B1", "points": 9, "gp": 2},  # uncatchable leader -> 1st locked
+            {"team": "B2", "points": 3, "gp": 2},  # 2nd/3rd/4th all still open
             {"team": "B3", "points": 3, "gp": 2},
             {"team": "B4", "points": 3, "gp": 2},
         ]},
     ]
     confirmed = server.confirmed_teams(standings)
-    assert {"A1", "A2", "B1"} <= confirmed
-    assert "A3" not in confirmed  # finished 3rd
-    assert "B2" not in confirmed and "B3" not in confirmed  # can still drop out
+    # Whole finished group is locked, plus B's uncatchable leader.
+    assert {"A1", "A2", "A3", "A4", "B1"} <= confirmed
+    # B's lower teams can still swap, so their positions are not locked.
+    assert "B2" not in confirmed and "B3" not in confirmed and "B4" not in confirmed
 
 
 def test_projection_only_includes_currently_qualifying_teams():
