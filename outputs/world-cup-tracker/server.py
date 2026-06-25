@@ -1925,24 +1925,42 @@ def fmt_bracket_pct(value: float | None) -> str:
 
 
 def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
-    """Teams that have clinched a top-2 group finish (guaranteed to advance).
-    Conservative: a rival counts as a threat if it can still reach the team's
-    current points; at most one such rival means the team is safe in the top 2."""
-    confirmed: set[str] = set()
+    """Teams whose final group position is already locked — it will not change
+    no matter how the remaining group games go. A team is locked when its order
+    against every rival is settled: either one side's current points already beat
+    the other's maximum possible points, or both teams have finished and a fixed
+    tiebreaker (points, goal difference, goals for) separates them."""
+
+    def remaining(entry: dict[str, Any]) -> int:
+        return max(0, 3 - int(entry.get("gp") or 0))
+
+    locked: set[str] = set()
     for group in standings or []:
         entries = group.get("entries", [])
         for team in entries:
-            floor = team.get("points") or 0
-            threats = 0
+            t_pts = team.get("points") or 0
+            t_max = t_pts + 3 * remaining(team)
+            settled = True
             for rival in entries:
                 if rival.get("team") == team.get("team"):
                     continue
-                rival_max = (rival.get("points") or 0) + 3 * max(0, 3 - int(rival.get("gp") or 0))
-                if rival_max >= floor:
-                    threats += 1
-            if threats <= 1 and team.get("team"):
-                confirmed.add(team["team"])
-    return confirmed
+                r_pts = rival.get("points") or 0
+                r_max = r_pts + 3 * remaining(rival)
+                if t_pts > r_max or r_pts > t_max:
+                    continue  # one side can never be caught by the other
+                both_finished = remaining(team) == 0 and remaining(rival) == 0
+                separated = (t_pts, team.get("gd") or 0, team.get("gf") or 0) != (
+                    r_pts,
+                    rival.get("gd") or 0,
+                    rival.get("gf") or 0,
+                )
+                if both_finished and separated:
+                    continue  # done and split by a tiebreaker that can no longer move
+                settled = False
+                break
+            if settled and team.get("team"):
+                locked.add(team["team"])
+    return locked
 
 
 def render_bracket_svg(
@@ -1988,7 +2006,7 @@ def render_bracket_svg(
             is_winner = team == winner
             changed_class = " changedEntry" if f"{slot_prefix}-{idx}" in changed_slots else ""
             if team in confirmed:
-                # Light-green band marking a team that has clinched its group.
+                # Light-green band: this team's final group position is locked.
                 band_y = y + idx * (box_h / 2)
                 rows.append(
                     f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="#dcf5e4" />'
