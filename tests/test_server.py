@@ -482,6 +482,27 @@ def test_qualifying_thirds_keeps_best_eight_only():
     assert "I" not in qualifying and "L" not in qualifying
 
 
+def test_confirmed_teams_clinched_top_two():
+    standings = [
+        {"name": "Group A", "entries": [  # group finished: top 2 locked
+            {"team": "A1", "points": 9, "gp": 3},
+            {"team": "A2", "points": 4, "gp": 3},
+            {"team": "A3", "points": 3, "gp": 3},
+            {"team": "A4", "points": 1, "gp": 3},
+        ]},
+        {"name": "Group B", "entries": [  # one game left, 2nd still contested
+            {"team": "B1", "points": 9, "gp": 2},  # clinched 1st with room to spare
+            {"team": "B2", "points": 3, "gp": 2},
+            {"team": "B3", "points": 3, "gp": 2},
+            {"team": "B4", "points": 3, "gp": 2},
+        ]},
+    ]
+    confirmed = server.confirmed_teams(standings)
+    assert {"A1", "A2", "B1"} <= confirmed
+    assert "A3" not in confirmed  # finished 3rd
+    assert "B2" not in confirmed and "B3" not in confirmed  # can still drop out
+
+
 def test_projection_only_includes_currently_qualifying_teams():
     # 12 group-stage R32 slot labels (2nd places + thirds) plus winners; the
     # bracket must contain only group winners, runners-up and the best 8 thirds.

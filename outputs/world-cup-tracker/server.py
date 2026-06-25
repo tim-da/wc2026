@@ -1924,6 +1924,27 @@ def fmt_bracket_pct(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.1f}%"
 
 
+def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
+    """Teams that have clinched a top-2 group finish (guaranteed to advance).
+    Conservative: a rival counts as a threat if it can still reach the team's
+    current points; at most one such rival means the team is safe in the top 2."""
+    confirmed: set[str] = set()
+    for group in standings or []:
+        entries = group.get("entries", [])
+        for team in entries:
+            floor = team.get("points") or 0
+            threats = 0
+            for rival in entries:
+                if rival.get("team") == team.get("team"):
+                    continue
+                rival_max = (rival.get("points") or 0) + 3 * max(0, 3 - int(rival.get("gp") or 0))
+                if rival_max >= floor:
+                    threats += 1
+            if threats <= 1 and team.get("team"):
+                confirmed.add(team["team"])
+    return confirmed
+
+
 def render_bracket_svg(
     projection: dict[str, Any],
     odds: dict[str, Any],
@@ -1931,8 +1952,10 @@ def render_bracket_svg(
     generated_at: datetime,
     changed_slots: set[str] | None = None,
     baseline_champion: str | None = None,
+    confirmed: set[str] | None = None,
 ) -> str:
     changed_slots = changed_slots or set()
+    confirmed = confirmed or set()
     width, height = 1600, 900
     box_w, box_h = 132, 54
     left_x = [68, 214, 360, 506]
@@ -1964,6 +1987,12 @@ def render_bracket_svg(
             row_y = y + 20 + idx * 25
             is_winner = team == winner
             changed_class = " changedEntry" if f"{slot_prefix}-{idx}" in changed_slots else ""
+            if team in confirmed:
+                # Light-green band marking a team that has clinched its group.
+                band_y = y + idx * (box_h / 2)
+                rows.append(
+                    f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="#dcf5e4" />'
+                )
             rows.append(
                 f'<text x="{x + 8}" y="{row_y}" class="team {"winner" if is_winner else "loser"}{changed_class}">{escape(svg_team_label(team))}</text>'
                 f'<text x="{x + box_w - 8}" y="{row_y}" class="pct {"winner" if is_winner else "loser"}{changed_class}">{team_pct(team)}</text>'
@@ -2093,6 +2122,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             generated_at,
             changed_projection_slots(projection, initial_projection, odds, initial_odds),
             initial_projection.get("champion") if initial_projection else None,
+            confirmed_teams(standings),
         )
     if mark_generated:
         write_latest_bracket_generation(payload)
