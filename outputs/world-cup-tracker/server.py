@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 from collections import defaultdict, deque
 import json
+import logging
 import os
 import re
 import subprocess
@@ -32,6 +33,10 @@ except ImportError:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parent
 APP = Flask(__name__, static_folder=str(ROOT / "static"), template_folder=str(ROOT / "templates"))
+LOG = logging.getLogger(__name__)
+
+# Upstream/network failures during snapshot refresh; stale cache is served when available.
+_SNAPSHOT_RECOVERABLE_ERRORS = (requests.RequestException, ValueError, KeyError, TypeError)
 BASELINE_CSV = ROOT.parent / "world_cup_2026_market_odds_polymarket_kalshi.csv"
 MATCH_BASELINE_JSON = Path(
     os.environ.get("WC_MATCH_BASELINE_PATH", ROOT.parent / "world_cup_2026_match_market_baseline.json")
@@ -2170,12 +2175,17 @@ def snapshot():
 
     try:
         payload = build_snapshot()
-    except Exception as exc:  # last-resort guard: serve the last good snapshot instead of a 500
+    except _SNAPSHOT_RECOVERABLE_ERRORS as exc:
         with _CACHE_LOCK:
             _CACHE_REFRESHING = False
             if _CACHE["payload"] is not None:
                 return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "error": str(exc)})
         return jsonify({"error": str(exc)}), 503
+    except Exception:
+        with _CACHE_LOCK:
+            _CACHE_REFRESHING = False
+        LOG.exception("Unexpected error refreshing snapshot")
+        raise
 
     with _CACHE_LOCK:
         _CACHE["payload"] = payload

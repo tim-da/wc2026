@@ -1,6 +1,9 @@
 .DS_Store
+.venv/
 __pycache__/
 *.pyc
+*.egg-info/
+.pytest_cache/
 work/
 outputs/world-cup-tracker/.bracket-generation-state.json
 outputs/world_cup_2026_match_market_baseline.json

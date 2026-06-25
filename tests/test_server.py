@@ -815,6 +815,21 @@ def test_snapshot_route_serves_last_good_payload_when_refresh_fails(monkeypatch)
     assert payload["teams"] == cached_payload["teams"]
 
 
+def test_snapshot_route_returns_500_on_unexpected_error(monkeypatch):
+    monkeypatch.setitem(server._CACHE, "payload", None)
+    monkeypatch.setitem(server._CACHE, "at", 0.0)
+    monkeypatch.setattr(server, "_CACHE_REFRESHING", False)
+    monkeypatch.setattr(
+        server,
+        "build_snapshot",
+        lambda: (_ for _ in ()).throw(RuntimeError("programming mistake")),
+    )
+
+    response = server.APP.test_client().get("/api/snapshot")
+
+    assert response.status_code == 500
+
+
 def test_snapshot_serves_stale_while_another_refresh_is_running(monkeypatch):
     cached_payload = {"generatedAt": "2026-06-19T12:00:00+00:00", "matches": [], "teams": []}
     monkeypatch.setitem(server._CACHE, "payload", cached_payload)
