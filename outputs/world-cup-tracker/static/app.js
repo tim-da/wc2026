@@ -1014,6 +1014,11 @@ function teamGames(data) {
       // Only real, qualified teams are seeded; skip knockout placeholders ("Group A Winner", etc.).
       const rec = byTeam.get(side.team);
       if (!rec) return;
+      // Skip not-yet-played knockout fixtures: ESPN seeds projected matchups
+      // (e.g. USA vs Bosnia) that are not certain, so they must not show as
+      // scheduled games. Group games (match.group set) are certain; completed
+      // knockout results still count.
+      if (!completed && !match.group) return;
       let result = "scheduled";
       if (completed) {
         if (side.winner) result = "win";
