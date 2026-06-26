@@ -435,6 +435,21 @@ def test_partial_knockout_fixtures_do_not_duplicate_teams_in_bracket():
     assert len(teams) == len(set(teams)), f"duplicate teams in R32: {teams}"
 
 
+def test_seeded_third_is_not_also_matched_to_a_placeholder_slot():
+    # ESPN seeds a real third ("B3") into one R32 slot; the matcher must not also
+    # assign Group B's third to a "Third Place …" placeholder slot (live "two
+    # Bosnias" bug).
+    standings = _make_standings()
+    events = [
+        {"stageSlug": "round-of-32", "home": {"team": "Group A Winner"}, "away": {"team": "B3"}},
+        {"stageSlug": "round-of-32", "home": {"team": "Group C Winner"},
+         "away": {"team": "Third Place Group A/B/C/D/E"}},
+    ]
+    resolve = server.build_slot_resolver(standings, events)
+    # B3 is already seeded, so its group must not be matched to the placeholder.
+    assert resolve("Third Place Group A/B/C/D/E") != "B3"
+
+
 def _make_standings():
     rows = []
     for letter in "ABCDEFGHIJKL":

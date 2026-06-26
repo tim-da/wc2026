@@ -1654,8 +1654,26 @@ def build_slot_resolver(
                 seen_labels.add(label)
                 third_slots.append((label, set(match.group(1).upper().split("/"))))
 
+    # Real teams ESPN has already placed into an R32 slot (only knockout slots,
+    # never group-stage fixtures, where every team appears).
+    seeded: set[str] = set()
+    for event in events or []:
+        if event.get("stageSlug") != "round-of-32":
+            continue
+        for side in ("home", "away"):
+            label = (event.get(side) or {}).get("team")
+            if label and not is_fixture_placeholder(label) and label in team_letter:
+                seeded.add(label)
+
+    # Don't match a third whose group is already seeded into a slot (else it would
+    # be placed twice, e.g. ESPN's seeded "Bosnia" plus a matched Group-B third).
+    qualifying = [
+        letter
+        for letter in qualifying_third_letters(ranking)
+        if len(ranking.get(letter, [])) < 3 or ranking[letter][2].get("team") not in seeded
+    ]
     third_team = {}
-    for label, letter in _assign_thirds(qualifying_third_letters(ranking), third_slots).items():
+    for label, letter in _assign_thirds(qualifying, third_slots).items():
         entries = ranking.get(letter, [])
         if len(entries) >= 3:
             third_team[label] = entries[2].get("team")
