@@ -498,9 +498,12 @@ def test_confirmed_teams_locks_settled_positions_only():
         ]},
     ]
     confirmed = server.confirmed_teams(standings)
-    # Whole finished group is locked, plus B's uncatchable leader.
-    assert {"A1", "A2", "A3", "A4", "B1"} <= confirmed
-    # B's lower teams can still swap, so their positions are not locked.
+    # Finished group: only the locked top two get a certain R32 berth.
+    assert "A1" in confirmed and "A2" in confirmed
+    # A locked 3rd/4th is NOT confirmed (3rd's advance depends on other groups).
+    assert "A3" not in confirmed and "A4" not in confirmed
+    # B's uncatchable leader is in; its still-contested chasers are not.
+    assert "B1" in confirmed
     assert "B2" not in confirmed and "B3" not in confirmed and "B4" not in confirmed
 
 

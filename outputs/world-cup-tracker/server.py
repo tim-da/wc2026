@@ -1925,42 +1925,48 @@ def fmt_bracket_pct(value: float | None) -> str:
 
 
 def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
-    """Teams whose final group position is already locked — it will not change
-    no matter how the remaining group games go. A team is locked when its order
-    against every rival is settled: either one side's current points already beat
-    the other's maximum possible points, or both teams have finished and a fixed
-    tiebreaker (points, goal difference, goals for) separates them."""
+    """Teams whose Round-of-32 berth is certain: their final group position is
+    already locked AND it is a top-2 finish. A position is locked when the order
+    against every rival is settled (one side's current points beat the other's
+    maximum, or both have finished and a fixed tiebreaker separates them). Note a
+    locked 3rd place is NOT enough — advancing as a best-third still depends on
+    other groups, so only guaranteed top-2 finishers qualify."""
 
     def remaining(entry: dict[str, Any]) -> int:
         return max(0, 3 - int(entry.get("gp") or 0))
 
-    locked: set[str] = set()
+    def key(entry: dict[str, Any]) -> tuple[float, float, float]:
+        return (entry.get("points") or 0, entry.get("gd") or 0, entry.get("gf") or 0)
+
+    confirmed: set[str] = set()
     for group in standings or []:
         entries = group.get("entries", [])
         for team in entries:
             t_pts = team.get("points") or 0
             t_max = t_pts + 3 * remaining(team)
             settled = True
+            above = 0  # rivals guaranteed to finish above this team
             for rival in entries:
                 if rival.get("team") == team.get("team"):
                     continue
                 r_pts = rival.get("points") or 0
                 r_max = r_pts + 3 * remaining(rival)
-                if t_pts > r_max or r_pts > t_max:
-                    continue  # one side can never be caught by the other
+                if t_pts > r_max:
+                    continue  # team can never be caught by this rival
+                if r_pts > t_max:
+                    above += 1  # rival can never be caught by the team
+                    continue
                 both_finished = remaining(team) == 0 and remaining(rival) == 0
-                separated = (t_pts, team.get("gd") or 0, team.get("gf") or 0) != (
-                    r_pts,
-                    rival.get("gd") or 0,
-                    rival.get("gf") or 0,
-                )
-                if both_finished and separated:
+                if both_finished and key(team) != key(rival):
+                    if key(rival) > key(team):
+                        above += 1
                     continue  # done and split by a tiebreaker that can no longer move
                 settled = False
                 break
-            if settled and team.get("team"):
-                locked.add(team["team"])
-    return locked
+            # Locked position AND guaranteed top 2 -> berth in the Round of 32 is certain.
+            if settled and above <= 1 and team.get("team"):
+                confirmed.add(team["team"])
+    return confirmed
 
 
 def render_bracket_svg(
