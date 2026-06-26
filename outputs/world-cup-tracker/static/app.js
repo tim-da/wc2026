@@ -1006,6 +1006,7 @@ function teamGames(data) {
     return rec;
   };
   (data.teams || []).forEach((t) => ensure(t.team, t.displayName, t.logo, t.group));
+  const confirmed = confirmedTeams(data);
   const matches = [...(data.matches || [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
   matches.forEach((match) => {
     const completed = !!(match.status && match.status.completed);
@@ -1014,11 +1015,14 @@ function teamGames(data) {
       // Only real, qualified teams are seeded; skip knockout placeholders ("Group A Winner", etc.).
       const rec = byTeam.get(side.team);
       if (!rec) return;
-      // Skip not-yet-played knockout fixtures: ESPN seeds projected matchups
-      // (e.g. USA vs Bosnia) that are not certain, so they must not show as
-      // scheduled games. Group games (match.group set) are certain; completed
-      // knockout results still count.
-      if (!completed && !match.group) return;
+      // Not-yet-played knockout fixtures are projections (ESPN seeds them), so
+      // only show one when BOTH teams are confirmed into it — e.g. South Africa
+      // vs Canada (two locked runners-up). Skip uncertain ones like USA vs
+      // Bosnia. Group games are always certain; completed KO results still count.
+      if (!completed && !match.group &&
+          !(confirmed.has(match.home?.team) && confirmed.has(match.away?.team))) {
+        return;
+      }
       let result = "scheduled";
       if (completed) {
         if (side.winner) result = "win";
@@ -1069,6 +1073,41 @@ function eliminatedTeams(data) {
     });
   });
   return out;
+}
+
+// Teams whose final group position is locked AND top-2 — their R32 berth is
+// certain. Mirrors the server's confirmed_teams (used for the bracket highlight).
+function confirmedTeams(data) {
+  const remaining = (e) => Math.max(0, 3 - (Number(e.gp) || 0));
+  const key = (e) => [Number(e.points) || 0, Number(e.gd) || 0, Number(e.gf) || 0];
+  const cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]; // > 0 when a ranks above b
+  const byGroup = {};
+  (data.teams || []).forEach((t) => { (byGroup[t.group] = byGroup[t.group] || []).push(t); });
+  const confirmed = new Set();
+  Object.values(byGroup).forEach((entries) => {
+    entries.forEach((team) => {
+      const tPts = Number(team.points) || 0;
+      const tMax = tPts + 3 * remaining(team);
+      let settled = true;
+      let above = 0;
+      for (const rival of entries) {
+        if (rival.team === team.team) continue;
+        const rPts = Number(rival.points) || 0;
+        if (tPts > rPts + 3 * remaining(rival)) continue;
+        if (rPts > tMax) { above += 1; continue; }
+        const bothFinished = remaining(team) === 0 && remaining(rival) === 0;
+        const diff = cmp(key(rival), key(team));
+        if (bothFinished && diff !== 0) {
+          if (diff > 0) above += 1;
+          continue;
+        }
+        settled = false;
+        break;
+      }
+      if (settled && above <= 1) confirmed.add(team.team);
+    });
+  });
+  return confirmed;
 }
 
 function renderTeamsOverall(data) {
