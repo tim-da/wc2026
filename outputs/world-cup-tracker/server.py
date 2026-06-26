@@ -1994,7 +1994,7 @@ def render_bracket_svg(
         rows = sorted(odds.values(), key=lambda item: item.get("mid") or 0, reverse=True)[:8]
         return "  |  ".join(f"{svg_team_label(row['team'])} {fmt_bracket_pct(row.get('midPct'))}" for row in rows)
 
-    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False) -> str:
+    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, entry_round: bool = False) -> str:
         team_a, team_b = match["teams"]
         winner = match["winner"]
         source = match.get("source")
@@ -2005,8 +2005,10 @@ def render_bracket_svg(
             row_y = y + 20 + idx * 25
             is_winner = team == winner
             changed_class = " changedEntry" if f"{slot_prefix}-{idx}" in changed_slots else ""
-            if team in confirmed:
+            if entry_round and team in confirmed:
                 # Light-green band: this team's final group position is locked.
+                # Only the Round of 32 entry boxes are confirmed; later rounds
+                # are projections, so they never get the highlight.
                 band_y = y + idx * (box_h / 2)
                 rows.append(
                     f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="#dcf5e4" />'
@@ -2083,10 +2085,10 @@ def render_bracket_svg(
 
     for round_idx, matches in enumerate(projection["rounds"]["left"]):
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}"))
+            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", entry_round=round_idx == 0))
     for round_idx, matches in enumerate(projection["rounds"]["right"]):
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}"))
+            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", entry_round=round_idx == 0))
 
     champion_class = "champion changedEntry" if baseline_champion and projection["champion"] != baseline_champion else "champion"
     svg_parts.append(f'<text x="{final_x + box_w / 2}" y="{final_y - 18}" class="{champion_class}">Champion: {escape(svg_team_label(projection["champion"]))}</text>')
