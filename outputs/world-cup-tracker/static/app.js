@@ -1047,30 +1047,37 @@ function teamGames(data) {
   return list;
 }
 
-// A team is definitively out only when it can no longer finish in the top 3 of
-// its group — 4th place never qualifies, not even as a best-third. (ESPN's
-// "Eliminated" note just marks the current last place, which is not the same.)
+// A team is definitively out when it can no longer reach the Round of 32: it
+// can't finish in the top 3 of its group, or it has finished 3rd but at least 8
+// other thirds are guaranteed to outrank it (out of the best-8 berths).
 function eliminatedTeams(data) {
-  const teams = data.teams || [];
-  const remaining = {};
-  teams.forEach((t) => { remaining[t.team] = 0; });
-  (data.matches || []).forEach((match) => {
-    if (!match.group) return; // group-stage games only
-    if (match.status && match.status.completed) return;
-    [match.home, match.away].forEach((side) => {
-      if (side && side.team && remaining[side.team] != null) remaining[side.team] += 1;
-    });
-  });
+  const remaining = (e) => Math.max(0, 3 - (Number(e.gp) || 0));
+  const key = (e) => [Number(e.points) || 0, Number(e.gd) || 0, Number(e.gf) || 0];
+  const cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]; // > 0 when a ranks above b
   const byGroup = {};
-  teams.forEach((t) => { (byGroup[t.group] = byGroup[t.group] || []).push(t); });
+  (data.teams || []).forEach((t) => { (byGroup[t.group] = byGroup[t.group] || []).push(t); });
   const out = new Set();
-  Object.values(byGroup).forEach((group) => {
-    group.forEach((team) => {
-      const maxPoints = (team.points || 0) + 3 * (remaining[team.team] || 0);
-      // Rivals already guaranteed to finish above this team (more points than it can ever reach).
-      const lockedAbove = group.filter((o) => o.team !== team.team && (o.points || 0) > maxPoints).length;
-      if (lockedAbove >= 3) out.add(team.team);
+  const thirds = []; // finished groups' third-placed teams
+  Object.values(byGroup).forEach((entries) => {
+    entries.forEach((team) => {
+      const tMax = (Number(team.points) || 0) + 3 * remaining(team);
+      let guaranteedAbove = 0;
+      for (const rival of entries) {
+        if (rival.team === team.team) continue;
+        if ((Number(rival.points) || 0) > tMax) { guaranteedAbove += 1; continue; }
+        const bothFinished = remaining(team) === 0 && remaining(rival) === 0;
+        if (bothFinished && cmp(key(rival), key(team)) > 0) guaranteedAbove += 1;
+      }
+      if (guaranteedAbove >= 3) out.add(team.team); // can't reach the top 3 -> out
     });
+    if (entries.every((e) => remaining(e) === 0)) {
+      const ranked = [...entries].sort((a, b) => cmp(key(b), key(a)));
+      if (ranked.length >= 3) thirds.push({ team: ranked[2].team, key: key(ranked[2]) });
+    }
+  });
+  // A finished group's third is out once at least 8 other finished thirds outrank it.
+  thirds.forEach((t) => {
+    if (thirds.filter((o) => o !== t && cmp(o.key, t.key) > 0).length >= 8) out.add(t.team);
   });
   return out;
 }
