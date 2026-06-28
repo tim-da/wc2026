@@ -497,28 +497,50 @@ def test_qualifying_thirds_keeps_best_eight_only():
     assert "I" not in qualifying and "L" not in qualifying
 
 
-def test_confirmed_teams_locks_settled_positions_only():
+def test_confirmed_teams_locks_top_two_and_best_eight_thirds():
+    # 9 finished groups; thirds get descending GD so group I's third is 9th (out).
+    groups = []
+    for index, letter in enumerate("ABCDEFGHI"):
+        groups.append({
+            "name": f"Group {letter}",
+            "entries": [
+                {"team": f"{letter}1", "points": 9, "gp": 3, "gd": 5, "gf": 0},
+                {"team": f"{letter}2", "points": 6, "gp": 3, "gd": 2, "gf": 0},
+                {"team": f"{letter}3", "points": 3, "gp": 3, "gd": 9 - index, "gf": 0},
+                {"team": f"{letter}4", "points": 0, "gp": 3, "gd": -9, "gf": 0},
+            ],
+        })
+    confirmed = server.confirmed_teams(groups)
+    # Every finished group's top two is a locked berth.
+    for letter in "ABCDEFGHI":
+        assert f"{letter}1" in confirmed and f"{letter}2" in confirmed
+    # The best 8 thirds (A..H) are confirmed; the 9th-best (I3) is not.
+    for letter in "ABCDEFGH":
+        assert f"{letter}3" in confirmed
+    assert "I3" not in confirmed
+    # 4th places never qualify.
+    assert all(f"{letter}4" not in confirmed for letter in "ABCDEFGHI")
+
+
+def test_confirmed_teams_excludes_unsettled_positions():
     standings = [
-        {"name": "Group A", "entries": [  # finished: every position fixed (incl. a GD-split tie)
+        {"name": "Group A", "entries": [  # finished -> top two locked
             {"team": "A1", "points": 9, "gp": 3, "gd": 5, "gf": 7},
             {"team": "A2", "points": 4, "gp": 3, "gd": 2, "gf": 4},
-            {"team": "A3", "points": 4, "gp": 3, "gd": -1, "gf": 2},
+            {"team": "A3", "points": 1, "gp": 3, "gd": -3, "gf": 2},
             {"team": "A4", "points": 0, "gp": 3, "gd": -6, "gf": 0},
         ]},
         {"name": "Group B", "entries": [  # one game left
-            {"team": "B1", "points": 9, "gp": 2},  # uncatchable leader -> 1st locked
-            {"team": "B2", "points": 3, "gp": 2},  # 2nd/3rd/4th all still open
+            {"team": "B1", "points": 9, "gp": 2},  # uncatchable leader -> locked
+            {"team": "B2", "points": 3, "gp": 2},  # 2nd/3rd still open
             {"team": "B3", "points": 3, "gp": 2},
             {"team": "B4", "points": 3, "gp": 2},
         ]},
     ]
     confirmed = server.confirmed_teams(standings)
-    # Finished group: only the locked top two get a certain R32 berth.
     assert "A1" in confirmed and "A2" in confirmed
-    # A locked 3rd/4th is NOT confirmed (3rd's advance depends on other groups).
-    assert "A3" not in confirmed and "A4" not in confirmed
-    # B's uncatchable leader is in; its still-contested chasers are not.
     assert "B1" in confirmed
+    # B's chasers and B's (unsettled) third are not confirmed.
     assert "B2" not in confirmed and "B3" not in confirmed and "B4" not in confirmed
 
 
