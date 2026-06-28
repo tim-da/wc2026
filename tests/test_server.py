@@ -544,9 +544,7 @@ def test_confirmed_teams_excludes_unsettled_positions():
     assert "B2" not in confirmed and "B3" not in confirmed and "B4" not in confirmed
 
 
-def test_bracket_greens_actual_winner_in_next_round():
-    # A completed R32 win makes that team certainly present in the R16 -> green
-    # band, even with no confirmed group qualifiers.
+def _r32_win_svg(winner, canada_mid, france_mid):
     from datetime import datetime, timezone
 
     event = {
@@ -554,20 +552,33 @@ def test_bracket_greens_actual_winner_in_next_round():
         "date": "2026-06-28T19:00:00Z",
         "stageSlug": "round-of-32",
         "status": {"completed": True},
-        "winner": "Canada",
+        "winner": winner,
         "home": {"team": "Canada"},
         "away": {"team": "France"},
     }
     odds = {
-        "Canada": {"team": "Canada", "mid": 0.1, "midPct": 10.0},
-        "France": {"team": "France", "mid": 0.9, "midPct": 90.0},
+        "Canada": {"team": "Canada", "mid": canada_mid, "midPct": canada_mid * 100},
+        "France": {"team": "France", "mid": france_mid, "midPct": france_mid * 100},
     }
     projection = server.build_fact_projection(odds, server.actual_winners_by_pair([event]), [event])
-    svg = server.render_bracket_svg(
+    return server.render_bracket_svg(
         projection, odds, ["t"], datetime(2026, 7, 1, tzinfo=timezone.utc), set(), None, set()
     )
-    # confirmed is empty, so the only green band can come from Canada's real R16 advance.
+
+
+def test_bracket_greens_expected_winner_in_next_round():
+    # Favourite Canada wins -> green band in the R16, no orange. confirmed empty,
+    # so any band must come from the real advancement.
+    svg = _r32_win_svg("Canada", canada_mid=0.9, france_mid=0.1)
     assert "#dcf5e4" in svg
+    assert "#ffd9a8" not in svg
+
+
+def test_bracket_marks_upset_winner_orange():
+    # Underdog Canada beats favourite France -> light-orange band, not green.
+    svg = _r32_win_svg("Canada", canada_mid=0.1, france_mid=0.9)
+    assert "#ffd9a8" in svg
+    assert "#dcf5e4" not in svg
 
 
 def test_projection_only_includes_currently_qualifying_teams():
