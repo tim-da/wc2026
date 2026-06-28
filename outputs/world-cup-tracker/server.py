@@ -2040,8 +2040,9 @@ def render_bracket_svg(
         rows = sorted(odds.values(), key=lambda item: item.get("mid") or 0, reverse=True)[:8]
         return "  |  ".join(f"{svg_team_label(row['team'])} {fmt_bracket_pct(row.get('midPct'))}" for row in rows)
 
-    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None) -> str:
+    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None, upset: set[str] | None = None) -> str:
         certain = certain or set()
+        upset = upset or set()
         team_a, team_b = match["teams"]
         winner = match["winner"]
         source = match.get("source")
@@ -2052,14 +2053,16 @@ def render_bracket_svg(
             row_y = y + 20 + idx * 25
             is_winner = team == winner
             changed_class = " changedEntry" if f"{slot_prefix}-{idx}" in changed_slots else ""
-            if team in certain:
-                # Light-green band: this team's presence in this box is certain —
-                # a locked group qualifier in the Round of 32, or a team that has
-                # actually won its way into a later round. Projected (not-yet-
-                # played) advancements stay uncoloured.
+            # Band: this team's presence here is certain — a locked group qualifier
+            # (R32) or a team that actually won its way into a later round. Green
+            # when the result went as predicted, light orange when it was an upset
+            # (the actual winner was not the market favourite). Projected
+            # (not-yet-played) advancements stay uncoloured.
+            band_fill = "#ffd9a8" if team in upset else "#dcf5e4" if team in certain else None
+            if band_fill:
                 band_y = y + idx * (box_h / 2)
                 rows.append(
-                    f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="#dcf5e4" />'
+                    f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="{band_fill}" />'
                 )
             rows.append(
                 f'<text x="{x + 8}" y="{row_y}" class="team {"winner" if is_winner else "loser"}{changed_class}">{escape(svg_team_label(team))}</text>'
@@ -2139,21 +2142,39 @@ def render_bracket_svg(
     def fact_losers(matches: list[dict[str, Any]]) -> set[str]:
         return {m["loser"] for m in matches if m.get("source") == "actual" and m.get("loser")}
 
+    def market_favourite(match: dict[str, Any]) -> str | None:
+        team_a, team_b = match["teams"]
+        value_a = odds.get(team_a, {}).get("mid") or 0
+        value_b = odds.get(team_b, {}).get("mid") or 0
+        return team_a if value_a >= value_b else team_b
+
+    def fact_upsets(matches: list[dict[str, Any]]) -> set[str]:
+        # Actual winners that were not the market favourite of their match.
+        return {
+            m["winner"]
+            for m in matches
+            if m.get("source") == "actual" and m.get("winner") and m["winner"] != market_favourite(m)
+        }
+
     left_rounds = projection["rounds"]["left"]
     right_rounds = projection["rounds"]["right"]
     for round_idx, matches in enumerate(left_rounds):
-        certain = confirmed if round_idx == 0 else fact_winners(left_rounds[round_idx - 1])
+        prev = left_rounds[round_idx - 1] if round_idx else []
+        certain = confirmed if round_idx == 0 else fact_winners(prev)
+        upset = fact_upsets(prev)
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", certain=certain))
+            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", certain=certain, upset=upset))
     for round_idx, matches in enumerate(right_rounds):
-        certain = confirmed if round_idx == 0 else fact_winners(right_rounds[round_idx - 1])
+        prev = right_rounds[round_idx - 1] if round_idx else []
+        certain = confirmed if round_idx == 0 else fact_winners(prev)
+        upset = fact_upsets(prev)
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", certain=certain))
+            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", certain=certain, upset=upset))
     semifinals = [left_rounds[3][0], right_rounds[3][0]]
 
     champion_class = "champion changedEntry" if baseline_champion and projection["champion"] != baseline_champion else "champion"
     svg_parts.append(f'<text x="{final_x + box_w / 2}" y="{final_y - 18}" class="{champion_class}">Champion: {escape(svg_team_label(projection["champion"]))}</text>')
-    svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True, certain=fact_winners(semifinals)))
+    svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True, certain=fact_winners(semifinals), upset=fact_upsets(semifinals)))
     svg_parts.append(f'<text x="{third_x + box_w / 2}" y="{third_y - 18}" class="round" text-anchor="middle">Third-place play-off</text>')
     svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third", certain=fact_losers(semifinals)))
     svg_parts.append(f'<text x="800" y="763" class="small" text-anchor="middle">Top consensus: {escape(top_consensus())}</text>')
