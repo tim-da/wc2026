@@ -544,6 +544,32 @@ def test_confirmed_teams_excludes_unsettled_positions():
     assert "B2" not in confirmed and "B3" not in confirmed and "B4" not in confirmed
 
 
+def test_bracket_greens_actual_winner_in_next_round():
+    # A completed R32 win makes that team certainly present in the R16 -> green
+    # band, even with no confirmed group qualifiers.
+    from datetime import datetime, timezone
+
+    event = {
+        "id": "r32-1",
+        "date": "2026-06-28T19:00:00Z",
+        "stageSlug": "round-of-32",
+        "status": {"completed": True},
+        "winner": "Canada",
+        "home": {"team": "Canada"},
+        "away": {"team": "France"},
+    }
+    odds = {
+        "Canada": {"team": "Canada", "mid": 0.1, "midPct": 10.0},
+        "France": {"team": "France", "mid": 0.9, "midPct": 90.0},
+    }
+    projection = server.build_fact_projection(odds, server.actual_winners_by_pair([event]), [event])
+    svg = server.render_bracket_svg(
+        projection, odds, ["t"], datetime(2026, 7, 1, tzinfo=timezone.utc), set(), None, set()
+    )
+    # confirmed is empty, so the only green band can come from Canada's real R16 advance.
+    assert "#dcf5e4" in svg
+
+
 def test_projection_only_includes_currently_qualifying_teams():
     # 12 group-stage R32 slot labels (2nd places + thirds) plus winners; the
     # bracket must contain only group winners, runners-up and the best 8 thirds.
