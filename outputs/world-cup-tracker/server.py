@@ -2040,7 +2040,8 @@ def render_bracket_svg(
         rows = sorted(odds.values(), key=lambda item: item.get("mid") or 0, reverse=True)[:8]
         return "  |  ".join(f"{svg_team_label(row['team'])} {fmt_bracket_pct(row.get('midPct'))}" for row in rows)
 
-    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, entry_round: bool = False) -> str:
+    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None) -> str:
+        certain = certain or set()
         team_a, team_b = match["teams"]
         winner = match["winner"]
         source = match.get("source")
@@ -2051,10 +2052,11 @@ def render_bracket_svg(
             row_y = y + 20 + idx * 25
             is_winner = team == winner
             changed_class = " changedEntry" if f"{slot_prefix}-{idx}" in changed_slots else ""
-            if entry_round and team in confirmed:
-                # Light-green band: this team's final group position is locked.
-                # Only the Round of 32 entry boxes are confirmed; later rounds
-                # are projections, so they never get the highlight.
+            if team in certain:
+                # Light-green band: this team's presence in this box is certain —
+                # a locked group qualifier in the Round of 32, or a team that has
+                # actually won its way into a later round. Projected (not-yet-
+                # played) advancements stay uncoloured.
                 band_y = y + idx * (box_h / 2)
                 rows.append(
                     f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="#dcf5e4" />'
@@ -2129,18 +2131,31 @@ def render_bracket_svg(
     svg_parts.append(f'<path d="M{left_x[3] + box_w},{round_ys[3][0] + box_h / 2} H{final_x}" class="connector" />')
     svg_parts.append(f'<path d="M{right_x[3]},{round_ys[3][0] + box_h / 2} H{final_x + box_w}" class="connector" />')
 
-    for round_idx, matches in enumerate(projection["rounds"]["left"]):
+    # A team is certainly in a box if it qualified (R32) or actually won the
+    # previous round; projected advancements are not.
+    def fact_winners(matches: list[dict[str, Any]]) -> set[str]:
+        return {m["winner"] for m in matches if m.get("source") == "actual" and m.get("winner")}
+
+    def fact_losers(matches: list[dict[str, Any]]) -> set[str]:
+        return {m["loser"] for m in matches if m.get("source") == "actual" and m.get("loser")}
+
+    left_rounds = projection["rounds"]["left"]
+    right_rounds = projection["rounds"]["right"]
+    for round_idx, matches in enumerate(left_rounds):
+        certain = confirmed if round_idx == 0 else fact_winners(left_rounds[round_idx - 1])
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", entry_round=round_idx == 0))
-    for round_idx, matches in enumerate(projection["rounds"]["right"]):
+            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", certain=certain))
+    for round_idx, matches in enumerate(right_rounds):
+        certain = confirmed if round_idx == 0 else fact_winners(right_rounds[round_idx - 1])
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", entry_round=round_idx == 0))
+            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", certain=certain))
+    semifinals = [left_rounds[3][0], right_rounds[3][0]]
 
     champion_class = "champion changedEntry" if baseline_champion and projection["champion"] != baseline_champion else "champion"
     svg_parts.append(f'<text x="{final_x + box_w / 2}" y="{final_y - 18}" class="{champion_class}">Champion: {escape(svg_team_label(projection["champion"]))}</text>')
-    svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True))
+    svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True, certain=fact_winners(semifinals)))
     svg_parts.append(f'<text x="{third_x + box_w / 2}" y="{third_y - 18}" class="round" text-anchor="middle">Third-place play-off</text>')
-    svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third"))
+    svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third", certain=fact_losers(semifinals)))
     svg_parts.append(f'<text x="800" y="763" class="small" text-anchor="middle">Top consensus: {escape(top_consensus())}</text>')
     svg_parts.append(
         f'<text x="28" y="815" class="foot">Sources: {escape(" / ".join(sources))}; ESPN scoreboard facts. Bracket order follows supplied reference image.</text>'
