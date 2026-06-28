@@ -1075,8 +1075,8 @@ function eliminatedTeams(data) {
   return out;
 }
 
-// Teams whose final group position is locked AND top-2 — their R32 berth is
-// certain. Mirrors the server's confirmed_teams (used for the bracket highlight).
+// Teams whose R32 berth is certain — a locked top-2 group finish, or a third
+// place already guaranteed in the best 8. Mirrors the server's confirmed_teams.
 function confirmedTeams(data) {
   const remaining = (e) => Math.max(0, 3 - (Number(e.gp) || 0));
   const key = (e) => [Number(e.points) || 0, Number(e.gd) || 0, Number(e.gf) || 0];
@@ -1084,7 +1084,11 @@ function confirmedTeams(data) {
   const byGroup = {};
   (data.teams || []).forEach((t) => { (byGroup[t.group] = byGroup[t.group] || []).push(t); });
   const confirmed = new Set();
+  const thirds = []; // { team, key, done } per group
   Object.values(byGroup).forEach((entries) => {
+    const ranked = [...entries].sort((a, b) => cmp(key(b), key(a)));
+    const done = entries.every((e) => remaining(e) === 0);
+    if (ranked.length >= 3) thirds.push({ team: ranked[2].team, key: key(ranked[2]), done });
     entries.forEach((team) => {
       const tPts = Number(team.points) || 0;
       const tMax = tPts + 3 * remaining(team);
@@ -1106,6 +1110,15 @@ function confirmedTeams(data) {
       }
       if (settled && above <= 1) confirmed.add(team.team);
     });
+  });
+  // Best-8 thirds: a finished group's third is in once at most 7 other thirds
+  // can possibly outrank it (unfinished groups' thirds count as "could be above").
+  thirds.forEach((t) => {
+    if (!t.done || !t.team) return;
+    const couldOutrank = thirds.filter(
+      (o) => o !== t && (!o.done || cmp(o.key, t.key) > 0)
+    ).length;
+    if (couldOutrank <= 7) confirmed.add(t.team);
   });
   return confirmed;
 }

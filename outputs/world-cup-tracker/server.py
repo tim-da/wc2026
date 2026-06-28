@@ -1943,12 +1943,12 @@ def fmt_bracket_pct(value: float | None) -> str:
 
 
 def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
-    """Teams whose Round-of-32 berth is certain: their final group position is
-    already locked AND it is a top-2 finish. A position is locked when the order
-    against every rival is settled (one side's current points beat the other's
-    maximum, or both have finished and a fixed tiebreaker separates them). Note a
-    locked 3rd place is NOT enough — advancing as a best-third still depends on
-    other groups, so only guaranteed top-2 finishers qualify."""
+    """Teams whose Round-of-32 berth is certain — either a locked top-2 group
+    finish, or a third place already guaranteed to be among the best 8. A group
+    position is locked when the order against every rival is settled (one side's
+    current points beat the other's maximum, or both have finished and a fixed
+    tiebreaker separates them). A third place is guaranteed when its group is
+    finished and at most 7 other thirds can possibly rank above it."""
 
     def remaining(entry: dict[str, Any]) -> int:
         return max(0, 3 - int(entry.get("gp") or 0))
@@ -1957,8 +1957,16 @@ def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
         return (entry.get("points") or 0, entry.get("gd") or 0, entry.get("gf") or 0)
 
     confirmed: set[str] = set()
+    thirds: dict[str, dict[str, Any]] = {}  # group letter -> third-placed entry
+    group_done: dict[str, bool] = {}
     for group in standings or []:
         entries = group.get("entries", [])
+        letter = _group_letter(group.get("name"))
+        ranked = sorted(entries, key=key, reverse=True)
+        if letter:
+            group_done[letter] = all(remaining(e) == 0 for e in entries)
+            if len(ranked) >= 3:
+                thirds[letter] = ranked[2]
         for team in entries:
             t_pts = team.get("points") or 0
             t_max = t_pts + 3 * remaining(team)
@@ -1984,6 +1992,20 @@ def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
             # Locked position AND guaranteed top 2 -> berth in the Round of 32 is certain.
             if settled and above <= 1 and team.get("team"):
                 confirmed.add(team["team"])
+
+    # Best-8 third places: a finished group's third is in once at most 7 other
+    # thirds can outrank it (unfinished groups' thirds count as "could be above").
+    for letter, third in thirds.items():
+        if not group_done.get(letter) or not third.get("team"):
+            continue
+        could_outrank = 0
+        for other_letter, other_third in thirds.items():
+            if other_letter == letter:
+                continue
+            if not group_done.get(other_letter) or key(other_third) > key(third):
+                could_outrank += 1
+        if could_outrank <= 7:
+            confirmed.add(third["team"])
     return confirmed
 
 
