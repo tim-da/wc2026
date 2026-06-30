@@ -1173,6 +1173,7 @@ def fetch_scoreboard() -> list[dict[str, Any]]:
                 "abbreviation": team.get("abbreviation"),
                 "logo": team.get("logo") or (team.get("logos") or [{}])[0].get("href"),
                 "score": as_float(competitor.get("score")),
+                "shootoutScore": as_float(competitor.get("shootoutScore")),
                 "winner": bool(competitor.get("winner")),
             }
 
