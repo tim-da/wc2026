@@ -2017,9 +2017,14 @@ def render_bracket_svg(
     changed_slots: set[str] | None = None,
     baseline_champion: str | None = None,
     confirmed: set[str] | None = None,
+    favourite_odds: dict[str, Any] | None = None,
 ) -> str:
     changed_slots = changed_slots or set()
     confirmed = confirmed or set()
+    # Upset detection compares the actual winner to the pre-game favourite. Use
+    # the baseline odds when available — current outright odds collapse to ~0 for
+    # the team that just lost, which would make every winner look favoured.
+    favourite_odds = favourite_odds or odds
     width, height = 1600, 900
     box_w, box_h = 132, 54
     left_x = [68, 214, 360, 506]
@@ -2144,8 +2149,8 @@ def render_bracket_svg(
 
     def market_favourite(match: dict[str, Any]) -> str | None:
         team_a, team_b = match["teams"]
-        value_a = odds.get(team_a, {}).get("mid") or 0
-        value_b = odds.get(team_b, {}).get("mid") or 0
+        value_a = (favourite_odds.get(team_a, {}) or {}).get("mid") or 0
+        value_b = (favourite_odds.get(team_b, {}) or {}).get("mid") or 0
         return team_a if value_a >= value_b else team_b
 
     def fact_upsets(matches: list[dict[str, Any]]) -> set[str]:
@@ -2225,6 +2230,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             changed_projection_slots(projection, initial_projection, odds, initial_odds),
             initial_projection.get("champion") if initial_projection else None,
             confirmed_teams(standings),
+            initial_odds,
         )
     if mark_generated:
         write_latest_bracket_generation(payload)
