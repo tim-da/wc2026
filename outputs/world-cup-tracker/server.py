@@ -161,13 +161,13 @@ KNOCKOUT_STAGE_SLUGS = {
 # official slots into the left/right trees used by the supplied bracket image.
 KNOCKOUT_EVENT_NUMBERS = {
     "left": {
-        "round-of-32": [1, 3, 2, 5, 11, 12, 9, 10],
+        "round-of-32": [1, 4, 3, 5, 11, 12, 9, 10],
         "round-of-16": [1, 2, 5, 6],
         "quarterfinals": [1, 2],
         "semifinals": [1],
     },
     "right": {
-        "round-of-32": [4, 6, 7, 8, 14, 16, 13, 15],
+        "round-of-32": [2, 6, 7, 8, 14, 16, 13, 15],
         "round-of-16": [3, 4, 7, 8],
         "quarterfinals": [3, 4],
         "semifinals": [2],
