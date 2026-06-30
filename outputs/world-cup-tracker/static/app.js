@@ -36,6 +36,13 @@ function fmtScore(value) {
   return value == null ? "-" : String(Number(value));
 }
 
+// Score for one side, with the penalty-shootout score in parentheses when a
+// knockout match was decided on penalties, e.g. "1 (4)".
+function fmtSideScore(side) {
+  const base = fmtScore(side?.score);
+  return side && side.shootoutScore != null ? `${base} (${Number(side.shootoutScore)})` : base;
+}
+
 function fmtDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("en", {
@@ -725,11 +732,11 @@ function matchCardHtml(match) {
           </div>
           <div class="teamLine">
             <span class="teamName">${escapeHtml(match.home.displayName || match.home.team)}</span>
-            <span class="score">${fmtScore(match.home.score)}</span>
+            <span class="score">${fmtSideScore(match.home)}</span>
           </div>
           <div class="teamLine">
             <span class="teamName">${escapeHtml(match.away.displayName || match.away.team)}</span>
-            <span class="score">${fmtScore(match.away.score)}</span>
+            <span class="score">${fmtSideScore(match.away)}</span>
           </div>
           ${predictionGroup(
             "PM locked",
