@@ -566,6 +566,76 @@ def _r32_win_svg(winner, canada_mid, france_mid):
     )
 
 
+def _full_knockout_events():
+    """A complete synthetic knockout with ESPN-style references where FIFA match
+    numbering deviates from date order (the live 'Belgium vs Belgium' setup):
+    date-#9's winner (T17) is seeded as a real team while its opponent slot
+    references 'Round of 32 9 Winner' — which is NOT T17's own match."""
+    events = []
+    day = 0
+    for i in range(16):  # R32, date order d1..d16 with teams (T1,T2)..(T31,T32)
+        home, away = f"T{2 * i + 1}", f"T{2 * i + 2}"
+        completed = i == 8  # date-#9 (T17 vs T18) is finished
+        events.append({
+            "id": f"r32-{i + 1}",
+            "date": f"2026-06-{28 + (day := i // 4):02d}T{10 + (i % 4) * 3:02d}:00:00Z",
+            "stageSlug": "round-of-32",
+            "status": {"completed": completed},
+            "winner": "T17" if completed else None,
+            "home": {"team": home, "winner": completed},
+            "away": {"team": away, "winner": False},
+        })
+    r16_slots = [("1", "2"), ("3", "4"), ("5", "6"), ("7", "8"), ("11", "12"), ("9", "T17"), ("13", "14"), ("15", "16")]
+    for i, (home, away) in enumerate(r16_slots):
+        label = lambda n: f"Round of 32 {n} Winner"
+        events.append({
+            "id": f"r16-{i + 1}",
+            "date": f"2026-07-{4 + i // 4:02d}T{10 + (i % 4) * 3:02d}:00:00Z",
+            "stageSlug": "round-of-16",
+            "status": {"completed": False},
+            "home": {"team": home if home == "T17" else label(home)},
+            "away": {"team": away if away == "T17" else label(away)},
+        })
+    for i in range(4):
+        events.append({
+            "id": f"qf-{i + 1}", "date": f"2026-07-09T{10 + i * 3:02d}:00:00Z", "stageSlug": "quarterfinals",
+            "status": {"completed": False},
+            "home": {"team": f"Round of 16 {2 * i + 1} Winner"}, "away": {"team": f"Round of 16 {2 * i + 2} Winner"},
+        })
+    for i in range(2):
+        events.append({
+            "id": f"sf-{i + 1}", "date": f"2026-07-14T{10 + i * 3:02d}:00:00Z", "stageSlug": "semifinals",
+            "status": {"completed": False},
+            "home": {"team": f"Quarterfinal {2 * i + 1} Winner"}, "away": {"team": f"Quarterfinal {2 * i + 2} Winner"},
+        })
+    events.append({
+        "id": "final", "date": "2026-07-19T15:00:00Z", "stageSlug": "final", "status": {"completed": False},
+        "home": {"team": "Semifinal 1 Winner"}, "away": {"team": "Semifinal 2 Winner"},
+    })
+    events.append({
+        "id": "third", "date": "2026-07-18T15:00:00Z", "stageSlug": "3rd-place-match", "status": {"completed": False},
+        "home": {"team": "Semifinal 1 Loser"}, "away": {"team": "Semifinal 2 Loser"},
+    })
+    return events
+
+
+def test_derived_tree_never_self_matches_seeded_winner():
+    events = _full_knockout_events()
+    odds = {f"T{n}": {"mid": (64 - n) / 100} for n in range(1, 33)}  # lower n = stronger
+    projection = server.build_fact_projection(odds, {}, events)
+    rounds = projection["rounds"]["left"] + projection["rounds"]["right"]
+    all_matches = [m for side in (projection["rounds"]["left"], projection["rounds"]["right"]) for rnd in side for m in rnd]
+    # no self-matches anywhere
+    assert all(m["teams"][0] != m["teams"][1] for m in all_matches), [m["teams"] for m in all_matches]
+    # every R32 winner appears exactly once in the R16
+    r16_teams = [t for side in ("left", "right") for m in projection["rounds"][side][1] for t in m["teams"]]
+    assert len(r16_teams) == len(set(r16_teams)) == 16
+    # T17 (real seed) is paired with the winner of 'Round of 32 9' = date-#10 (T19/T20)
+    t17_match = next(m for m in all_matches if m["stageSlug"] == "round-of-16" and "T17" in m["teams"])
+    partner = next(t for t in t17_match["teams"] if t != "T17")
+    assert partner in {"T19", "T20"}, t17_match["teams"]
+
+
 def test_bracket_greens_expected_winner_in_next_round():
     # Favourite Canada wins -> green band in the R16, no orange. confirmed empty,
     # so any band must come from the real advancement.
