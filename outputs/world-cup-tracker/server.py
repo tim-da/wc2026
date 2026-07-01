@@ -2391,9 +2391,13 @@ def check_goals():
             changed.append(cur)
 
     # New-favorite: diff the consensus title-odds leader against the stored one.
+    # Skip when either market fell back to baseline odds — a transient live-market
+    # outage would otherwise flip the leader and fire a spurious "new favorite"
+    # (and flip back on the next run).
     try:
-        odds, _ = current_consensus_odds()
-        leader = top_leader(odds)
+        odds, odds_sources = current_consensus_odds()
+        fully_live = odds and not any("baseline" in source for source in odds_sources)
+        leader = top_leader(odds) if fully_live else None
         favorite = leader["team"] if leader else None
         if favorite:
             previous_favorite = supabase_get_app_state("favorite")

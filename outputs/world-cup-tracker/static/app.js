@@ -586,6 +586,10 @@ function showToast(notification) {
 }
 
 function favoriteTeam(snapshot) {
+  // Only trust the favorite when both markets are live — a baseline fallback for
+  // either can flip the leader and fire a spurious "new favorite".
+  const sources = snapshot?.currentOddsSources;
+  if (!sources || sources.polymarket !== "live" || sources.kalshi !== "live") return null;
   return snapshot?.odds?.consensus?.[0]?.team || null;
 }
 

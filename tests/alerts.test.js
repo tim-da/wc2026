@@ -142,27 +142,45 @@ test("final score: fires when a match completes", () => {
 });
 
 // ---- Alert 4: new favorite ----
-test("favoriteTeam: reads the top consensus team, null when absent", () => {
-  assert.equal(app.favoriteTeam({ odds: { consensus: [{ team: "Spain" }, { team: "France" }] } }), "Spain");
-  assert.equal(app.favoriteTeam({ odds: { consensus: [] } }), null);
+const liveSnap = (consensus) => ({
+  currentOddsSources: { polymarket: "live", kalshi: "live" },
+  odds: { consensus },
+});
+
+test("favoriteTeam: reads the top consensus team when both markets are live", () => {
+  assert.equal(app.favoriteTeam(liveSnap([{ team: "Spain" }, { team: "France" }])), "Spain");
+  assert.equal(app.favoriteTeam(liveSnap([])), null);
   assert.equal(app.favoriteTeam(null), null);
+  // A baseline fallback for either market suppresses the favorite (no spurious flip).
+  assert.equal(
+    app.favoriteTeam({ currentOddsSources: { polymarket: "baseline", kalshi: "live" }, odds: { consensus: [{ team: "Spain" }] } }),
+    null,
+  );
 });
 
 test("new favorite: fires only when the leader actually changes", () => {
   reset();
-  app.showFavoriteNotification({ odds: { consensus: [{ team: "Brazil" }] } }, { odds: { consensus: [{ team: "Spain" }] } });
+  app.showFavoriteNotification(liveSnap([{ team: "Brazil" }]), liveSnap([{ team: "Spain" }]));
   assert.equal(toasts.length, 1);
   assert.equal(toasts[0].type, "favoriteChange");
   assert.ok(toasts[0].text.includes("We have a new favorite - Spain"));
   assert.equal(desktop.length, 1); // also pushed as a desktop notification
 
   reset();
-  app.showFavoriteNotification({ odds: { consensus: [{ team: "Spain" }] } }, { odds: { consensus: [{ team: "Spain" }] } });
+  app.showFavoriteNotification(liveSnap([{ team: "Spain" }]), liveSnap([{ team: "Spain" }]));
   assert.equal(toasts.length, 0, "unchanged leader -> no alert");
 
   reset();
-  app.showFavoriteNotification(null, { odds: { consensus: [{ team: "Spain" }] } });
+  app.showFavoriteNotification(null, liveSnap([{ team: "Spain" }]));
   assert.equal(toasts.length, 0, "first load -> no alert");
+
+  reset();
+  // Leader "changes" only because one market fell back to baseline -> no alert.
+  app.showFavoriteNotification(liveSnap([{ team: "Spain" }]), {
+    currentOddsSources: { polymarket: "baseline", kalshi: "live" },
+    odds: { consensus: [{ team: "France" }] },
+  });
+  assert.equal(toasts.length, 0, "baseline fallback -> no spurious alert");
 });
 
 // ---- End-to-end emit path: toast + desktop notification ----
