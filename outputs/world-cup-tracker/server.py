@@ -1750,6 +1750,109 @@ def bracket_pick(
     return (team_a, "market") if value_a >= value_b else (team_b, "market")
 
 
+KNOCKOUT_REF_PATTERNS = {
+    "round-of-16": re.compile(r"^Round of 32 (\d+) Winner$", re.IGNORECASE),
+    "quarterfinals": re.compile(r"^Round of 16 (\d+) Winner$", re.IGNORECASE),
+    "semifinals": re.compile(r"^Quarterfinal (\d+) Winner$", re.IGNORECASE),
+    "final": re.compile(r"^Semifinal (\d+) Winner$", re.IGNORECASE),
+}
+KNOCKOUT_PREVIOUS_STAGE = {
+    "round-of-16": "round-of-32",
+    "quarterfinals": "round-of-16",
+    "semifinals": "quarterfinals",
+    "final": "semifinals",
+}
+
+
+def derive_knockout_tree(events: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Derive the bracket wiring from ESPN's own cross-round references instead
+    of a hardcoded position map. ESPN numbers knockout matches with FIFA's fixed
+    match numbers, which do NOT always follow kickoff date order — hardcoded
+    mappings kept drifting as fixtures were populated (USA vs USA, two Bosnias,
+    Belgium vs Belgium). Here every fixture side is resolved to the previous-round
+    event that feeds it:
+
+    - a real team seeded in a slot anchors that slot to the previous-round match
+      the team played in;
+    - "Round of 32 N Winner"-style references claim the remaining previous-round
+      events (sorted numbers onto date-sorted events).
+
+    Each previous-round event feeds exactly one slot, so duplicates and
+    self-matches are impossible by construction. Returns None when the knockout
+    fixture list is incomplete (pre-tournament, tests, baseline) — callers then
+    keep the static seed bracket.
+    """
+    by_stage: dict[str, list[dict[str, Any]]] = {}
+    for slug in ("round-of-32", "round-of-16", "quarterfinals", "semifinals", "final", "3rd-place-match"):
+        by_stage[slug] = sorted(
+            [event for event in events if event.get("stageSlug") == slug],
+            key=lambda event: event.get("date") or "",
+        )
+    expected = {"round-of-32": 16, "round-of-16": 8, "quarterfinals": 4, "semifinals": 2, "final": 1}
+    if any(len(by_stage[slug]) != count for slug, count in expected.items()):
+        return None
+
+    feeders: dict[int, tuple[dict[str, Any], dict[str, Any]]] = {}
+    for slug, pattern in KNOCKOUT_REF_PATTERNS.items():
+        previous = by_stage[KNOCKOUT_PREVIOUS_STAGE[slug]]
+        current = by_stage[slug]
+        slot_feeder: dict[tuple[int, str], dict[str, Any]] = {}
+        used: set[int] = set()
+        pending: list[tuple[int, str, int | None]] = []
+        for index, event in enumerate(current):
+            for side in ("home", "away"):
+                label = (event.get(side) or {}).get("team") or ""
+                reference = pattern.match(label)
+                if reference:
+                    pending.append((index, side, int(reference.group(1))))
+                    continue
+                feeder = None
+                if label and not is_fixture_placeholder(label):
+                    feeder = next(
+                        (
+                            candidate
+                            for candidate in previous
+                            if label
+                            in ((candidate.get("home") or {}).get("team"), (candidate.get("away") or {}).get("team"))
+                        ),
+                        None,
+                    )
+                if feeder is not None and id(feeder) not in used:
+                    slot_feeder[(index, side)] = feeder
+                    used.add(id(feeder))
+                else:
+                    pending.append((index, side, None))
+        remaining = [candidate for candidate in previous if id(candidate) not in used]
+        if len(pending) != len(remaining):
+            return None
+        # Sorted match numbers onto date-sorted remaining events; unknown labels last.
+        pending.sort(key=lambda item: (item[2] is None, item[2] or 0))
+        for (index, side, _), feeder in zip(pending, remaining):
+            slot_feeder[(index, side)] = feeder
+        for index, event in enumerate(current):
+            home_feeder = slot_feeder.get((index, "home"))
+            away_feeder = slot_feeder.get((index, "away"))
+            if home_feeder is None or away_feeder is None:
+                return None
+            feeders[id(event)] = (home_feeder, away_feeder)
+
+    final_event = by_stage["final"][0]
+    sf_left, sf_right = feeders[id(final_event)]
+
+    def rounds_under(semifinal: dict[str, Any]) -> list[list[dict[str, Any]]]:
+        quarterfinals = list(feeders[id(semifinal)])
+        r16 = [child for quarter in quarterfinals for child in feeders[id(quarter)]]
+        r32 = [child for sixteenth in r16 for child in feeders[id(sixteenth)]]
+        return [r32, r16, quarterfinals, [semifinal]]
+
+    return {
+        "left": rounds_under(sf_left),
+        "right": rounds_under(sf_right),
+        "final": final_event,
+        "third": by_stage["3rd-place-match"][0] if by_stage["3rd-place-match"] else None,
+    }
+
+
 def build_fact_projection(
     odds: dict[str, Any],
     actual_winners: dict[str, str],
@@ -1758,6 +1861,10 @@ def build_fact_projection(
 ) -> dict[str, Any]:
     stage_events = knockout_events_by_stage(events or [])
     resolver = build_slot_resolver(standings, events)
+
+    tree = derive_knockout_tree(events or [])
+    if tree:
+        return _projection_from_tree(tree, odds, resolver)
 
     def build_round(
         pairings: list[tuple[str, str]],
@@ -1843,6 +1950,115 @@ def build_fact_projection(
         "final": final,
         "thirdPlaceMatch": third_match,
         "rounds": {"left": left_rounds, "right": right_rounds},
+    }
+
+
+def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) -> dict[str, Any]:
+    """Project the bracket over the ESPN-derived wiring: each slot shows its real
+    seeded team when known, otherwise the projected winner of the feeder match."""
+    results: dict[int, dict[str, Any]] = {}
+
+    def slot_team(event: dict[str, Any], side: str, feeder: dict[str, Any] | None) -> str:
+        label = (event.get(side) or {}).get("team") or ""
+        if label and not is_fixture_placeholder(label):
+            if resolver:
+                resolved = resolver(label)
+                if resolved:
+                    return resolved
+            return label
+        if feeder is not None and id(feeder) in results:
+            return results[id(feeder)]["winner"]
+        # Round-of-32 group placeholders resolve from standings when available.
+        if resolver:
+            resolved = resolver(label)
+            if resolved:
+                return resolved
+        return label
+
+    def build_match(event: dict[str, Any], feeder_pair, stage_slug: str) -> dict[str, Any]:
+        home_feeder, away_feeder = feeder_pair
+        team_a = slot_team(event, "home", home_feeder)
+        team_b = slot_team(event, "away", away_feeder)
+        event_winner = event.get("winner") if event.get("status", {}).get("completed") else None
+        if event_winner in {team_a, team_b}:
+            winner, source = event_winner, "actual"
+        else:
+            winner, source = bracket_pick(team_a, team_b, odds, {}, stage_slug)
+        match = {
+            "teams": [team_a, team_b],
+            "winner": winner,
+            "loser": team_b if winner == team_a else team_a,
+            "source": source,
+            "eventId": event.get("id"),
+            "stageSlug": stage_slug,
+        }
+        results[id(event)] = match
+        return match
+
+    round_slugs = ["round-of-32", "round-of-16", "quarterfinals", "semifinals"]
+    rounds: dict[str, list[list[dict[str, Any]]]] = {}
+    for side_name in ("left", "right"):
+        side_rounds = []
+        for round_index, stage_slug in enumerate(round_slugs):
+            stage_matches = []
+            for match_index, event in enumerate(tree[side_name][round_index]):
+                if round_index == 0:
+                    feeder_pair = (None, None)
+                else:
+                    below = tree[side_name][round_index - 1]
+                    feeder_pair = (below[match_index * 2], below[match_index * 2 + 1])
+                stage_matches.append(build_match(event, feeder_pair, stage_slug))
+            side_rounds.append(stage_matches)
+        rounds[side_name] = side_rounds
+
+    left_final = rounds["left"][-1][0]
+    right_final = rounds["right"][-1][0]
+    final = build_match(tree["final"], (tree["left"][-1][0], tree["right"][-1][0]), "final")
+
+    third_event = tree["third"]
+    if third_event is not None:
+        # Third-place sides fall back to the semifinal losers when not yet seeded.
+        def third_team(side: str, fallback: str) -> str:
+            label = (third_event.get(side) or {}).get("team") or ""
+            if label and not is_fixture_placeholder(label):
+                return label
+            return fallback
+
+        team_a = third_team("home", left_final["loser"])
+        team_b = third_team("away", right_final["loser"])
+        event_winner = third_event.get("winner") if third_event.get("status", {}).get("completed") else None
+        if event_winner in {team_a, team_b}:
+            winner, source = event_winner, "actual"
+        else:
+            winner, source = bracket_pick(team_a, team_b, odds, {}, "3rd-place-match")
+        third_match = {
+            "teams": [team_a, team_b],
+            "winner": winner,
+            "loser": team_b if winner == team_a else team_a,
+            "source": source,
+            "eventId": third_event.get("id"),
+            "stageSlug": "3rd-place-match",
+        }
+    else:
+        team_a, team_b = left_final["loser"], right_final["loser"]
+        winner, source = bracket_pick(team_a, team_b, odds, {}, "3rd-place-match")
+        third_match = {
+            "teams": [team_a, team_b],
+            "winner": winner,
+            "loser": team_b if winner == team_a else team_a,
+            "source": source,
+            "eventId": None,
+            "stageSlug": "3rd-place-match",
+        }
+
+    return {
+        "champion": final["winner"],
+        "runnerUp": final["loser"],
+        "thirdPlace": third_match["winner"],
+        "fourthPlace": third_match["loser"],
+        "final": final,
+        "thirdPlaceMatch": third_match,
+        "rounds": {"left": rounds["left"], "right": rounds["right"]},
     }
 
 
