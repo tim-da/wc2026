@@ -1896,6 +1896,7 @@ def build_fact_projection(
                     "loser": loser,
                     "source": source,
                     "eventId": event.get("id") if event else None,
+                    "date": event.get("date") if event else None,
                     "stageSlug": stage_slug,
                 }
             )
@@ -1990,6 +1991,7 @@ def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) 
             "loser": team_b if winner == team_a else team_a,
             "source": source,
             "eventId": event.get("id"),
+            "date": event.get("date"),
             "stageSlug": stage_slug,
         }
         results[id(event)] = match
@@ -2037,6 +2039,7 @@ def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) 
             "loser": team_b if winner == team_a else team_a,
             "source": source,
             "eventId": third_event.get("id"),
+            "date": third_event.get("date"),
             "stageSlug": "3rd-place-match",
         }
     else:
@@ -2048,6 +2051,7 @@ def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) 
             "loser": team_b if winner == team_a else team_a,
             "source": source,
             "eventId": None,
+            "date": None,
             "stageSlug": "3rd-place-match",
         }
 
@@ -2159,6 +2163,16 @@ def fmt_bracket_pct(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.1f}%"
 
 
+def fmt_bracket_date(value: str | None) -> str:
+    if not value:
+        return ""
+    try:
+        moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return ""
+    return f"{moment.strftime('%b')} {moment.day}"
+
+
 def confirmed_teams(standings: list[dict[str, Any]] | None) -> set[str]:
     """Teams whose Round-of-32 berth is certain — either a locked top-2 group
     finish, or a third place already guaranteed to be among the best 8. A group
@@ -2262,7 +2276,7 @@ def render_bracket_svg(
         rows = sorted(odds.values(), key=lambda item: item.get("mid") or 0, reverse=True)[:8]
         return "  |  ".join(f"{svg_team_label(row['team'])} {fmt_bracket_pct(row.get('midPct'))}" for row in rows)
 
-    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None, upset: set[str] | None = None) -> str:
+    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None, upset: set[str] | None = None, show_date: bool = False) -> str:
         certain = certain or set()
         upset = upset or set()
         team_a, team_b = match["teams"]
@@ -2297,10 +2311,15 @@ def render_bracket_svg(
                 f'<text x="{x + 8}" y="{row_y}" class="team {"winner" if is_winner else "loser"}{changed_class}">{escape(svg_team_label(team))}</text>'
                 f'<text x="{x + box_w - 8}" y="{row_y}" class="pct {"winner" if is_winner else "loser"}{changed_class}">{team_pct(team)}</text>'
             )
+        when = fmt_bracket_date(match.get("date")) if show_date else ""
+        date_label = (
+            f'<text x="{x + box_w}" y="{y + box_h + 12}" class="when" text-anchor="end">{escape(when)}</text>' if when else ""
+        )
         return (
             f'<rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" rx="4" class="box" fill="{fill}" />'
             f'<line x1="{x}" y1="{y + box_h / 2}" x2="{x + box_w}" y2="{y + box_h / 2}" class="divider" />'
             + "".join(rows)
+            + date_label
         )
 
     def connector(prev_x: int, prev_ys: list[int], next_x: int, next_ys: list[int], *, leftward: bool) -> str:
@@ -2335,6 +2354,7 @@ def render_bracket_svg(
           .small { font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #68707a; }
           .foot { font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #4b5563; }
           .fact { font: 800 9px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #166534; text-anchor: end; }
+          .when { font: 10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #8a919b; }
         </style>""",
         '<rect width="1600" height="900" fill="#ffffff" />',
         f'<text x="800" y="68" class="title" text-anchor="middle">FIFA World Cup 2026 - Knock-Out Stage: Current Market + Facts</text>',
@@ -2391,20 +2411,20 @@ def render_bracket_svg(
         certain = confirmed if round_idx == 0 else fact_winners(prev)
         upset = fact_upsets(prev)
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", certain=certain, upset=upset))
+            svg_parts.append(match_box(left_x[round_idx], y, match, f"left-{round_idx}-{match_idx}", certain=certain, upset=upset, show_date=round_idx >= 1))
     for round_idx, matches in enumerate(right_rounds):
         prev = right_rounds[round_idx - 1] if round_idx else []
         certain = confirmed if round_idx == 0 else fact_winners(prev)
         upset = fact_upsets(prev)
         for match_idx, (match, y) in enumerate(zip(matches, round_ys[round_idx])):
-            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", certain=certain, upset=upset))
+            svg_parts.append(match_box(right_x[round_idx], y, match, f"right-{round_idx}-{match_idx}", certain=certain, upset=upset, show_date=round_idx >= 1))
     semifinals = [left_rounds[3][0], right_rounds[3][0]]
 
     champion_class = "champion changedEntry" if baseline_champion and projection["champion"] != baseline_champion else "champion"
     svg_parts.append(f'<text x="{final_x + box_w / 2}" y="{final_y - 18}" class="{champion_class}">Champion: {escape(svg_team_label(projection["champion"]))}</text>')
-    svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True, certain=fact_winners(semifinals), upset=fact_upsets(semifinals)))
+    svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True, certain=fact_winners(semifinals), upset=fact_upsets(semifinals), show_date=True))
     svg_parts.append(f'<text x="{third_x + box_w / 2}" y="{third_y - 18}" class="round" text-anchor="middle">Third-place play-off</text>')
-    svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third", certain=fact_losers(semifinals)))
+    svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third", certain=fact_losers(semifinals), show_date=True))
     svg_parts.append(f'<text x="800" y="763" class="small" text-anchor="middle">Top consensus: {escape(top_consensus())}</text>')
     svg_parts.append(
         f'<text x="28" y="815" class="foot">Sources: {escape(" / ".join(sources))}; ESPN scoreboard facts. Bracket order follows supplied reference image.</text>'
