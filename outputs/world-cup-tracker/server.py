@@ -2268,7 +2268,9 @@ def render_bracket_svg(
         team_a, team_b = match["teams"]
         winner = match["winner"]
         source = match.get("source")
-        fill = "#fffbea" if highlight else "#fbfcfe"
+        # Finished matches (result is an actual fact) read light grey; the final
+        # keeps its warm highlight until it is actually played.
+        fill = "#e8ebef" if source == "actual" else "#fffbea" if highlight else "#fbfcfe"
         source_mark = "FACT" if source == "actual" else ""
         rows = []
         for idx, team in enumerate((team_a, team_b)):
@@ -2279,8 +2281,13 @@ def render_bracket_svg(
             # (R32) or a team that actually won its way into a later round. Green
             # when the result went as predicted, light orange when it was an upset
             # (the actual winner was not the market favourite). Projected
-            # (not-yet-played) advancements stay uncoloured.
-            band_fill = "#ffd9a8" if team in upset else "#dcf5e4" if team in certain else None
+            # (not-yet-played) advancements stay uncoloured. Finished boxes skip
+            # the bands so their grey fill stays visible — the presence signal is
+            # trivial once the result is known (the advance/upset marking lives in
+            # the next round's box).
+            band_fill = None
+            if source != "actual":
+                band_fill = "#ffd9a8" if team in upset else "#dcf5e4" if team in certain else None
             if band_fill:
                 band_y = y + idx * (box_h / 2)
                 rows.append(
