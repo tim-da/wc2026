@@ -2268,10 +2268,10 @@ def render_bracket_svg(
         team_a, team_b = match["teams"]
         winner = match["winner"]
         source = match.get("source")
-        # Finished matches (result is an actual fact) read light grey; the final
-        # keeps its warm highlight until it is actually played.
+        # Finished matches (result is an actual fact) read light grey — that fill
+        # replaces the old "FACT" mark above the box; the final keeps its warm
+        # highlight until it is actually played.
         fill = "#e8ebef" if source == "actual" else "#fffbea" if highlight else "#fbfcfe"
-        source_mark = "FACT" if source == "actual" else ""
         rows = []
         for idx, team in enumerate((team_a, team_b)):
             row_y = y + 20 + idx * 25
@@ -2297,9 +2297,8 @@ def render_bracket_svg(
                 f'<text x="{x + 8}" y="{row_y}" class="team {"winner" if is_winner else "loser"}{changed_class}">{escape(svg_team_label(team))}</text>'
                 f'<text x="{x + box_w - 8}" y="{row_y}" class="pct {"winner" if is_winner else "loser"}{changed_class}">{team_pct(team)}</text>'
             )
-        mark = f'<text x="{x + box_w - 8}" y="{y - 5}" class="fact">{source_mark}</text>' if source_mark else ""
         return (
-            f'{mark}<rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" rx="4" class="box" fill="{fill}" />'
+            f'<rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" rx="4" class="box" fill="{fill}" />'
             f'<line x1="{x}" y1="{y + box_h / 2}" x2="{x + box_w}" y2="{y + box_h / 2}" class="divider" />'
             + "".join(rows)
         )
