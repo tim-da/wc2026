@@ -1690,10 +1690,21 @@ loadSnapshot().catch((error) => {
 });
 loadBracketStatusQuietly();
 
-setInterval(() => {
-  loadSnapshot().catch((error) => {
-    console.error(error);
-    setText("#refreshStamp", "Refresh failed");
-  });
-  loadBracketStatusQuietly();
-}, 60_000);
+// Poll faster while a match is in play so live scores (and penalty-shootout
+// tallies) track close to real time; ease off between games.
+function refreshDelay() {
+  const live = (state.snapshot?.matches || []).some((match) => match.status?.state === "in");
+  return live ? 20_000 : 60_000;
+}
+
+function scheduleRefresh() {
+  setTimeout(() => {
+    loadSnapshot().catch((error) => {
+      console.error(error);
+      setText("#refreshStamp", "Refresh failed");
+    });
+    loadBracketStatusQuietly();
+    scheduleRefresh();
+  }, refreshDelay());
+}
+scheduleRefresh();

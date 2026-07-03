@@ -52,6 +52,13 @@ ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa
 ESPN_STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings"
 
 CACHE_TTL_SECONDS = 60
+LIVE_CACHE_TTL_SECONDS = 20  # faster refresh while a match is in play (live goals/penalties)
+
+
+def _cache_ttl(payload: dict[str, Any] | None) -> int:
+    matches = (payload or {}).get("matches") or []
+    live = any((match.get("status") or {}).get("state") == "in" for match in matches)
+    return LIVE_CACHE_TTL_SECONDS if live else CACHE_TTL_SECONDS
 _CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
 _BRACKET_STATUS_CACHE: dict[str, Any] = {"at": 0.0, "payload": None}
 _CACHE_LOCK = threading.Lock()
@@ -2549,7 +2556,7 @@ def snapshot():
 
     with _CACHE_LOCK:
         now = time.time()
-        if _CACHE["payload"] is not None and now - _CACHE["at"] < CACHE_TTL_SECONDS:
+        if _CACHE["payload"] is not None and now - _CACHE["at"] < _cache_ttl(_CACHE["payload"]):
             return jsonify({**_CACHE["payload"], "cached": True})
         if _CACHE_REFRESHING and _CACHE["payload"] is not None:
             return jsonify({**_CACHE["payload"], "cached": True, "stale": True, "refreshing": True})
