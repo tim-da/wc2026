@@ -544,7 +544,7 @@ def test_confirmed_teams_excludes_unsettled_positions():
     assert "B2" not in confirmed and "B3" not in confirmed and "B4" not in confirmed
 
 
-def _r32_win_svg(winner, canada_mid, france_mid):
+def _r32_win_svg(winner, canada_mid, france_mid, upsets=None):
     from datetime import datetime, timezone
 
     event = {
@@ -562,7 +562,7 @@ def _r32_win_svg(winner, canada_mid, france_mid):
     }
     projection = server.build_fact_projection(odds, server.actual_winners_by_pair([event]), [event])
     return server.render_bracket_svg(
-        projection, odds, ["t"], datetime(2026, 7, 1, tzinfo=timezone.utc), set(), None, set()
+        projection, odds, ["t"], datetime(2026, 7, 1, tzinfo=timezone.utc), set(), None, set(), upsets or set()
     )
 
 
@@ -637,18 +637,49 @@ def test_derived_tree_never_self_matches_seeded_winner():
 
 
 def test_bracket_greens_expected_winner_in_next_round():
-    # Favourite Canada wins -> green band in the R16, no orange. confirmed empty,
-    # so any band must come from the real advancement.
+    # Predicted winner Canada wins -> green band in the R16, no orange. confirmed
+    # empty, so any band must come from the real advancement.
     svg = _r32_win_svg("Canada", canada_mid=0.9, france_mid=0.1)
     assert "#dcf5e4" in svg
     assert "#ffd9a8" not in svg
 
 
 def test_bracket_marks_upset_winner_orange():
-    # Underdog Canada beats favourite France -> light-orange band, not green.
-    svg = _r32_win_svg("Canada", canada_mid=0.1, france_mid=0.9)
+    # Canada beat the locked prediction (upsets set) -> light-orange band, not green.
+    svg = _r32_win_svg("Canada", canada_mid=0.1, france_mid=0.9, upsets={"Canada"})
     assert "#ffd9a8" in svg
     assert "#dcf5e4" not in svg
+
+
+def test_locked_upset_winners_uses_match_capture_over_outright():
+    # The Egypt case: outright title odds favour the opponent, but the locked
+    # match-market pick was the actual winner -> Hit on the card, so NOT an upset.
+    event = {
+        "id": "r32-egy",
+        "date": "2026-07-03T18:00:00Z",
+        "stageSlug": "round-of-32",
+        "status": {"completed": True},
+        "winner": "Egypt",
+        "home": {"team": "Australia"},
+        "away": {"team": "Egypt"},
+    }
+    outright = {"Australia": {"mid": 0.02, "midPct": 2.0}, "Egypt": {"mid": 0.001, "midPct": 0.1}}
+    pair = server.event_market_key(event)  # captures are stored under the event-scoped key
+    picked_egypt = {pair: {
+        "polymarket": {"preGame": {"pick": "Egypt", "pickPct": 61.0}},
+        "kalshi": {"preGame": {"pick": "Egypt", "pickPct": 58.0}},
+    }}
+    assert server.locked_upset_winners([event], picked_egypt, outright, outright) == set()
+
+    # And when the locked picks named the loser, the winner IS an upset.
+    picked_australia = {pair: {
+        "polymarket": {"preGame": {"pick": "Australia", "pickPct": 55.0}},
+        "kalshi": {"preGame": {"pick": "Australia", "pickPct": 57.0}},
+    }}
+    assert server.locked_upset_winners([event], picked_australia, outright, outright) == {"Egypt"}
+
+    # No capture at all -> falls back to outright odds (Australia favoured) -> upset.
+    assert server.locked_upset_winners([event], {}, outright, outright) == {"Egypt"}
 
 
 def test_projection_only_includes_currently_qualifying_teams():

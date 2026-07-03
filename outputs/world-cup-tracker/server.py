@@ -2166,6 +2166,51 @@ def write_latest_bracket_generation(payload: dict[str, Any]) -> None:
     temporary_path.replace(BRACKET_GENERATION_STATE_JSON)
 
 
+def stored_match_markets() -> dict[str, Any]:
+    """Read-only view of the captured match markets (no new captures written)."""
+    if supabase_enabled():
+        try:
+            return supabase_load_markets()
+        except (requests.RequestException, ValueError, KeyError, TypeError):
+            return {}
+    try:
+        return load_match_baseline().get("markets", {})
+    except (OSError, ValueError):
+        return {}
+
+
+def locked_upset_winners(
+    events: list[dict[str, Any]],
+    match_markets: dict[str, Any],
+    locked_polymarket: dict[str, Any],
+    locked_kalshi: dict[str, Any],
+) -> set[str]:
+    """Winners of completed knockout matches that beat the locked pre-game
+    prediction — the exact picks the match cards grade Hit/Miss against
+    (pre-game match-market capture, falling back to the outright odds). A win is
+    an upset when at least one graded source predicted the other team, matching
+    the app's Upsets filter."""
+    upsets: set[str] = set()
+    for event in events:
+        if event.get("stageSlug") not in KNOCKOUT_STAGE_SLUGS:
+            continue
+        if not (event.get("status") or {}).get("completed"):
+            continue
+        winner = event.get("winner")
+        home_team = (event.get("home") or {}).get("team")
+        away_team = (event.get("away") or {}).get("team")
+        if not winner or winner == "Draw" or winner not in {home_team, away_team}:
+            continue
+        pair_key = event_market_key(event)
+        fixture_markets = locked_markets_for_event(match_markets, event)
+        for source_name, outright in (("polymarket", locked_polymarket), ("kalshi", locked_kalshi)):
+            pick = pick_for_event(source_name, pair_key, home_team, away_team, fixture_markets, outright).get("pick")
+            if pick and pick != "Draw" and pick != winner:
+                upsets.add(winner)
+                break
+    return upsets
+
+
 def fmt_bracket_pct(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.1f}%"
 
@@ -2255,14 +2300,13 @@ def render_bracket_svg(
     changed_slots: set[str] | None = None,
     baseline_champion: str | None = None,
     confirmed: set[str] | None = None,
-    favourite_odds: dict[str, Any] | None = None,
+    upset_teams: set[str] | None = None,
 ) -> str:
     changed_slots = changed_slots or set()
     confirmed = confirmed or set()
-    # Upset detection compares the actual winner to the pre-game favourite. Use
-    # the baseline odds when available — current outright odds collapse to ~0 for
-    # the team that just lost, which would make every winner look favoured.
-    favourite_odds = favourite_odds or odds
+    # Winners whose completed match beat the locked pre-game prediction — the
+    # same picks the match cards grade Hit/Miss against (locked_upset_winners).
+    upset_teams = upset_teams or set()
     width, height = 1600, 900
     box_w, box_h = 132, 54
     left_x = [68, 214, 360, 506]
@@ -2397,19 +2441,9 @@ def render_bracket_svg(
     def fact_losers(matches: list[dict[str, Any]]) -> set[str]:
         return {m["loser"] for m in matches if m.get("source") == "actual" and m.get("loser")}
 
-    def market_favourite(match: dict[str, Any]) -> str | None:
-        team_a, team_b = match["teams"]
-        value_a = (favourite_odds.get(team_a, {}) or {}).get("mid") or 0
-        value_b = (favourite_odds.get(team_b, {}) or {}).get("mid") or 0
-        return team_a if value_a >= value_b else team_b
-
     def fact_upsets(matches: list[dict[str, Any]]) -> set[str]:
-        # Actual winners that were not the market favourite of their match.
-        return {
-            m["winner"]
-            for m in matches
-            if m.get("source") == "actual" and m.get("winner") and m["winner"] != market_favourite(m)
-        }
+        # Actual winners whose match beat the locked pre-game prediction.
+        return fact_winners(matches) & upset_teams
 
     left_rounds = projection["rounds"]["left"]
     right_rounds = projection["rounds"]["right"]
@@ -2472,6 +2506,13 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
     }
     # The status poll only needs the composition hash, so skip the (relatively costly) SVG render there.
     if render_svg:
+        baseline_polymarket, baseline_kalshi, _ = load_baseline_odds()
+        upsets = locked_upset_winners(
+            events,
+            stored_match_markets(),
+            baseline_polymarket or odds,
+            baseline_kalshi or odds,
+        )
         payload["svg"] = render_bracket_svg(
             projection,
             odds,
@@ -2480,7 +2521,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             changed_projection_slots(projection, initial_projection, odds, initial_odds),
             initial_projection.get("champion") if initial_projection else None,
             confirmed_teams(standings),
-            initial_odds,
+            upsets,
         )
     if mark_generated:
         write_latest_bracket_generation(payload)
