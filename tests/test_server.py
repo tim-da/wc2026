@@ -646,12 +646,12 @@ def test_bracket_greens_expected_winner_in_next_round():
 
 def test_bracket_marks_upset_winner_orange():
     # Canada beat the locked prediction (upsets set) -> light-orange band, not green.
-    svg = _r32_win_svg("Canada", canada_mid=0.1, france_mid=0.9, upsets={"Canada"})
+    svg = _r32_win_svg("Canada", canada_mid=0.1, france_mid=0.9, upsets={"r32-1"})
     assert "#ffd9a8" in svg
     assert "#dcf5e4" not in svg
 
 
-def test_locked_upset_winners_uses_match_capture_over_outright():
+def test_locked_upset_events_uses_match_capture_over_outright():
     # The Egypt case: outright title odds favour the opponent, but the locked
     # match-market pick was the actual winner -> Hit on the card, so NOT an upset.
     event = {
@@ -669,17 +669,56 @@ def test_locked_upset_winners_uses_match_capture_over_outright():
         "polymarket": {"preGame": {"pick": "Egypt", "pickPct": 61.0}},
         "kalshi": {"preGame": {"pick": "Egypt", "pickPct": 58.0}},
     }}
-    assert server.locked_upset_winners([event], picked_egypt, outright, outright) == set()
+    assert server.locked_upset_events([event], picked_egypt, outright, outright) == set()
 
-    # And when the locked picks named the loser, the winner IS an upset.
+    # And when the locked picks named the loser, the match IS an upset.
     picked_australia = {pair: {
         "polymarket": {"preGame": {"pick": "Australia", "pickPct": 55.0}},
         "kalshi": {"preGame": {"pick": "Australia", "pickPct": 57.0}},
     }}
-    assert server.locked_upset_winners([event], picked_australia, outright, outright) == {"Egypt"}
+    assert server.locked_upset_events([event], picked_australia, outright, outright) == {"r32-egy"}
 
     # No capture at all -> falls back to outright odds (Australia favoured) -> upset.
-    assert server.locked_upset_winners([event], {}, outright, outright) == {"Egypt"}
+    assert server.locked_upset_events([event], {}, outright, outright) == {"r32-egy"}
+
+
+def test_upset_band_does_not_follow_team_into_later_rounds():
+    # The Morocco case: a team upsets in the R32 (T17 beats favoured T18), then
+    # wins its R16 as the locked pick (Hit). Orange must appear only in the R16
+    # box; its QF appearance renders green.
+    from datetime import datetime, timezone
+
+    events = _full_knockout_events()  # date-#9 (T17 vs T18) completed, winner T17
+    # Locked outright picks: T18 favoured over T17 (R32 upset); T17 favoured
+    # over anyone it meets later (predicted R16 win).
+    odds = {
+        "T17": {"team": "T17", "mid": 0.30, "midPct": 30.0},
+        "T18": {"team": "T18", "mid": 0.50, "midPct": 50.0},
+    }
+    for n in range(1, 33):
+        odds.setdefault(f"T{n}", {"team": f"T{n}", "mid": (33 - n) / 1000, "midPct": (33 - n) / 10})
+
+    def render(evs):
+        upsets = server.locked_upset_events(evs, {}, odds, odds)
+        assert "r32-9" in upsets and len(upsets) <= 2
+        projection = server.build_fact_projection(odds, server.actual_winners_by_pair(evs), evs)
+        return server.render_bracket_svg(
+            projection, odds, ["t"], datetime(2026, 7, 5, tzinfo=timezone.utc), set(), None, set(), upsets
+        )
+
+    # R16 still pending: T17 carries the upset band into its R16 box only.
+    assert render(events).count("#ffd9a8") == 1
+
+    # T17 then wins the R16 as the pick: no orange anywhere — its QF box is
+    # green (the old per-team set kept it orange forever).
+    done = [dict(e) for e in events]
+    for e in done:
+        if e["id"] == "r16-6":
+            e["status"] = {"completed": True}
+            e["winner"] = "T17"
+    svg = render(done)
+    assert svg.count("#ffd9a8") == 0
+    assert "#dcf5e4" in svg
 
 
 def test_projection_only_includes_currently_qualifying_teams():
