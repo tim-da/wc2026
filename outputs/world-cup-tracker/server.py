@@ -2179,17 +2179,19 @@ def stored_match_markets() -> dict[str, Any]:
         return {}
 
 
-def locked_upset_winners(
+def locked_upset_events(
     events: list[dict[str, Any]],
     match_markets: dict[str, Any],
     locked_polymarket: dict[str, Any],
     locked_kalshi: dict[str, Any],
 ) -> set[str]:
-    """Winners of completed knockout matches that beat the locked pre-game
-    prediction — the exact picks the match cards grade Hit/Miss against
-    (pre-game match-market capture, falling back to the outright odds). A win is
-    an upset when at least one graded source predicted the other team, matching
-    the app's Upsets filter."""
+    """Event ids of completed knockout matches whose winner beat the locked
+    pre-game prediction — the exact picks the match cards grade Hit/Miss against
+    (pre-game match-market capture, falling back to the outright odds). A result
+    is an upset when at least one graded source predicted the other team,
+    matching the app's Upsets filter. Per-MATCH, not per-team: a team that won
+    one round as an upset can still advance the next round as the predicted
+    winner (e.g. Morocco upsetting Netherlands, then beating Canada as the pick)."""
     upsets: set[str] = set()
     for event in events:
         if event.get("stageSlug") not in KNOCKOUT_STAGE_SLUGS:
@@ -2199,14 +2201,14 @@ def locked_upset_winners(
         winner = event.get("winner")
         home_team = (event.get("home") or {}).get("team")
         away_team = (event.get("away") or {}).get("team")
-        if not winner or winner == "Draw" or winner not in {home_team, away_team}:
+        if not winner or winner == "Draw" or winner not in {home_team, away_team} or not event.get("id"):
             continue
         pair_key = event_market_key(event)
         fixture_markets = locked_markets_for_event(match_markets, event)
         for source_name, outright in (("polymarket", locked_polymarket), ("kalshi", locked_kalshi)):
             pick = pick_for_event(source_name, pair_key, home_team, away_team, fixture_markets, outright).get("pick")
             if pick and pick != "Draw" and pick != winner:
-                upsets.add(winner)
+                upsets.add(event["id"])
                 break
     return upsets
 
@@ -2300,13 +2302,13 @@ def render_bracket_svg(
     changed_slots: set[str] | None = None,
     baseline_champion: str | None = None,
     confirmed: set[str] | None = None,
-    upset_teams: set[str] | None = None,
+    upset_events: set[str] | None = None,
 ) -> str:
     changed_slots = changed_slots or set()
     confirmed = confirmed or set()
-    # Winners whose completed match beat the locked pre-game prediction — the
-    # same picks the match cards grade Hit/Miss against (locked_upset_winners).
-    upset_teams = upset_teams or set()
+    # Event ids of completed matches whose winner beat the locked pre-game pick —
+    # the same picks the match cards grade Hit/Miss against (locked_upset_events).
+    upset_events = upset_events or set()
     width, height = 1600, 900
     box_w, box_h = 132, 54
     left_x = [68, 214, 360, 506]
@@ -2442,8 +2444,13 @@ def render_bracket_svg(
         return {m["loser"] for m in matches if m.get("source") == "actual" and m.get("loser")}
 
     def fact_upsets(matches: list[dict[str, Any]]) -> set[str]:
-        # Actual winners whose match beat the locked pre-game prediction.
-        return fact_winners(matches) & upset_teams
+        # Winners whose SPECIFIC feeding match beat the locked pre-game pick —
+        # an earlier-round upset must not follow the team into later rounds.
+        return {
+            m["winner"]
+            for m in matches
+            if m.get("source") == "actual" and m.get("winner") and m.get("eventId") in upset_events
+        }
 
     left_rounds = projection["rounds"]["left"]
     right_rounds = projection["rounds"]["right"]
@@ -2507,7 +2514,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
     # The status poll only needs the composition hash, so skip the (relatively costly) SVG render there.
     if render_svg:
         baseline_polymarket, baseline_kalshi, _ = load_baseline_odds()
-        upsets = locked_upset_winners(
+        upsets = locked_upset_events(
             events,
             stored_match_markets(),
             baseline_polymarket or odds,
