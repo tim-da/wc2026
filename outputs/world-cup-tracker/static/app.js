@@ -1090,6 +1090,21 @@ function eliminatedTeams(data) {
   thirds.forEach((t) => {
     if (thirds.filter((o) => o !== t && cmp(o.key, t.key) > 0).length >= 8) out.add(t.team);
   });
+  // Knockout phase: losing a completed knockout match eliminates a team — except
+  // semifinal losers, who still have the third-place match to play (they stay
+  // ungreyed until it's over).
+  const pendingKo = new Set();
+  (data.matches || []).forEach((match) => {
+    if (match.group || !match.status || match.status.completed) return;
+    [match.home, match.away].forEach((side) => {
+      if (side && side.team) pendingKo.add(side.team);
+    });
+  });
+  (data.matches || []).forEach((match) => {
+    if (match.group || !match.status?.completed || !match.winner || match.winner === "Draw") return;
+    const loser = match.home?.team === match.winner ? match.away?.team : match.home?.team;
+    if (loser && !pendingKo.has(loser)) out.add(loser);
+  });
   return out;
 }
 
