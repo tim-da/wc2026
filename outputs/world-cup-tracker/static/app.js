@@ -1240,10 +1240,24 @@ function renderTeamsOverall(data) {
 
 const RESULT_WORD = { win: "Won", draw: "Drew", loss: "Lost", scheduled: "Scheduled" };
 
+// Champion-eligibility for the title-odds bars. Stricter than eliminatedTeams:
+// that helper spares a semifinal loser until the third-place match is played
+// (right for the Overall table), but a semifinal loser can no longer win the
+// World Cup, so for title odds ANY completed knockout loss is terminal.
+function titleEliminatedTeams(data) {
+  const out = new Set(eliminatedTeams(data));
+  (data.matches || []).forEach((match) => {
+    if (match.group || !match.status?.completed || !match.winner || match.winner === "Draw") return;
+    const loser = match.home?.team === match.winner ? match.away?.team : match.home?.team;
+    if (loser) out.add(loser);
+  });
+  return out;
+}
+
 function renderOdds(data) {
-  // Only teams still in the tournament — eliminated sides' residual odds are
-  // noise, and the books also list teams that never qualified (e.g. Italy).
-  const out = eliminatedTeams(data);
+  // Only teams that can still win the title — eliminated sides' residual odds
+  // are noise, and the books also list teams that never qualified (e.g. Italy).
+  const out = titleEliminatedTeams(data);
   const qualified = new Set((data.teams || []).map((t) => t.team));
   let scoped = data.odds.consensus.filter((row) => qualified.has(row.team) && !out.has(row.team));
   const globalMax = scoped[0]?.pct || 1;
