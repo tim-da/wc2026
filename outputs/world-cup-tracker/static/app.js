@@ -1241,8 +1241,12 @@ function renderTeamsOverall(data) {
 const RESULT_WORD = { win: "Won", draw: "Drew", loss: "Lost", scheduled: "Scheduled" };
 
 function renderOdds(data) {
-  const globalMax = data.odds.consensus[0]?.pct || 1;
-  let scoped = data.odds.consensus;
+  // Only teams still in the tournament — eliminated sides' residual odds are
+  // noise, and the books also list teams that never qualified (e.g. Italy).
+  const out = eliminatedTeams(data);
+  const qualified = new Set((data.teams || []).map((t) => t.team));
+  let scoped = data.odds.consensus.filter((row) => qualified.has(row.team) && !out.has(row.team));
+  const globalMax = scoped[0]?.pct || 1;
   if (state.team) {
     scoped = scoped.filter((row) => row.team === state.team);
   } else if (state.group) {
