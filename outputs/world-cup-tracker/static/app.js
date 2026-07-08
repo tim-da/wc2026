@@ -446,6 +446,15 @@ function matchKey(match) {
   return match.id || `${match.date}|${match.home?.team}|${match.away?.team}`;
 }
 
+// Knockout detection must use stageSlug: match.group is parsed from ESPN's
+// altGameNote and can be missing on a group game, which would otherwise make
+// elimination logic treat an ordinary group loss as a knockout exit.
+const KNOCKOUT_STAGES = new Set(["round-of-32", "round-of-16", "quarterfinals", "semifinals", "3rd-place-match", "final"]);
+
+function isKnockoutMatch(match) {
+  return KNOCKOUT_STAGES.has(match?.stageSlug);
+}
+
 function scorePair(match) {
   const home = match.home?.score;
   const away = match.away?.score;
@@ -1030,7 +1039,7 @@ function teamGames(data) {
       // only show one when BOTH teams are confirmed into it — e.g. South Africa
       // vs Canada (two locked runners-up). Skip uncertain ones like USA vs
       // Bosnia. Group games are always certain; completed KO results still count.
-      if (!completed && !match.group &&
+      if (!completed && isKnockoutMatch(match) &&
           !(confirmed.has(match.home?.team) && confirmed.has(match.away?.team))) {
         return;
       }
@@ -1095,13 +1104,13 @@ function eliminatedTeams(data) {
   // ungreyed until it's over).
   const pendingKo = new Set();
   (data.matches || []).forEach((match) => {
-    if (match.group || !match.status || match.status.completed) return;
+    if (!isKnockoutMatch(match) || !match.status || match.status.completed) return;
     [match.home, match.away].forEach((side) => {
       if (side && side.team) pendingKo.add(side.team);
     });
   });
   (data.matches || []).forEach((match) => {
-    if (match.group || !match.status?.completed || !match.winner || match.winner === "Draw") return;
+    if (!isKnockoutMatch(match) || !match.status?.completed || !match.winner || match.winner === "Draw") return;
     const loser = match.home?.team === match.winner ? match.away?.team : match.home?.team;
     if (loser && !pendingKo.has(loser)) out.add(loser);
   });
@@ -1247,7 +1256,7 @@ const RESULT_WORD = { win: "Won", draw: "Drew", loss: "Lost", scheduled: "Schedu
 function titleEliminatedTeams(data) {
   const out = new Set(eliminatedTeams(data));
   (data.matches || []).forEach((match) => {
-    if (match.group || !match.status?.completed || !match.winner || match.winner === "Draw") return;
+    if (!isKnockoutMatch(match) || !match.status?.completed || !match.winner || match.winner === "Draw") return;
     const loser = match.home?.team === match.winner ? match.away?.team : match.home?.team;
     if (loser) out.add(loser);
   });
