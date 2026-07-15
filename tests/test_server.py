@@ -651,6 +651,48 @@ def test_bracket_marks_upset_winner_orange():
     assert "#dcf5e4" not in svg
 
 
+def test_third_place_pick_fallback_chain():
+    # Both third-place participants are title-eliminated, so championship odds
+    # must never decide this pick (they preferred the team whose market
+    # collapsed later — Argentina over France).
+    sf1 = {"id": "sf1", "stageSlug": "semifinals", "date": "2026-07-14T19:00:00Z",
+           "home": {"team": "France"}, "away": {"team": "Spain"},
+           "status": {"completed": True}, "winner": "Spain"}
+    sf2 = {"id": "sf2", "stageSlug": "semifinals", "date": "2026-07-15T19:00:00Z",
+           "home": {"team": "England"}, "away": {"team": "Argentina"},
+           "status": {"completed": False}}
+    third = {"id": "tp", "stageSlug": "3rd-place-match", "date": "2026-07-18T19:00:00Z",
+             "home": {"team": "France"}, "away": {"team": "Argentina"},
+             "status": {"completed": False}}
+    baseline = {"France": {"mid": 0.20}, "Argentina": {"mid": 0.1475}}
+
+    # 1. Direct match market for the fixture wins when both teams are listed.
+    direct = {server.event_market_key(third): {"kalshi": {"preGame": {
+        "pick": "France", "pickPct": 58.0,
+        "outcomes": {"France": {"midPct": 58.0}, "Argentina": {"midPct": 42.0}},
+    }}}}
+    assert server.third_place_pick("France", "Argentina", third, [sf1, sf2], direct, baseline) == "France"
+
+    # 2. Otherwise, semifinal ratings: each team's own pre-game win probability.
+    sf_markets = {
+        server.event_market_key(sf1): {"polymarket": {"preGame": {
+            "pick": "France", "pickPct": 52.0,
+            "outcomes": {"France": {"midPct": 52.0}, "Spain": {"midPct": 48.0}},
+        }}},
+        server.event_market_key(sf2): {"polymarket": {"preGame": {
+            "pick": "Argentina", "pickPct": 55.0,
+            "outcomes": {"England": {"midPct": 45.0}, "Argentina": {"midPct": 55.0}},
+        }}},
+    }
+    assert server.third_place_pick("France", "Argentina", third, [sf1, sf2], sf_markets, baseline) == "Argentina"
+
+    # 3. No market data at all: baseline (pre-tournament) odds, which never collapse.
+    assert server.third_place_pick("France", "Argentina", third, [sf1, sf2], {}, baseline) == "France"
+
+    # Nothing available -> None (caller keeps its default).
+    assert server.third_place_pick("France", "Argentina", third, [sf1, sf2], {}, {}) is None
+
+
 def test_locked_upset_events_uses_match_capture_over_outright():
     # The Egypt case: outright title odds favour the opponent, but the locked
     # match-market pick was the actual winner -> Hit on the card, so NOT an upset.
