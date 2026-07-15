@@ -1167,3 +1167,37 @@ def test_write_latest_bracket_generation_creates_parent_and_replaces_atomically(
 
     assert server.json.loads(path.read_text())["compositionHash"] == "abc"
     assert not path.with_name(f".{path.name}.tmp").exists()
+
+
+def test_finished_boxes_show_pregame_odds():
+    # A completed match with a preGame capture shows its pre-match odds in the
+    # bracket box; without a capture it keeps the title odds.
+    from datetime import datetime, timezone
+
+    event = {
+        "id": "r32-1",
+        "date": "2026-06-28T19:00:00Z",
+        "stageSlug": "round-of-32",
+        "status": {"completed": True},
+        "winner": "Canada",
+        "home": {"team": "Canada"},
+        "away": {"team": "France"},
+    }
+    odds = {
+        "Canada": {"team": "Canada", "mid": 0.9, "midPct": 90.0},
+        "France": {"team": "France", "mid": 0.1, "midPct": 10.0},
+    }
+    captures = {server.event_market_key(event): {"polymarket": {"preGame": {
+        "pick": "Canada", "pickPct": 63.0,
+        "outcomes": {"Canada": {"midPct": 63.0}, "France": {"midPct": 37.0}},
+    }}}}
+    pregame = server.pregame_pct_by_event([event], captures)
+    assert pregame == {"r32-1": {"Canada": 63.0, "France": 37.0}}
+
+    projection = server.build_fact_projection(odds, server.actual_winners_by_pair([event]), [event])
+    stamp = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    svg = server.render_bracket_svg(projection, odds, ["t"], stamp, set(), None, set(), set(), None, pregame)
+    assert "63.0%" in svg and "37.0%" in svg
+
+    svg_no_capture = server.render_bracket_svg(projection, odds, ["t"], stamp, set(), None, set(), set(), None, {})
+    assert "90.0%" in svg_no_capture and "63.0%" not in svg_no_capture
