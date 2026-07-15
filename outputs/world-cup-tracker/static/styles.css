@@ -1254,3 +1254,25 @@ tbody tr.outRow td {
     width: calc(100vw - 20px);
   }
 }
+
+.siteFooter {
+  margin: 6px 0 20px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.siteFooter h2 {
+  margin-bottom: 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.siteFooter p {
+  margin: 0;
+  max-width: 860px;
+}

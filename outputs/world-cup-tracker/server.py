@@ -2676,6 +2676,40 @@ def index():
     return render_template("index.html", web3forms_key=WEB3FORMS_KEY, vapid_public_key=VAPID_PUBLIC_KEY)
 
 
+SITE_URL = "https://wc2026-m91b.onrender.com"
+
+
+@APP.get("/robots.txt")
+def robots():
+    return Response(
+        f"User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: {SITE_URL}/sitemap.xml\n",
+        mimetype="text/plain",
+    )
+
+
+@APP.get("/sitemap.xml")
+def sitemap():
+    urls = "".join(
+        f"<url><loc>{SITE_URL}{path}</loc><changefreq>{freq}</changefreq></url>"
+        for path, freq in (("/", "hourly"), ("/bracket", "daily"))
+    )
+    return Response(
+        f'<?xml version="1.0" encoding="UTF-8"?>'
+        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
+        mimetype="application/xml",
+    )
+
+
+@APP.get("/favicon.ico")
+def favicon():
+    # Browsers request /favicon.ico unconditionally; serve the PNG mark.
+    return Response(
+        (ROOT / "static" / "favicon-32.png").read_bytes(),
+        mimetype="image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 @APP.get("/sw.js")
 def service_worker():
     # Served from the root so its scope covers the whole site.
@@ -2886,7 +2920,10 @@ def bracket_page():
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>World Cup Current Bracket</title>
+    <title>FIFA World Cup 2026 Knockout Bracket — Market Projection</title>
+    <meta name="description" content="The FIFA World Cup 2026 knockout bracket as projected by Polymarket and Kalshi prediction markets — actual results, upsets and the projected champion, updated live." />
+    <link rel="canonical" href="{SITE_URL}/bracket" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png" />
     <script defer src="https://cloud.umami.is/script.js" data-website-id="868c8fa8-c8cf-4843-84b3-8231cd582298" data-domains="wc2026-m91b.onrender.com"></script>
     <style>
       body {{
