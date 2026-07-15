@@ -2920,8 +2920,8 @@ def bracket_page():
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FIFA World Cup 2026 Knockout Bracket — Market Projection</title>
-    <meta name="description" content="The FIFA World Cup 2026 knockout bracket as projected by Polymarket and Kalshi prediction markets — actual results, upsets and the projected champion, updated live." />
+    <title>World Cup 2026 Bracket — Market Projection</title>
+    <meta name="description" content="The World Cup 2026 knockout bracket as projected by Polymarket and Kalshi prediction markets — results, upsets and the projected champion." />
     <link rel="canonical" href="{SITE_URL}/bracket" />
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png" />
     <script defer src="https://cloud.umami.is/script.js" data-website-id="868c8fa8-c8cf-4843-84b3-8231cd582298" data-domains="wc2026-m91b.onrender.com"></script>
