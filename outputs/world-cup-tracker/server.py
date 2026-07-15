@@ -1122,9 +1122,13 @@ def build_projection(
     odds: dict[str, Any],
     events: list[dict[str, Any]] | None = None,
     standings: list[dict[str, Any]] | None = None,
+    match_markets: dict[str, Any] | None = None,
+    fallback_odds: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     events = events or []
-    projection = build_fact_projection(odds, actual_winners_by_pair(events), events, standings)
+    projection = build_fact_projection(
+        odds, actual_winners_by_pair(events), events, standings, match_markets, fallback_odds
+    )
     return {
         "champion": projection["champion"],
         "finalists": projection["final"]["teams"],
@@ -1481,8 +1485,8 @@ def build_snapshot() -> dict[str, Any]:
         "matchMarketsCaptured": sum(len(source) for source in live_match_sources.values()),
         "leaders": {"polymarket": pm_top, "kalshi": ks_top},
         "projections": {
-            "polymarket": build_projection(polymarket, scoreboard, standings),
-            "kalshi": build_projection(kalshi, scoreboard, standings),
+            "polymarket": build_projection(polymarket, scoreboard, standings, match_markets, locked_polymarket),
+            "kalshi": build_projection(kalshi, scoreboard, standings, match_markets, locked_kalshi),
         },
         "odds": {
             "polymarket": polymarket,
@@ -1860,18 +1864,86 @@ def derive_knockout_tree(events: list[dict[str, Any]]) -> dict[str, Any] | None:
     }
 
 
+def _phase_capture(fixture_markets: dict[str, Any], source_name: str) -> dict[str, Any] | None:
+    phases = phase_container(fixture_markets.get(source_name) or {})
+    return phases.get("preGame") or phases.get("inPlay")
+
+
+def _capture_team_pct(capture: dict[str, Any] | None, team: str) -> float | None:
+    if not capture:
+        return None
+    return ((capture.get("outcomes") or {}).get(team) or {}).get("midPct")
+
+
+def third_place_pick(
+    team_a: str,
+    team_b: str,
+    third_event: dict[str, Any] | None,
+    semifinal_events: list[dict[str, Any] | None],
+    match_markets: dict[str, Any] | None,
+    fallback_odds: dict[str, Any] | None,
+) -> str | None:
+    """Pick the third-place winner WITHOUT the championship odds: both
+    participants are title-eliminated (or about to be), so their outright prices
+    are residual dust — comparing them prefers whichever team's market collapsed
+    later. Fallback chain:
+      1. the direct match market for the fixture (once both teams are listed on
+         Polymarket/Kalshi);
+      2. semifinal ratings — each team's own pre-game win probability in its
+         semifinal;
+      3. baseline (pre-tournament) outright odds, which never collapse.
+    Returns the picked team, or None to let the caller use its default."""
+    match_markets = match_markets or {}
+
+    def average(values: list[float | None]) -> float | None:
+        present = [value for value in values if value is not None]
+        return sum(present) / len(present) if present else None
+
+    def fixture_score(event: dict[str, Any], team: str) -> float | None:
+        fixture = locked_markets_for_event(match_markets, event)
+        return average([_capture_team_pct(_phase_capture(fixture, source), team) for source in ("polymarket", "kalshi")])
+
+    if third_event is not None:
+        score_a = fixture_score(third_event, team_a)
+        score_b = fixture_score(third_event, team_b)
+        if score_a is not None and score_b is not None and score_a != score_b:
+            return team_a if score_a > score_b else team_b
+
+    def semifinal_rating(team: str) -> float | None:
+        for semifinal in semifinal_events:
+            if not semifinal:
+                continue
+            sides = ((semifinal.get("home") or {}).get("team"), (semifinal.get("away") or {}).get("team"))
+            if team in sides:
+                return fixture_score(semifinal, team)
+        return None
+
+    rating_a = semifinal_rating(team_a)
+    rating_b = semifinal_rating(team_b)
+    if rating_a is not None and rating_b is not None and rating_a != rating_b:
+        return team_a if rating_a > rating_b else team_b
+
+    base_a = ((fallback_odds or {}).get(team_a) or {}).get("mid")
+    base_b = ((fallback_odds or {}).get(team_b) or {}).get("mid")
+    if base_a is not None and base_b is not None and base_a != base_b:
+        return team_a if base_a > base_b else team_b
+    return None
+
+
 def build_fact_projection(
     odds: dict[str, Any],
     actual_winners: dict[str, str],
     events: list[dict[str, Any]] | None = None,
     standings: list[dict[str, Any]] | None = None,
+    match_markets: dict[str, Any] | None = None,
+    fallback_odds: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     stage_events = knockout_events_by_stage(events or [])
     resolver = build_slot_resolver(standings, events)
 
     tree = derive_knockout_tree(events or [])
     if tree:
-        return _projection_from_tree(tree, odds, resolver)
+        return _projection_from_tree(tree, odds, resolver, match_markets, fallback_odds)
 
     def build_round(
         pairings: list[tuple[str, str]],
@@ -1961,7 +2033,13 @@ def build_fact_projection(
     }
 
 
-def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) -> dict[str, Any]:
+def _projection_from_tree(
+    tree: dict[str, Any],
+    odds: dict[str, Any],
+    resolver,
+    match_markets: dict[str, Any] | None = None,
+    fallback_odds: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Project the bracket over the ESPN-derived wiring: each slot shows its real
     seeded team when known, otherwise the projected winner of the feeder match."""
     results: dict[int, dict[str, Any]] = {}
@@ -2036,10 +2114,16 @@ def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) 
         team_a = third_team("home", left_final["loser"])
         team_b = third_team("away", right_final["loser"])
         event_winner = third_event.get("winner") if third_event.get("status", {}).get("completed") else None
+        semifinals = [tree["left"][-1][0], tree["right"][-1][0]]
         if event_winner in {team_a, team_b}:
             winner, source = event_winner, "actual"
         else:
-            winner, source = bracket_pick(team_a, team_b, odds, {}, "3rd-place-match")
+            # Never judge the 3rd-place pair by championship odds — see third_place_pick.
+            picked = third_place_pick(team_a, team_b, third_event, semifinals, match_markets, fallback_odds)
+            if picked:
+                winner, source = picked, "market"
+            else:
+                winner, source = bracket_pick(team_a, team_b, odds, {}, "3rd-place-match")
         third_match = {
             "teams": [team_a, team_b],
             "winner": winner,
@@ -2051,7 +2135,12 @@ def _projection_from_tree(tree: dict[str, Any], odds: dict[str, Any], resolver) 
         }
     else:
         team_a, team_b = left_final["loser"], right_final["loser"]
-        winner, source = bracket_pick(team_a, team_b, odds, {}, "3rd-place-match")
+        semifinals = [tree["left"][-1][0], tree["right"][-1][0]]
+        picked = third_place_pick(team_a, team_b, None, semifinals, match_markets, fallback_odds)
+        if picked:
+            winner, source = picked, "market"
+        else:
+            winner, source = bracket_pick(team_a, team_b, odds, {}, "3rd-place-match")
         third_match = {
             "teams": [team_a, team_b],
             "winner": winner,
@@ -2498,8 +2587,11 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
         standings = fetch_standings()
     except requests.RequestException:
         standings = None
-    projection = build_fact_projection(odds, actual_winners_by_pair(events), events, standings)
+    match_markets = stored_match_markets()
     initial_odds = baseline_consensus_odds()
+    projection = build_fact_projection(
+        odds, actual_winners_by_pair(events), events, standings, match_markets, initial_odds
+    )
     initial_projection = build_fact_projection(initial_odds, {}) if initial_odds else None
     generated_at = datetime.now(timezone.utc)
     composition = projection_composition(projection)
@@ -2516,7 +2608,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
         baseline_polymarket, baseline_kalshi, _ = load_baseline_odds()
         upsets = locked_upset_events(
             events,
-            stored_match_markets(),
+            match_markets,
             baseline_polymarket or odds,
             baseline_kalshi or odds,
         )
