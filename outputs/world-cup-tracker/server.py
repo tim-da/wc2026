@@ -1875,24 +1875,23 @@ def _capture_team_pct(capture: dict[str, Any] | None, team: str) -> float | None
     return ((capture.get("outcomes") or {}).get(team) or {}).get("midPct")
 
 
-def third_place_pick(
+def third_place_tiers(
     team_a: str,
     team_b: str,
     third_event: dict[str, Any] | None,
     semifinal_events: list[dict[str, Any] | None],
     match_markets: dict[str, Any] | None,
     fallback_odds: dict[str, Any] | None,
-) -> str | None:
-    """Pick the third-place winner WITHOUT the championship odds: both
-    participants are title-eliminated (or about to be), so their outright prices
-    are residual dust — comparing them prefers whichever team's market collapsed
-    later. Fallback chain:
+):
+    """Yield (score_a, score_b) per data tier for the third-place pair, best
+    tier first. Championship odds are never used — both participants are
+    title-eliminated (or about to be), so their outright prices are residual
+    dust. Tiers:
       1. the direct match market for the fixture (once both teams are listed on
          Polymarket/Kalshi);
       2. semifinal ratings — each team's own pre-game win probability in its
          semifinal;
-      3. baseline (pre-tournament) outright odds, which never collapse.
-    Returns the picked team, or None to let the caller use its default."""
+      3. baseline (pre-tournament) outright odds (as %), which never collapse."""
     match_markets = match_markets or {}
 
     def average(values: list[float | None]) -> float | None:
@@ -1904,10 +1903,7 @@ def third_place_pick(
         return average([_capture_team_pct(_phase_capture(fixture, source), team) for source in ("polymarket", "kalshi")])
 
     if third_event is not None:
-        score_a = fixture_score(third_event, team_a)
-        score_b = fixture_score(third_event, team_b)
-        if score_a is not None and score_b is not None and score_a != score_b:
-            return team_a if score_a > score_b else team_b
+        yield fixture_score(third_event, team_a), fixture_score(third_event, team_b)
 
     def semifinal_rating(team: str) -> float | None:
         for semifinal in semifinal_events:
@@ -1918,15 +1914,43 @@ def third_place_pick(
                 return fixture_score(semifinal, team)
         return None
 
-    rating_a = semifinal_rating(team_a)
-    rating_b = semifinal_rating(team_b)
-    if rating_a is not None and rating_b is not None and rating_a != rating_b:
-        return team_a if rating_a > rating_b else team_b
+    yield semifinal_rating(team_a), semifinal_rating(team_b)
 
-    base_a = ((fallback_odds or {}).get(team_a) or {}).get("mid")
-    base_b = ((fallback_odds or {}).get(team_b) or {}).get("mid")
-    if base_a is not None and base_b is not None and base_a != base_b:
-        return team_a if base_a > base_b else team_b
+    yield (
+        pct(((fallback_odds or {}).get(team_a) or {}).get("mid")),
+        pct(((fallback_odds or {}).get(team_b) or {}).get("mid")),
+    )
+
+
+def third_place_pick(
+    team_a: str,
+    team_b: str,
+    third_event: dict[str, Any] | None,
+    semifinal_events: list[dict[str, Any] | None],
+    match_markets: dict[str, Any] | None,
+    fallback_odds: dict[str, Any] | None,
+) -> str | None:
+    """Pick the third-place winner from the first tier that separates the pair
+    (see third_place_tiers). Returns None to let the caller use its default."""
+    for score_a, score_b in third_place_tiers(team_a, team_b, third_event, semifinal_events, match_markets, fallback_odds):
+        if score_a is not None and score_b is not None and score_a != score_b:
+            return team_a if score_a > score_b else team_b
+    return None
+
+
+def third_place_display_pct(
+    team_a: str,
+    team_b: str,
+    third_event: dict[str, Any] | None,
+    semifinal_events: list[dict[str, Any] | None],
+    match_markets: dict[str, Any] | None,
+    fallback_odds: dict[str, Any] | None,
+) -> dict[str, float] | None:
+    """Percentages to display in the third-place box: the first tier where both
+    sides have a value (ties are fine for display, unlike the pick)."""
+    for score_a, score_b in third_place_tiers(team_a, team_b, third_event, semifinal_events, match_markets, fallback_odds):
+        if score_a is not None and score_b is not None:
+            return {team_a: round(score_a, 3), team_b: round(score_b, 3)}
     return None
 
 
@@ -2392,6 +2416,7 @@ def render_bracket_svg(
     baseline_champion: str | None = None,
     confirmed: set[str] | None = None,
     upset_events: set[str] | None = None,
+    third_display_pct: dict[str, float] | None = None,
 ) -> str:
     changed_slots = changed_slots or set()
     confirmed = confirmed or set()
@@ -2418,7 +2443,7 @@ def render_bracket_svg(
         rows = sorted(odds.values(), key=lambda item: item.get("mid") or 0, reverse=True)[:8]
         return "  |  ".join(f"{svg_team_label(row['team'])} {fmt_bracket_pct(row.get('midPct'))}" for row in rows)
 
-    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None, upset: set[str] | None = None, show_date: bool = False) -> str:
+    def match_box(x: int, y: int, match: dict[str, Any], slot_prefix: str, highlight: bool = False, certain: set[str] | None = None, upset: set[str] | None = None, show_date: bool = False, display_pct: dict[str, float] | None = None) -> str:
         certain = certain or set()
         upset = upset or set()
         team_a, team_b = match["teams"]
@@ -2449,9 +2474,12 @@ def render_bracket_svg(
                 rows.append(
                     f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="{band_fill}" />'
                 )
+            # display_pct overrides the title odds — used for the third-place box,
+            # where both teams are title-eliminated and outright prices are dust.
+            shown_pct = fmt_bracket_pct(display_pct.get(team)) if display_pct else team_pct(team)
             rows.append(
                 f'<text x="{x + 8}" y="{row_y}" class="team {"winner" if is_winner else "loser"}{changed_class}">{escape(svg_team_label(team))}</text>'
-                f'<text x="{x + box_w - 8}" y="{row_y}" class="pct {"winner" if is_winner else "loser"}{changed_class}">{team_pct(team)}</text>'
+                f'<text x="{x + box_w - 8}" y="{row_y}" class="pct {"winner" if is_winner else "loser"}{changed_class}">{shown_pct}</text>'
             )
         when = fmt_bracket_date(match.get("date")) if show_date else ""
         date_label = (
@@ -2561,7 +2589,7 @@ def render_bracket_svg(
     svg_parts.append(f'<text x="{final_x + box_w / 2}" y="{final_y - 18}" class="{champion_class}">Champion: {escape(svg_team_label(projection["champion"]))}</text>')
     svg_parts.append(match_box(final_x, final_y, projection["final"], "final", highlight=True, certain=fact_winners(semifinals), upset=fact_upsets(semifinals), show_date=True))
     svg_parts.append(f'<text x="{third_x + box_w / 2}" y="{third_y - 18}" class="round" text-anchor="middle">Third-place play-off</text>')
-    svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third", certain=fact_losers(semifinals), show_date=True))
+    svg_parts.append(match_box(third_x, third_y, projection["thirdPlaceMatch"], "third", certain=fact_losers(semifinals), show_date=True, display_pct=third_display_pct))
     svg_parts.append(f'<text x="800" y="763" class="small" text-anchor="middle">Top consensus: {escape(top_consensus())}</text>')
     svg_parts.append(
         f'<text x="28" y="815" class="foot">Sources: {escape(" / ".join(sources))}; ESPN scoreboard facts. Bracket order follows supplied reference image.</text>'
@@ -2612,6 +2640,15 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             baseline_polymarket or odds,
             baseline_kalshi or odds,
         )
+        third_teams = projection["thirdPlaceMatch"]["teams"]
+        third_pct = third_place_display_pct(
+            third_teams[0],
+            third_teams[1],
+            next((e for e in events if e.get("stageSlug") == "3rd-place-match"), None),
+            [e for e in events if e.get("stageSlug") == "semifinals"],
+            match_markets,
+            initial_odds,
+        )
         payload["svg"] = render_bracket_svg(
             projection,
             odds,
@@ -2621,6 +2658,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             initial_projection.get("champion") if initial_projection else None,
             confirmed_teams(standings),
             upsets,
+            third_pct,
         )
     if mark_generated:
         write_latest_bracket_generation(payload)
