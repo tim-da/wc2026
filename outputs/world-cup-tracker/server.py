@@ -1959,6 +1959,45 @@ def third_place_display_pct(
     return None
 
 
+def pregame_match_pct(event: dict[str, Any], match_markets: dict[str, Any]) -> dict[str, float] | None:
+    """The pre-match win probabilities for an event's two teams, averaged across
+    the books' preGame captures. Strictly pre-kickoff — in-play reads are never
+    used. Returns None unless both teams have a positive price (an untraded
+    market is missing data, not 0% odds)."""
+    home_team = (event.get("home") or {}).get("team")
+    away_team = (event.get("away") or {}).get("team")
+    if not home_team or not away_team:
+        return None
+    fixture = locked_markets_for_event(match_markets, event)
+    scores: dict[str, float] = {}
+    for team in (home_team, away_team):
+        values = []
+        for source in ("polymarket", "kalshi"):
+            capture = phase_container(fixture.get(source) or {}).get("preGame")
+            value = _capture_team_pct(capture, team)
+            if value is not None:
+                values.append(value)
+        if not values or sum(values) <= 0:
+            return None
+        scores[team] = round(sum(values) / len(values), 3)
+    return scores
+
+
+def pregame_pct_by_event(events: list[dict[str, Any]], match_markets: dict[str, Any]) -> dict[str, dict[str, float]]:
+    """Pre-match odds per completed knockout event id — shown in the bracket's
+    finished boxes instead of the (now meaningless) title odds."""
+    result: dict[str, dict[str, float]] = {}
+    for event in events:
+        if event.get("stageSlug") not in KNOCKOUT_STAGE_SLUGS:
+            continue
+        if not (event.get("status") or {}).get("completed") or not event.get("id"):
+            continue
+        scores = pregame_match_pct(event, match_markets)
+        if scores:
+            result[event["id"]] = scores
+    return result
+
+
 def build_fact_projection(
     odds: dict[str, Any],
     actual_winners: dict[str, str],
@@ -2422,12 +2461,16 @@ def render_bracket_svg(
     confirmed: set[str] | None = None,
     upset_events: set[str] | None = None,
     third_display_pct: dict[str, float] | None = None,
+    pregame_pct: dict[str, dict[str, float]] | None = None,
 ) -> str:
     changed_slots = changed_slots or set()
     confirmed = confirmed or set()
     # Event ids of completed matches whose winner beat the locked pre-game pick —
     # the same picks the match cards grade Hit/Miss against (locked_upset_events).
     upset_events = upset_events or set()
+    # Pre-match odds per completed event id — finished boxes show these instead
+    # of title odds (a loser's title odds collapse to dust the moment it loses).
+    pregame_pct = pregame_pct or {}
     width, height = 1600, 900
     box_w, box_h = 132, 54
     left_x = [68, 214, 360, 506]
@@ -2479,9 +2522,16 @@ def render_bracket_svg(
                 rows.append(
                     f'<rect x="{x + 1.6}" y="{band_y + 1.6}" width="{box_w - 3.2}" height="{box_h / 2 - 3.2}" rx="2" fill="{band_fill}" />'
                 )
-            # display_pct overrides the title odds — used for the third-place box,
-            # where both teams are title-eliminated and outright prices are dust.
-            shown_pct = fmt_bracket_pct(display_pct.get(team)) if display_pct else team_pct(team)
+            # Odds shown in the box: an explicit override wins (third-place box);
+            # a finished match shows its PRE-match odds from the captures (title
+            # odds are meaningless once the result is in); otherwise title odds.
+            box_pregame = pregame_pct.get(match.get("eventId") or "") if source == "actual" else None
+            if display_pct:
+                shown_pct = fmt_bracket_pct(display_pct.get(team))
+            elif box_pregame:
+                shown_pct = fmt_bracket_pct(box_pregame.get(team))
+            else:
+                shown_pct = team_pct(team)
             rows.append(
                 f'<text x="{x + 8}" y="{row_y}" class="team {"winner" if is_winner else "loser"}{changed_class}">{escape(svg_team_label(team))}</text>'
                 f'<text x="{x + box_w - 8}" y="{row_y}" class="pct {"winner" if is_winner else "loser"}{changed_class}">{shown_pct}</text>'
@@ -2654,6 +2704,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             match_markets,
             initial_odds,
         )
+        pregame_pct = pregame_pct_by_event(events, match_markets)
         payload["svg"] = render_bracket_svg(
             projection,
             odds,
@@ -2664,6 +2715,7 @@ def build_bracket_payload(mark_generated: bool = False, render_svg: bool = True)
             confirmed_teams(standings),
             upsets,
             third_pct,
+            pregame_pct,
         )
     if mark_generated:
         write_latest_bracket_generation(payload)
