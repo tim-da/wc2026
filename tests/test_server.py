@@ -692,6 +692,17 @@ def test_third_place_pick_fallback_chain():
     # Nothing available -> None (caller keeps its default).
     assert server.third_place_pick("France", "Argentina", third, [sf1, sf2], {}, {}) is None
 
+    # A freshly listed, untraded fixture market prices every outcome at 0 — that
+    # tier is missing data, not 0% odds: both the pick and the display must skip
+    # it and fall through (this rendered "0% / 0%" in the third-place box live).
+    untraded = {server.event_market_key(third): {"kalshi": {"preGame": {
+        "pick": None, "pickPct": None,
+        "outcomes": {"France": {"midPct": 0.0}, "Argentina": {"midPct": 0.0}},
+    }}}}
+    assert server.third_place_pick("France", "Argentina", third, [sf1, sf2], untraded, baseline) == "France"
+    display = server.third_place_display_pct("France", "Argentina", third, [sf1, sf2], untraded, baseline)
+    assert display == {"France": 20.0, "Argentina": 14.75}  # baseline tier, not 0/0
+
 
 def test_locked_upset_events_uses_match_capture_over_outright():
     # The Egypt case: outright title odds favour the opponent, but the locked

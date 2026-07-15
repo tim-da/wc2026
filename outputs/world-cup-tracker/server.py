@@ -1931,9 +1931,11 @@ def third_place_pick(
     fallback_odds: dict[str, Any] | None,
 ) -> str | None:
     """Pick the third-place winner from the first tier that separates the pair
-    (see third_place_tiers). Returns None to let the caller use its default."""
+    (see third_place_tiers). A tier only counts when both scores are positive —
+    a freshly listed market with no trades prices every outcome at 0, which is
+    the absence of data, not a 0% chance. Returns None for the caller's default."""
     for score_a, score_b in third_place_tiers(team_a, team_b, third_event, semifinal_events, match_markets, fallback_odds):
-        if score_a is not None and score_b is not None and score_a != score_b:
+        if score_a and score_b and score_a != score_b:
             return team_a if score_a > score_b else team_b
     return None
 
@@ -1947,9 +1949,12 @@ def third_place_display_pct(
     fallback_odds: dict[str, Any] | None,
 ) -> dict[str, float] | None:
     """Percentages to display in the third-place box: the first tier where both
-    sides have a value (ties are fine for display, unlike the pick)."""
+    sides have a POSITIVE value (ties are fine for display, unlike the pick).
+    An untraded market prices at 0 — that's missing data, not 0% odds, so such
+    a tier is skipped (this rendered '0% / 0%' when the books first listed the
+    third-place fixture)."""
     for score_a, score_b in third_place_tiers(team_a, team_b, third_event, semifinal_events, match_markets, fallback_odds):
-        if score_a is not None and score_b is not None:
+        if score_a and score_b:
             return {team_a: round(score_a, 3), team_b: round(score_b, 3)}
     return None
 
