@@ -1276,3 +1276,8 @@ tbody tr.outRow td {
   margin: 0;
   max-width: 860px;
 }
+
+.medal {
+  margin-left: 2px;
+  font-size: 13px;
+}

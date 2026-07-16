@@ -936,6 +936,44 @@ function matchdayGroups(data) {
   return groups;
 }
 
+// Podium medals for the last four, shown after the team name in both Teams
+// views: finalists carry gold until the final is decided (the winner upgrades
+// to the cup, the runner-up keeps gold); third-place participants carry bronze
+// (the play-off winner upgrades to silver).
+function teamMedals(data) {
+  const medals = new Map();
+  const events = data.matches || [];
+  const isReal = (t) => t && (data.teams || []).some((x) => x.team === t);
+  const finalMatch = events.find((m) => m.stageSlug === "final");
+  const thirdMatch = events.find((m) => m.stageSlug === "3rd-place-match");
+
+  const finalists = new Set();
+  const thirdSide = new Set();
+  [finalMatch?.home?.team, finalMatch?.away?.team].forEach((t) => { if (isReal(t)) finalists.add(t); });
+  [thirdMatch?.home?.team, thirdMatch?.away?.team].forEach((t) => { if (isReal(t)) thirdSide.add(t); });
+  events.filter((m) => m.stageSlug === "semifinals").forEach((m) => {
+    if (!m.status?.completed || !m.winner || m.winner === "Draw") return;
+    finalists.add(m.winner);
+    const loser = m.home?.team === m.winner ? m.away?.team : m.home?.team;
+    if (loser) thirdSide.add(loser);
+  });
+
+  finalists.forEach((t) => medals.set(t, "\u{1F947}"));
+  thirdSide.forEach((t) => medals.set(t, "\u{1F949}"));
+  if (finalMatch?.status?.completed && finalMatch.winner && finalMatch.winner !== "Draw") {
+    medals.set(finalMatch.winner, "\u{1F3C6}");
+  }
+  if (thirdMatch?.status?.completed && thirdMatch.winner && thirdMatch.winner !== "Draw") {
+    medals.set(thirdMatch.winner, "\u{1F948}");
+  }
+  return medals;
+}
+
+function medalBadge(medals, team) {
+  const medal = medals.get(team);
+  return medal ? ` <span class="medal" aria-hidden="true">${medal}</span>` : "";
+}
+
 function renderTeamsGroup(data) {
   const query = state.search.trim().toLowerCase();
   // By-group view shows whole groups that have a team playing that day.
@@ -957,6 +995,7 @@ function renderTeamsGroup(data) {
     if (!groupOrder.has(row.group)) groupOrder.set(row.group, groupOrder.size);
   });
   const dots = qualificationDots(data.teams);
+  const medals = teamMedals(data);
   const liveTeams = new Set();
   (data.matches || []).forEach((match) => {
     if (match.status?.state === "in") {
@@ -979,7 +1018,7 @@ function renderTeamsGroup(data) {
             <span class="teamCell">
               ${dot}
               ${row.logo ? `<img class="logo" src="${escapeHtml(row.logo)}" alt="" />` : ""}
-              ${escapeHtml(row.displayName)}
+              ${escapeHtml(row.displayName)}${medalBadge(medals, row.team)}
               ${live}
             </span>
           </td>
@@ -1189,6 +1228,7 @@ function renderTeamsOverall(data) {
   });
   const eliminated = eliminatedTeams(data);
   const consensus = new Map((data.teams || []).map((t) => [t.team, t.consensusPct]));
+  const medals = teamMedals(data);
 
   const body = rows
     .map((rec) => {
@@ -1209,7 +1249,7 @@ function renderTeamsOverall(data) {
           <td>
             <span class="teamCell">
               ${rec.logo ? `<img class="logo" src="${escapeHtml(rec.logo)}" alt="" />` : ""}
-              ${escapeHtml(rec.displayName)}
+              ${escapeHtml(rec.displayName)}${medalBadge(medals, rec.team)}
               ${live}
             </span>
           </td>
