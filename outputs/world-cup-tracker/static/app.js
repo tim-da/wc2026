@@ -770,10 +770,14 @@ function renderRankTable(node, data) {
       const score = match.home?.score != null && match.away?.score != null
         ? `${fmtSideScore(match.home)} : ${fmtSideScore(match.away)}`
         : "—";
+      const verdict = match.status?.completed
+        ? (isUpset(match) ? `<span class="tag miss">Miss</span>` : `<span class="tag hit">Hit</span>`)
+        : "\u2014";
       return `
         <tr>
           <td>${fmtRankDate(match.date)}</td>
           <td>${escapeHtml(match.home?.displayName || match.home?.team || "")} vs ${escapeHtml(match.away?.displayName || match.away?.team || "")}</td>
+          <td class="num">${verdict}</td>
           <td class="num">${score}</td>
           <td class="num">${fmtUsd(pm) || "—"}</td>
           <td class="num">${fmtUsd(ks) || "—"}</td>
@@ -789,6 +793,7 @@ function renderRankTable(node, data) {
           <tr>
             <th>Date</th>
             <th>Match</th>
+            <th class="num">Hit</th>
             <th class="num">Score</th>
             <th class="num">Bet on Polymarket</th>
             <th class="num">Bet on Kalshi</th>
