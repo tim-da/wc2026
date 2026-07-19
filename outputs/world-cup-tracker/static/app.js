@@ -801,6 +801,17 @@ function renderRankTable(node, data) {
           </tr>
         </thead>
         <tbody>${body}</tbody>
+        <tfoot>
+          <tr class="rankTotals">
+            <td></td>
+            <td>Total (${rows.length} matches)</td>
+            <td></td>
+            <td></td>
+            <td class="num">${fmtUsd(rows.reduce((sum, r) => sum + r.pm, 0)) || "\u2014"}</td>
+            <td class="num">${fmtUsd(rows.reduce((sum, r) => sum + r.ks, 0)) || "\u2014"}</td>
+            <td class="num"><strong>${fmtUsd(rows.reduce((sum, r) => sum + r.total, 0)) || "\u2014"}</strong></td>
+          </tr>
+        </tfoot>
       </table>
     </div>`;
 }

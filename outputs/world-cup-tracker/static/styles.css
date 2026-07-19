@@ -1285,3 +1285,10 @@ tbody tr.outRow td {
 .matchList > .rankTable {
   grid-column: 1 / -1;
 }
+
+.rankTotals td {
+  border-top: 2px solid var(--line);
+  border-bottom: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
