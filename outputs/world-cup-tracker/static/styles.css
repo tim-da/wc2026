@@ -1281,3 +1281,7 @@ tbody tr.outRow td {
   margin-left: 2px;
   font-size: 13px;
 }
+
+.matchList > .rankTable {
+  grid-column: 1 / -1;
+}
