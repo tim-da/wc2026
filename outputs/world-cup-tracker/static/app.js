@@ -718,6 +718,10 @@ function matchVisible(match) {
 
 function renderMatches(data) {
   const node = $("#matchList");
+  if (state.filter === "rank") {
+    renderRankTable(node, data);
+    return;
+  }
   const matches = data.matches.filter(matchVisible);
   if (!matches.length) {
     node.innerHTML = `<div class="empty">No matches in this view.</div>`;
@@ -725,6 +729,75 @@ function renderMatches(data) {
   }
 
   node.innerHTML = matches.map(matchCardHtml).join("");
+}
+
+// Total USD staked on a match's market per source: the live/final read when
+// captured, else the locked pre-game total.
+function matchSourceTotal(match, source) {
+  const p = match.prediction || {};
+  return p[`${source}CurrentTotal`] ?? p[`${source}PickTotal`] ?? null;
+}
+
+function fmtRankDate(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(value));
+}
+
+// Rank view: matches ordered by total money staked across both books. Honours
+// the team/group/date focus filters like every other segment.
+function renderRankTable(node, data) {
+  const rows = (data.matches || [])
+    .filter((match) => {
+      if (state.team && match.home?.team !== state.team && match.away?.team !== state.team) return false;
+      if (state.group && match.group !== state.group) return false;
+      if (state.date && localDateKey(match.date) !== state.date) return false;
+      return matchSourceTotal(match, "polymarket") != null || matchSourceTotal(match, "kalshi") != null;
+    })
+    .map((match) => {
+      const pm = matchSourceTotal(match, "polymarket") || 0;
+      const ks = matchSourceTotal(match, "kalshi") || 0;
+      return { match, pm, ks, total: pm + ks };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  if (!rows.length) {
+    node.innerHTML = `<div class="empty">No betting volumes in this view.</div>`;
+    return;
+  }
+
+  const body = rows
+    .map(({ match, pm, ks, total }) => {
+      const score = match.home?.score != null && match.away?.score != null
+        ? `${fmtSideScore(match.home)} : ${fmtSideScore(match.away)}`
+        : "—";
+      return `
+        <tr>
+          <td>${fmtRankDate(match.date)}</td>
+          <td>${escapeHtml(match.home?.displayName || match.home?.team || "")} vs ${escapeHtml(match.away?.displayName || match.away?.team || "")}</td>
+          <td class="num">${score}</td>
+          <td class="num">${fmtUsd(pm) || "—"}</td>
+          <td class="num">${fmtUsd(ks) || "—"}</td>
+          <td class="num"><strong>${fmtUsd(total) || "—"}</strong></td>
+        </tr>
+      `;
+    })
+    .join("");
+  node.innerHTML = `
+    <div class="tableWrap rankTable">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Match</th>
+            <th class="num">Score</th>
+            <th class="num">Bet on Polymarket</th>
+            <th class="num">Bet on Kalshi</th>
+            <th class="num">Total bets</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
 }
 
 function matchCardHtml(match) {
