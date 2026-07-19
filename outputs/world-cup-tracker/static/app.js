@@ -27,6 +27,7 @@ function fmtPct(value) {
 function fmtUsd(value) {
   const n = Number(value);
   if (value == null || !Number.isFinite(n) || n <= 0) return "";
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(n >= 1e10 ? 0 : 2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M`;
   if (n >= 1e3) return `$${Math.round(n / 1e3)}k`;
   return `$${Math.round(n)}`;
